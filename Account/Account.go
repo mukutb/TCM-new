@@ -469,7 +469,7 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 	if res.AccountID == accountId{
 		//fmt.Println("This Account arleady exists: " + AccountId)
 		//fmt.Println(res);
-		errMsg := "{ \"message\" : \"This Account arleady exists\", \"code\" : \"503\"}"
+		errMsg := "{ \"message\" : \"This Account already exists\", \"code\" : \"503\"}"
 		err := stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
@@ -531,8 +531,8 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 // ============================================================================================================================
 func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
-	if len(args) != 11 {
-		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 11\", \"code\" : \"503\"}"
+	if len(args) != 10 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 10\", \"code\" : \"503\"}"
 		err = stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
@@ -555,7 +555,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 	res := Securities{}
 	json.Unmarshal(AccountAsBytes, &res)
 	if res.SecurityId == _securityId{
-		errMsg := "{ \"message\" : \"This Security arleady exists\", \"code\" : \"503\"}"
+		errMsg := "{ \"message\" : \"This Security already exists\", \"code\" : \"503\"}"
 		err := stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
@@ -574,9 +574,8 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		`"category": "` + args[5] + `" ,`+
 		`"totalvalue": "` + args[6] + `" ,`+
 		`"valuePercentage": "` + args[7] + `" ,`+
-		`"mtm": "` + args[9] + `" ,`+
-		`"effectivePercentage": "` + args[10] + `" `+
-		`"effectivePercentage": "" `+
+		`"mtm": "` + args[8] + `" ,`+
+		`"effectivePercentage": "` + args[9] + `" `+
 		`}`
 		//fmt.Println("order: " + order)
 		fmt.Print("order in bytes array: ")
