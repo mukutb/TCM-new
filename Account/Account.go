@@ -149,8 +149,8 @@ func (t *ManageAccounts) Query(stub shim.ChaincodeStubInterface, function string
 		return t.getAccount_byNumber(stub, args)
 	} else if function == "get_AllAccount" {													//Read all Accounts
 		return t.get_AllAccount(stub, args)
-	}else if function == "getSecrurities_byAccount" {									//update a Account
-		return t.getSecrurities_byAccount(stub, args)
+	}else if function == "getSecurities_byAccount" {									//update a Account
+		return t.getSecurities_byAccount(stub, args)
 	}
 	fmt.Println("query did not find func: " + function)						//errors
 	errMsg := "{ \"message\" : \"Received unknown function query\", \"code\" : \"503\"}"
@@ -390,7 +390,7 @@ func (t *ManageAccounts) update_Account(stub shim.ChaincodeStubInterface, args [
 	res := Accounts{}
 	json.Unmarshal(AccountAsBytes, &res)
 	if res.AccountNumber == accountNumber{
-		fmt.Println("Account found with AccountNuber : " + accountNumber)
+		fmt.Println("Account found with AccountNumber : " + accountNumber)
 		//fmt.Println(res);
 		res.AccountID				=args[0]
 		res.AccountName				=args[1]
@@ -589,7 +589,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 	res2 := Accounts{}
 	json.Unmarshal(AccountAsBytes, &res2)
 	if res2.AccountNumber == _accountNumber{
-		fmt.Println("Account found with AccountNuber : " + _accountNumber)
+		fmt.Println("Account found with AccountNumber : " + _accountNumber)
 		//fmt.Println(res2);
 
 	}else{
@@ -679,14 +679,14 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 	return nil, nil
 }
 // ============================================================================================================================
-//  getSecrurities_byAccount- get details of all Account from chaincode state
+//  getSecurities_byAccount- get details of all Account from chaincode state
 // ============================================================================================================================
-func (t *ManageAccounts) getSecrurities_byAccount(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var jsonResp, errResp string
-	fmt.Println("start getSecrurities_byAccount")
+	fmt.Println("start getSecurities_byAccount")
 	var err error
 	if len(args) != 1 {
-		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 1\" \" as an argument\", \"code\" : \"503\"}"
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting \"AccountNumber \" as an argument\", \"code\" : \"503\"}"
 		err = stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
@@ -724,6 +724,6 @@ func (t *ManageAccounts) getSecrurities_byAccount(stub shim.ChaincodeStubInterfa
 		}
 	}
 	jsonResp = jsonResp + "}"
-	fmt.Println("end getSecrurities_byAccount")
+	fmt.Println("end getSecurities_byAccount")
 	return []byte(jsonResp), nil
 }
