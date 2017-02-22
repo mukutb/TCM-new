@@ -375,7 +375,7 @@ func (t *ManageAccounts) update_Account(stub shim.ChaincodeStubInterface, args [
 		return nil, nil
 	}
 	// set accountNumber
-	accountNumber := args[0]
+	accountNumber := args[2]
 	AccountAsBytes, err := stub.GetState(accountNumber)									//get the Account for the specified AccountId from chaincode state
 	if err != nil {
 		errMsg := "{ \"message\" : \"Failed to get state for " + accountNumber + "\", \"code\" : \"503\"}"
