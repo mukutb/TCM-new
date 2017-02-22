@@ -419,7 +419,7 @@ func (t *ManageAccounts) update_Account(stub shim.ChaincodeStubInterface, args [
 		`"currency": "` + res.Currency + `" ,`+
 		`"securities": "` + res.Securities + `" `+
 		`}`
-	err = stub.PutState(res.AccountID, []byte(order))									//store Account with id as key
+	err = stub.PutState(res.AccountNumber, []byte(order))									//store Account with id as key
 	if err != nil {
 		return nil, err
 	}
@@ -487,10 +487,10 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 		`"currency": "` + currency + `" ,`+
 		`"securities": "` + securities + `" `+
 		`}`
-		//fmt.Println("order: " + order)
-		fmt.Print("order in bytes array: ")
-		fmt.Println([]byte(order))
-	err = stub.PutState(accountId, []byte(order))									//store Account with AccountId as key
+		fmt.Println("order: " + order)
+		//fmt.Print("order in bytes array: ")
+		//fmt.Println([]byte(order))
+	err = stub.PutState(accountNumber, []byte(order))									//store Account with AccountId as key
 	if err != nil {
 		return nil, err
 	}
@@ -500,8 +500,8 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 		return nil, errors.New("Failed to get Account index")
 	}
 	var AccountIndex []string
-	//fmt.Print("AccountIndexAsBytes: ")
-	//fmt.Println(AccountIndexAsBytes)
+	fmt.Print("AccountIndexAsBytes: ")
+	fmt.Println(AccountIndexAsBytes)
 	
 	json.Unmarshal(AccountIndexAsBytes, &AccountIndex)							//un stringify it aka JSON.parse()
 	//fmt.Print("AccountIndex after unmarshal..before append: ")
@@ -517,7 +517,7 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 	fmt.Print("AccountIndexStr: ")
 	fmt.Println(AccountIndexStr)
 
-	tosend := "{ \"AccountId\" : \""+accountId+"\", \"message\" : \"Account created succcessfully\", \"code\" : \"200\"}"
+	tosend := "{ \"accountNumber\" : \""+accountNumber+"\", \"message\" : \"Account created succcessfully\", \"code\" : \"200\"}"
 	err = stub.SetEvent("evtsender", []byte(tosend))
 	if err != nil {
 		return nil, err
