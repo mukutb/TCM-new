@@ -494,9 +494,9 @@ func (t *ManageDeals) create_deal(stub shim.ChaincodeStubInterface, args []strin
 	res := Deal{}
 	json.Unmarshal(dealAsBytes, &res)
 	if res.DealID == dealId{
-		//fmt.Println("This Deal arleady exists: " + dealId)
+		//fmt.Println("This Deal already exists: " + dealId)
 		//fmt.Println(res);
-		errMsg := "{ \"message\" : \"This Deal arleady exists\", \"code\" : \"503\"}"
+		errMsg := "{ \"message\" : \"This Deal already exists\", \"code\" : \"503\"}"
 		err := stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
@@ -610,8 +610,8 @@ func (t *ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
 		} 
 		return nil, nil
 	}
-	//fmt.Print("dealAsBytes in update Deal")
-	//fmt.Println(dealAsBytes);
+	fmt.Print("dealAsBytes in update Deal")
+	fmt.Println(dealAsBytes);
 	res := Deal{}
 	json.Unmarshal(dealAsBytes, &res)
 	if res.DealID == dealId{
@@ -640,6 +640,7 @@ func (t *ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
 		`"transactions": "` + res.Transactions + `" , `+
 		`"lastSuccessfulAllocationDate": "` + res.LastSuccessfulAllocationDate + `" `+
 		`}`
+		fmt.Println("order: "+ order)
 	err = stub.PutState(dealId, []byte(order))									//store Deal with id as key
 	if err != nil {
 		return nil, err
@@ -679,8 +680,8 @@ func (t *ManageDeals) update_transaction(stub shim.ChaincodeStubInterface, args 
 		} 
 		return nil, nil
 	}
-	//fmt.Print("dealAsBytes in update Deal")
-	//fmt.Println(dealAsBytes);
+	fmt.Print("dealAsBytes in update Deal")
+	fmt.Println(dealAsBytes);
 	res := Transaction{}
 	json.Unmarshal(dealAsBytes, &res)
 	if res.TransactionId == _transactionId{
@@ -708,6 +709,7 @@ func (t *ManageDeals) update_transaction(stub shim.ChaincodeStubInterface, args 
 		`"allocationStatus": "` + args[8] + `" , `+
 		`"transactionStatus": "` + args[9] + `" `+
 		`}`
+		fmt.Println("order: "+ order)
 	err = stub.PutState(args[2], []byte(order))									//store Deal with id as key
 	if err != nil {
 		return nil, err
@@ -747,8 +749,8 @@ func (t *ManageDeals) update_transaction_AllocationStatus(stub shim.ChaincodeStu
 		} 
 		return nil, nil
 	}
-	//fmt.Print("dealAsBytes in update Deal")
-	//fmt.Println(dealAsBytes);
+	fmt.Print("dealAsBytes in update Deal")
+	fmt.Println(dealAsBytes);
 	res := Transaction{}
 	json.Unmarshal(dealAsBytes, &res)
 	if res.TransactionId == _transactionId{
@@ -776,6 +778,7 @@ func (t *ManageDeals) update_transaction_AllocationStatus(stub shim.ChaincodeStu
 		`"allocationStatus": "` + args[1] + `" , `+
 		`"transactionStatus": "` + res.TransactionStatus + `" `+
 		`}`
+		fmt.Println("order: "+ order)
 	err = stub.PutState(_transactionId, []byte(order))									//store Deal with id as key
 	if err != nil {
 		return nil, err
@@ -814,9 +817,9 @@ func (t *ManageDeals) create_transaction(stub shim.ChaincodeStubInterface, args 
 	dealAsBytes, err := stub.GetState(_transactionId)	
 	json.Unmarshal(dealAsBytes, &res)
 	if res.TransactionId == _transactionId{
-		//fmt.Println("This Deal arleady exists: " + dealId)
+		//fmt.Println("This Deal already exists: " + dealId)
 		//fmt.Println(res);
-		errMsg := "{ \"message\" : \"This Transaction arleady exists\", \"code\" : \"503\"}"
+		errMsg := "{ \"message\" : \"This Transaction already exists\", \"code\" : \"503\"}"
 		err := stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
@@ -837,9 +840,9 @@ func (t *ManageDeals) create_transaction(stub shim.ChaincodeStubInterface, args 
 		`"allocationStatus": "` + args[8] + `" , `+
 		`"transactionStatus": "` + args[9] + `" `+
 		`}`
-		//fmt.Println("order: " + order)
-		fmt.Print("order in bytes array: ")
-		fmt.Println([]byte(order))
+		fmt.Println("order: " + order)
+		//fmt.Print("order in bytes array: ")
+		//fmt.Println([]byte(order))
 	err = stub.PutState(_transactionId, []byte(order))									//store Deal with dealId as key
 	if err != nil {
 		return nil, err
@@ -848,7 +851,8 @@ func (t *ManageDeals) create_transaction(stub shim.ChaincodeStubInterface, args 
 	//Send DealID & transaction
 	var temp []string
 	temp = append(temp, args[2], args[0])
-
+	fmt.Println("temp: ")
+	fmt.Println(temp)
 	t.addTransaction_inDeal(stub, temp)
 
 	tosend := "{ \"dealId\" : \""+args[2]+"\", \"message\" : \"Deal created succcessfully\", \"code\" : \"200\"}"
