@@ -695,7 +695,7 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 	}
 
 	_AccountNumber := args[0]
-	_tempJson :=Accounts{}
+	_tempJson := Securities{}
 
 	var res = Accounts{}
 	AccountAsBytes, err := stub.GetState(_AccountNumber)
