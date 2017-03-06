@@ -194,8 +194,8 @@ func (t *ManageAccounts) getAccount_byName(stub shim.ChaincodeStubInterface, arg
 			return nil, errors.New(errResp)
 		}
 		json.Unmarshal(valueAsBytes, &_tempJson)
-		//fmt.Print("valueAsBytes : ")
-		//fmt.Println(valueAsBytes)
+		fmt.Print("valueAsBytes : ")
+		fmt.Println(valueAsBytes)
 		if _tempJson.AccountName == _AccountName {
 			jsonResp = jsonResp + "\""+ val + "\":" + string(valueAsBytes[:])
 			if i < len(AccountIndex)-1 {
@@ -203,12 +203,12 @@ func (t *ManageAccounts) getAccount_byName(stub shim.ChaincodeStubInterface, arg
 			}
 		}
 	}
-	//fmt.Println("len(AccountIndex) : ")
-	//fmt.Println(len(AccountIndex))
+	fmt.Println("len(AccountIndex) : ")
+	fmt.Println(len(AccountIndex))
 	jsonResp = jsonResp + "}"
 	fmt.Println("jsonResp : " + jsonResp)
-	//fmt.Print("jsonResp in bytes : ")
-	//fmt.Println([]byte(jsonResp))
+	fmt.Print("jsonResp in bytes : ")
+	fmt.Println([]byte(jsonResp))
 	fmt.Println("end getAccount_byName")
 	return []byte(jsonResp), nil
 											//send it onward
@@ -237,11 +237,11 @@ func (t *ManageAccounts) getAccount_byType(stub shim.ChaincodeStubInterface, arg
 	if err != nil {
 		return nil, errors.New("Failed to get Account index")
 	}
-	//fmt.Print("AccountAsBytes : ")
-	//fmt.Println(AccountAsBytes)
+	fmt.Print("AccountAsBytes : ")
+	fmt.Println(AccountAsBytes)
 	json.Unmarshal(AccountAsBytes, &AccountIndex)								//un stringify it aka JSON.parse()
-	//fmt.Print("AccountIndex : ")
-	//fmt.Println(AccountIndex)
+	fmt.Print("AccountIndex : ")
+	fmt.Println(AccountIndex)
 	jsonResp = "{"
 	for i,val := range AccountIndex{
 		fmt.Println(strconv.Itoa(i) + " - looking at " + val + " for all Account")
@@ -251,8 +251,8 @@ func (t *ManageAccounts) getAccount_byType(stub shim.ChaincodeStubInterface, arg
 			return nil, errors.New(errResp)
 		}
 		json.Unmarshal(valueAsBytes, &_tempJson)
-		//fmt.Print("valueAsBytes : ")
-		//fmt.Println(valueAsBytes)
+		fmt.Print("valueAsBytes : ")
+		fmt.Println(valueAsBytes)
 		if _tempJson.AccountType == _AccountType {
 			jsonResp = jsonResp + "\""+ val + "\":" + string(valueAsBytes[:])
 			if i < len(AccountIndex)-1 {
@@ -260,12 +260,12 @@ func (t *ManageAccounts) getAccount_byType(stub shim.ChaincodeStubInterface, arg
 			}
 		}
 	}
-	//fmt.Println("len(AccountIndex) : ")
-	//fmt.Println(len(AccountIndex))
+	fmt.Println("len(AccountIndex) : ")
+	fmt.Println(len(AccountIndex))
 	jsonResp = jsonResp + "}"
 	fmt.Println("jsonResp : " + jsonResp)
-	//fmt.Print("jsonResp in bytes : ")
-	//fmt.Println([]byte(jsonResp))
+	fmt.Print("jsonResp in bytes : ")
+	fmt.Println([]byte(jsonResp))
 	fmt.Println("end getAccount_byType")
 	return []byte(jsonResp), nil
 											//send it onward
@@ -297,15 +297,15 @@ func (t *ManageAccounts) getAccount_byNumber(stub shim.ChaincodeStubInterface, a
 		return nil, errors.New(errResp)
 	}
 	json.Unmarshal(valueAsBytes, &_tempJson)
-	//fmt.Print("valueAsBytes : ")
-	//fmt.Println(valueAsBytes)
+	fmt.Print("valueAsBytes : ")
+	fmt.Println(valueAsBytes)
 	if _tempJson.AccountNumber == _AccountNumber {
 		jsonResp = jsonResp + "\""+ _AccountNumber + "\":" + string(valueAsBytes[:])
 	}
 	jsonResp = jsonResp + "}"
 	fmt.Println("jsonResp : " + jsonResp)
-	//fmt.Print("jsonResp in bytes : ")
-	//fmt.Println([]byte(jsonResp))
+	fmt.Print("jsonResp in bytes : ")
+	fmt.Println([]byte(jsonResp))
 	fmt.Println("end getAccount_byNumber")
 	return []byte(jsonResp), nil
 											//send it onward
@@ -330,8 +330,8 @@ func (t *ManageAccounts) get_AllAccount(stub shim.ChaincodeStubInterface, args [
 	if err != nil {
 		return nil, errors.New("Failed to get Account index")
 	}
-	//fmt.Print("AccountAsBytes : ")
-	//fmt.Println(AccountAsBytes)
+	fmt.Print("AccountAsBytes : ")
+	fmt.Println(AccountAsBytes)
 	json.Unmarshal(AccountAsBytes, &AccountIndex)								//un stringify it aka JSON.parse()
 	fmt.Print("AccountIndex : ")
 	fmt.Println(AccountIndex)
@@ -350,12 +350,12 @@ func (t *ManageAccounts) get_AllAccount(stub shim.ChaincodeStubInterface, args [
 			jsonResp = jsonResp + ","
 		}
 	}
-	//fmt.Println("len(AccountIndex) : ")
-	//fmt.Println(len(AccountIndex))
+	fmt.Println("len(AccountIndex) : ")
+	fmt.Println(len(AccountIndex))
 	jsonResp = jsonResp + "}"
 	fmt.Println("jsonResp : " + jsonResp)
-	//fmt.Print("jsonResp in bytes : ")
-	//fmt.Println([]byte(jsonResp))
+	fmt.Print("jsonResp in bytes : ")
+	fmt.Println([]byte(jsonResp))
 	fmt.Println("end get_AllAccount")
 	return []byte(jsonResp), nil
 											//send it onward
@@ -391,7 +391,7 @@ func (t *ManageAccounts) update_Account(stub shim.ChaincodeStubInterface, args [
 	json.Unmarshal(AccountAsBytes, &res)
 	if res.AccountNumber == accountNumber{
 		fmt.Println("Account found with AccountNumber : " + accountNumber)
-		//fmt.Println(res);
+		fmt.Println(res);
 		res.AccountID				=args[0]
 		res.AccountName				=args[1]
 		res.AccountNumber			=args[2]
@@ -419,7 +419,7 @@ func (t *ManageAccounts) update_Account(stub shim.ChaincodeStubInterface, args [
 		`"currency": "` + res.Currency + `" ,`+
 		`"securities": "` + res.Securities + `" `+
 		`}`
-	err = stub.PutState(res.AccountNumber, []byte(order))									//store Account with id as key
+	err = stub.PutState(res.AccountName, []byte(order))									//store Account with id as key
 	if err != nil {
 		return nil, err
 	}
@@ -460,15 +460,15 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 		if err != nil {
 			return nil, errors.New("Failed to get Account " + accountNumber)
 		}
-	//fmt.Print("AccountAsBytes: ")
-	//fmt.Println(AccountAsBytes)
+	fmt.Print("AccountAsBytes: ")
+	fmt.Println(AccountAsBytes)
 	res := Accounts{}
 	json.Unmarshal(AccountAsBytes, &res)
-	//fmt.Print("res: ")
-	//fmt.Println(res)
+	fmt.Print("res: ")
+	fmt.Println(res)
 	if res.AccountID == accountId{
-		//fmt.Println("This Account arleady exists: " + AccountId)
-		//fmt.Println(res);
+		fmt.Println("This Account already exists: " + accountId)
+		fmt.Println(res);
 		errMsg := "{ \"message\" : \"This Account already exists\", \"code\" : \"503\"}"
 		err := stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
@@ -488,8 +488,8 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 		`"securities": "` + securities + `" `+
 		`}`
 		fmt.Println("order: " + order)
-		//fmt.Print("order in bytes array: ")
-		//fmt.Println([]byte(order))
+		fmt.Print("order in bytes array: ")
+		fmt.Println([]byte(order))
 	err = stub.PutState(accountNumber, []byte(order))									//store Account with AccountId as key
 	if err != nil {
 		return nil, err
@@ -504,20 +504,20 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 	fmt.Println(AccountIndexAsBytes)
 	
 	json.Unmarshal(AccountIndexAsBytes, &AccountIndex)							//un stringify it aka JSON.parse()
-	//fmt.Print("AccountIndex after unmarshal..before append: ")
-	//fmt.Println(AccountIndex)
+	fmt.Print("AccountIndex after unmarshal..before append: ")
+	fmt.Println(AccountIndex)
 	//append
 	AccountIndex = append(AccountIndex, accountNumber)									//add Account AccountId to index list
-	//fmt.Println("! Account index after appending AccountId: ", AccountIndex)
+	fmt.Println("! Account index after appending AccountId: ", AccountIndex)
 	jsonAsBytes, _ := json.Marshal(AccountIndex)
+	fmt.Print("jsonAsBytes: ")
+	fmt.Println(jsonAsBytes)
 	err = stub.PutState(AccountIndexStr, jsonAsBytes)						//store name of Account
 	if err != nil {
 		return nil, err
 	}
-	fmt.Print("AccountIndexStr: ")
-	fmt.Println(AccountIndexStr)
 
-	tosend := "{ \"accountNumber\" : \""+accountNumber+"\", \"message\" : \"Account created succcessfully\", \"code\" : \"200\"}"
+	tosend := "{ \"AccountId\" : \""+accountId+"\", \"message\" : \"Account created succcessfully\", \"code\" : \"200\"}"
 	err = stub.SetEvent("evtsender", []byte(tosend))
 	if err != nil {
 		return nil, err
@@ -577,7 +577,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		`"mtm": "` + args[8] + `" ,`+
 		`"effectivePercentage": "` + args[9] + `" `+
 		`}`
-		//fmt.Println("order: " + order)
+		fmt.Println("order: " + order)
 		fmt.Print("order in bytes array: ")
 		fmt.Println([]byte(order))
 	err = stub.PutState(_securityId, []byte(order))									//store Account with AccountId as key
@@ -590,7 +590,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 	json.Unmarshal(AccountAsBytes, &res2)
 	if res2.AccountNumber == _accountNumber{
 		fmt.Println("Account found with AccountNumber : " + _accountNumber)
-		//fmt.Println(res2);
+		fmt.Println(res2);
 
 	}else{
 		errMsg := "{ \"message\" : \""+ _accountNumber+ " Not Found.\", \"code\" : \"503\"}"
@@ -662,7 +662,7 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 		`"currency": "` + res.Currency + `" ,`+
 		`"securities": `+ "" +`" `+
 		`}`
-		//fmt.Println("order: " + order)
+		fmt.Println("order: " + order)
 		fmt.Print("order in bytes array: ")
 		fmt.Println([]byte(order))
 	err = stub.PutState(_accountNumber, []byte(order))									//store Account with _accountNumber as key
@@ -686,7 +686,7 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 	fmt.Println("start getSecurities_byAccount")
 	var err error
 	if len(args) != 1 {
-		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting \"AccountNumber \" as an argument\", \"code\" : \"503\"}"
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting \"AccountNumber\" as an argument\", \"code\" : \"503\"}"
 		err = stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
@@ -695,7 +695,7 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 	}
 
 	_AccountNumber := args[0]
-	_tempJson := Securities{}
+	_tempJson :=Accounts{}
 
 	var res = Accounts{}
 	AccountAsBytes, err := stub.GetState(_AccountNumber)
@@ -714,8 +714,8 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 			return nil, errors.New(errResp)
 		}
 		json.Unmarshal(valueAsBytes, &_tempJson)
-		//fmt.Print("valueAsBytes : ")
-		//fmt.Println(valueAsBytes)
+		fmt.Print("valueAsBytes : ")
+		fmt.Println(valueAsBytes)
 		if _tempJson.AccountType == _AccountNumber {
 			jsonResp = jsonResp + "\""+ val + "\":" + string(valueAsBytes[:])
 			if i < len(_SecuritySplit)-1 {
