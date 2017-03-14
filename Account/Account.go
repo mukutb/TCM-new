@@ -55,7 +55,7 @@ type Securities struct{
 	Totalvalue string `json:"totalvalue"`
 	ValuePercentage string `json:"valuePercentage"`
 	MTM string `json:"mtm"`
-	EffectivePercentage string `json:"effectivePercentage"`
+	EffectiveValue string `json:"effectiveValue"`
 	EffectiveValueinUSD string `json:"effectiveValueinUSD"`
 }
 // ============================================================================================================================
@@ -575,7 +575,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		`"totalvalue": "` + args[6] + `" ,`+
 		`"valuePercentage": "` + args[7] + `" ,`+
 		`"mtm": "` + args[8] + `" ,`+
-		`"effectivePercentage": "` + args[9] + `" `+
+		`"effectiveValue": "` + args[9] + `" `+
 		`}`
 		fmt.Println("order: " + order)
 		fmt.Print("order in bytes array: ")
@@ -695,7 +695,7 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 	}
 
 	_AccountNumber := args[0]
-	_tempJson :=Accounts{}
+	_tempJson :=Securities{}
 
 	var res = Accounts{}
 	AccountAsBytes, err := stub.GetState(_AccountNumber)
@@ -703,21 +703,24 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 		return nil, errors.New("Failed to get Account index")
 	}
 	json.Unmarshal(AccountAsBytes, &res)
+	fmt.Print("account details: ");
+	fmt.Println(res)
 	_SecuritySplit := strings.Split(res.Securities, ",")
-
+	fmt.Print("_SecuritySplit: " )
+	fmt.Println(_SecuritySplit)
 	jsonResp = "{"
-	for i,val := range _SecuritySplit{
-		fmt.Println(strconv.Itoa(i) + " - looking at " + val + " for all Account")
-		valueAsBytes, err := stub.GetState(val)
+	for i := range _SecuritySplit{
+		fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
+		valueAsBytes, err := stub.GetState(_SecuritySplit[i])
 		if err != nil {
-			errResp = "{\"Error\":\"Failed to get state for " + val + "\"}"
+			errResp = "{\"Error\":\"Failed to get state for " + _SecuritySplit[i] + "\"}"
 			return nil, errors.New(errResp)
 		}
 		json.Unmarshal(valueAsBytes, &_tempJson)
 		fmt.Print("valueAsBytes : ")
 		fmt.Println(valueAsBytes)
-		if _tempJson.AccountType == _AccountNumber {
-			jsonResp = jsonResp + "\""+ val + "\":" + string(valueAsBytes[:])
+		if _tempJson.AccountNumber == _AccountNumber {
+			jsonResp = jsonResp + "\""+ _SecuritySplit[i] + "\":" + string(valueAsBytes[:])
 			if i < len(_SecuritySplit)-1 {
 				jsonResp = jsonResp + ","
 			}
