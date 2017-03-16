@@ -589,9 +589,13 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		return nil, err
 	}
 
+	AccountAsBytes, err := stub.GetState(res.AccountNumber)
+		if err != nil {
+			return nil, errors.New("Failed to get Security " + res.AccountNumber)
+		}
 	//Adding Security to the account
 	res2 := Accounts{}
-	json.Unmarshal(SecurityAsBytes, &res2)
+	json.Unmarshal(AccountAsBytes, &res2)
 	if res2.AccountNumber == _accountNumber{
 		fmt.Println("Account found with AccountNumber : " + _accountNumber)
 		fmt.Println(res2);
