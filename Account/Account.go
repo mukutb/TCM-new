@@ -566,17 +566,17 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		} 
 		return nil, nil				//all stop a Account by this name exists
 	}
-	_mtm,err := strconv.Atoi(mtm)
+	_mtm,err := strconv.ParseFloat(mtm,64)
 	if err != nil {
-		return nil, errors.New("Error while converting string 'mtm' to int ")
+		return nil, errors.New("Error while converting string 'mtm' to float ")
 	}
-	_valuePercentage,err := strconv.Atoi(valuePercentage)
+	_valuePercentage,err := strconv.ParseFloat(valuePercentage,64)
 	if err != nil {
-		return nil, errors.New("Error while converting string 'valuePercentage' to int ")
+		return nil, errors.New("Error while converting string 'valuePercentage' to float ")
 	}
-	_securityQuantity,err := strconv.Atoi(securityQuantity)
+	_securityQuantity,err := strconv.ParseFloat(securityQuantity,64)
 	if err != nil {
-		return nil, errors.New("Error while converting string 'securityQuantity' to int ")
+		return nil, errors.New("Error while converting string 'securityQuantity' to float ")
 	}
 	_effectiveValue := _mtm * _valuePercentage;
 	_totalValue := _effectiveValue * _securityQuantity;
@@ -588,10 +588,10 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		`"securityQuantity": "` + securityQuantity + `" ,`+
 		`"securityType": "` + _securityType + `" ,`+
 		`"collateralForm": "` + _collateralForm + `" ,`+
-		`"totalvalue": "` + strconv.Itoa(_totalValue) + `" ,`+
+		`"totalvalue": "` + strconv.FormatFloat(float64(_totalValue), 'f', 2, 32)+ `" ,`+
 		`"valuePercentage": "` + valuePercentage + `" ,`+
 		`"mtm": "` + mtm + `" ,`+
-		`"effectiveValue": "` + strconv.Itoa(_effectiveValue) + `" `+
+		`"effectiveValue": "` + strconv.FormatFloat(float64(_effectiveValue), 'f', 2, 32) + `" `+
 		`}`
 	fmt.Println("order: " + order)
 	err = stub.PutState(_securityId, []byte(order))									//store Account with AccountId as key
