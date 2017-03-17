@@ -630,9 +630,11 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		} 
 		return nil, nil
 	}
-
-	res2.Securities = res2.Securities+ "," + _securityId;
-	
+	if res2.Securities == " " {
+		res2.Securities = _securityId;
+	}else {
+		res2.Securities = res2.Securities+ "," + _securityId;
+	}
 	order2 := 	`{`+
 		`"accountId": "` + res2.AccountID + `" ,`+
 		`"accountName": "` + res2.AccountName + `" ,`+
