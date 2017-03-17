@@ -578,7 +578,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 	if err != nil {
 		return nil, errors.New("Error while converting string 'securityQuantity' to float ")
 	}
-	_effectiveValue := _mtm * _valuePercentage;
+	_effectiveValue := _mtm * (_valuePercentage/100);
 	_totalValue := _effectiveValue * _securityQuantity;
 	//build the Account json string manually
 	order := 	`{`+
