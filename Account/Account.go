@@ -460,24 +460,24 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 	securities				:=args[7]
 	
 	AccountAsBytes, err := stub.GetState(accountNumber)
-		if err != nil {
-			return nil, errors.New("Failed to get Account " + accountNumber)
-		}
+	if err != nil {
+		return nil, errors.New("Failed to get Account " + accountNumber)
+	}
 	fmt.Print("AccountAsBytes: ")
 	fmt.Println(AccountAsBytes)
 	res := Accounts{}
 	json.Unmarshal(AccountAsBytes, &res)
 	fmt.Print("res: ")
 	fmt.Println(res)
-	if res.AccountID == accountId{
-		fmt.Println("This Account already exists: " + accountId)
+	if res.AccountNumber == accountNumber{
+		fmt.Println("This Account already exists: " + accountNumber)
 		fmt.Println(res);
-		errMsg := "{ \"message\" : \"This Account already exists\", \"code\" : \"503\"}"
+		errMsg := "{ \"AccountNumber\" : \""+accountNumber+"\", \"message\" : \"This account already exists\", \"code\" : \"503\"}"
 		err := stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
 		} 
-	return nil, nil				//all stop a Account by this name exists
+		return nil, nil				//all stop a Account by this name exists
 	}
 	
 	//build the Account json string manually
@@ -491,9 +491,7 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 		`"pledger": "` + pledger + `" ,`+
 		`"securities": "` + securities + `" `+
 		`}`
-		fmt.Println("order: " + order)
-		fmt.Print("order in bytes array: ")
-		fmt.Println([]byte(order))
+	fmt.Println("order: " + order)
 	err = stub.PutState(accountNumber, []byte(order))									//store Account with AccountId as key
 	if err != nil {
 		return nil, err
@@ -512,7 +510,7 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 	fmt.Println(AccountIndex)
 	//append
 	AccountIndex = append(AccountIndex, accountNumber)									//add Account AccountId to index list
-	fmt.Println("! Account index after appending AccountId: ", AccountIndex)
+	fmt.Println("! Account index after appending accountNumber: ", AccountIndex)
 	jsonAsBytes, _ := json.Marshal(AccountIndex)
 	fmt.Print("jsonAsBytes: ")
 	fmt.Println(jsonAsBytes)
@@ -521,7 +519,7 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 		return nil, err
 	}
 
-	tosend := "{ \"AccountId\" : \""+accountId+"\", \"message\" : \"Account created succcessfully\", \"code\" : \"200\"}"
+	tosend := "{ \"AccountNumber\" : \""+accountNumber+"\", \"message\" : \"Account created succcessfully\", \"code\" : \"200\"}"
 	err = stub.SetEvent("evtsender", []byte(tosend))
 	if err != nil {
 		return nil, err
@@ -535,8 +533,8 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 // ============================================================================================================================
 func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
-	if len(args) != 10 {
-		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 10\", \"code\" : \"503\"}"
+	if len(args) != 8 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 8\", \"code\" : \"503\"}"
 		err = stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
@@ -544,13 +542,15 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		return nil, nil
 	}
 	fmt.Println("start add_security")
-	/*if len(args[0]) <= 0 {
-		return nil, errors.New("1st argument must be a non-empty string")
-	}
-	*/
-
+	
 	_securityId				:= args[0]
-	_accountNumber 				:= args[1]
+	_accountNumber 			:= args[1]
+	_securityName			:= args[2]
+	securityQuantity		:= args[3]
+	_securityType			:= args[4]
+	_collateralForm			:= args[5]
+	valuePercentage		:= args[6]
+	mtm					:= args[7]
 		
 	SecurityAsBytes, err := stub.GetState(_securityId)
 		if err != nil {
@@ -559,47 +559,69 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 	res := Securities{}
 	json.Unmarshal(SecurityAsBytes, &res)
 	if res.SecurityId == _securityId{
-		errMsg := "{ \"message\" : \"This Security already exists\", \"code\" : \"503\"}"
+		errMsg := "{ \"SecurityId\" : \""+_securityId+"\",\"message\" : \"This Security already exists\", \"code\" : \"503\"}"
 		err := stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
 		} 
 		return nil, nil				//all stop a Account by this name exists
 	}
-	
+	_mtm,err := strconv.Atoi(mtm)
+	if err != nil {
+		return nil, errors.New("Error while converting string 'mtm' to int ")
+	}
+	_valuePercentage,err := strconv.Atoi(valuePercentage)
+	if err != nil {
+		return nil, errors.New("Error while converting string 'valuePercentage' to int ")
+	}
+	_securityQuantity,err := strconv.Atoi(securityQuantity)
+	if err != nil {
+		return nil, errors.New("Error while converting string 'securityQuantity' to int ")
+	}
+	_effectiveValue := _mtm * _valuePercentage;
+	_totalValue := _effectiveValue * _securityQuantity;
 	//build the Account json string manually
 	order := 	`{`+
-
-		`"securityId": "` + args[0] + `" ,`+
-		`"accountNumber": "` + args[1] + `" ,`+
-		`"securityName": "` + args[2] + `" ,`+
-		`"securityQuantity": "` + args[3] + `" ,`+
-		`"securityType": "` + args[4] + `" ,`+
-		`"collateralForm": "` + args[5] + `" ,`+
-		`"totalvalue": "` + args[6] + `" ,`+
-		`"valuePercentage": "` + args[7] + `" ,`+
-		`"mtm": "` + args[8] + `" ,`+
-		`"effectiveValue": "` + args[9] + `" `+
+		`"securityId": "` + _securityId + `" ,`+
+		`"accountNumber": "` + _accountNumber + `" ,`+
+		`"securityName": "` + _securityName + `" ,`+
+		`"securityQuantity": "` + securityQuantity + `" ,`+
+		`"securityType": "` + _securityType + `" ,`+
+		`"collateralForm": "` + _collateralForm + `" ,`+
+		`"totalvalue": "` + strconv.Itoa(_totalValue) + `" ,`+
+		`"valuePercentage": "` + valuePercentage + `" ,`+
+		`"mtm": "` + mtm + `" ,`+
+		`"effectiveValue": "` + strconv.Itoa(_effectiveValue) + `" `+
 		`}`
-		fmt.Println("order: " + order)
-		fmt.Print("order in bytes array: ")
-		fmt.Println([]byte(order))
+	fmt.Println("order: " + order)
 	err = stub.PutState(_securityId, []byte(order))									//store Account with AccountId as key
 	if err != nil {
 		return nil, err
 	}
-
-	AccountAsBytes, err := stub.GetState(res.AccountNumber)
-		if err != nil {
-			return nil, errors.New("Failed to get Security " + res.AccountNumber)
-		}
+	AccountAsBytes, err := stub.GetState(_accountNumber)
+	if err != nil {
+		return nil, errors.New("Failed to get account " + _accountNumber)
+	}
 	//Adding Security to the account
 	res2 := Accounts{}
 	json.Unmarshal(AccountAsBytes, &res2)
+	fmt.Println(res2);
 	if res2.AccountNumber == _accountNumber{
 		fmt.Println("Account found with AccountNumber : " + _accountNumber)
-		fmt.Println(res2);
-
+		_SecuritySplit := strings.Split(res2.Securities, ",")
+		fmt.Print("_SecuritySplit: " )
+		fmt.Println(_SecuritySplit)
+		for i := range _SecuritySplit{
+			fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
+			if _SecuritySplit[i] == _securityId {
+				errMsg := "{ \"SecurityId\" : \""+_securityId+"\",\"message\" : \" SecurityId already exists in the account.\", \"code\" : \"503\"}"
+				err = stub.SetEvent("errEvent", []byte(errMsg))
+				if err != nil {
+					return nil, err
+				} 
+				return nil, nil
+			}
+		}
 	}else{
 		errMsg := "{ \"message\" : \""+ _accountNumber+ " Not Found.\", \"code\" : \"503\"}"
 		err = stub.SetEvent("errEvent", []byte(errMsg))
@@ -609,7 +631,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		return nil, nil
 	}
 
-	res2.Securities = res2.Securities+ "," + _securityId
+	res2.Securities = res2.Securities+ "," + _securityId;
 	
 	order2 := 	`{`+
 		`"accountId": "` + res2.AccountID + `" ,`+
@@ -621,11 +643,11 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		`"pledger": "` + res2.Pledger + `" ,`+
 		`"securities": "` + res2.Securities + `" `+
 		`}`
+	fmt.Println("order2: " + order2)
 	err = stub.PutState(res2.AccountNumber, []byte(order2))									//store Account with id as key
 	if err != nil {
 		return nil, err
 	}
-
 	tosend := "{ \"SecurityId\" : \""+_securityId+"\", \"message\" : \"Security updated succcesfully\", \"code\" : \"200\"}"
 	err = stub.SetEvent("evtsender", []byte(tosend))
 	if err != nil {
@@ -650,16 +672,14 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 	}
 	fmt.Println("start remove_securitiesFromAccount")
 
-	_accountNumber				:=args[0]
-	
+	_accountNumber	:=args[0]
 		
 	AccountAsBytes, err := stub.GetState(_accountNumber)
-		if err != nil {
-			return nil, errors.New("Failed to get Account " + _accountNumber)
-		}
+	if err != nil {
+		return nil, errors.New("Failed to get Account " + _accountNumber)
+	}
 	res := Accounts{}
 	json.Unmarshal(AccountAsBytes, &res)
-
 	
 	//build the Account json string manually
 	order := 	`{`+
@@ -671,9 +691,7 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 		`"currency": "` + res.Currency + `" ,`+
 		`"securities": `+ "" +`" `+
 		`}`
-		fmt.Println("order: " + order)
-		fmt.Print("order in bytes array: ")
-		fmt.Println([]byte(order))
+	fmt.Println("order: " + order)
 	err = stub.PutState(_accountNumber, []byte(order))									//store Account with _accountNumber as key
 	if err != nil {
 		return nil, err
@@ -683,7 +701,6 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 	if err != nil {
 		return nil, err
 	}
-
 	fmt.Println("end remove_securitiesFromAccount")
 	return nil, nil
 }
@@ -736,6 +753,8 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 		}
 	}
 	jsonResp = jsonResp + "}"
+	fmt.Print("jsonResp: ")
+	fmt.Println(jsonResp)
 	fmt.Println("end getSecurities_byAccount")
 	return []byte(jsonResp), nil
 }
