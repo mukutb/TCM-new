@@ -595,7 +595,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		`"valuePercentage": "` + valuePercentage + `" ,`+
 		`"mtm": "` + mtm + `" ,`+
 		`"effectiveValue": "` + strconv.FormatFloat(float64(_effectiveValue), 'f', 2, 64) + `" `+
-		`"currency": "` + mtm + `" ,`+
+		`"currency": "` + _currency + `" ,`+
 		`}`
 	fmt.Println("order: " + order)
 	err = stub.PutState(_securityId, []byte(order))									//store Account with AccountId as key
