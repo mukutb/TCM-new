@@ -56,7 +56,9 @@ type Securities struct{
 	Totalvalue string `json:"totalvalue"`
 	ValuePercentage string `json:"valuePercentage"`
 	MTM string `json:"mtm"`
-	EffectiveValue string `json:"effectiveValue"`
+	EffectivePercentage string `json:"effectivePercentage"`
+	EffectiveValueinUSD string `json:"effectiveValueinUSD"`
+	Currency string `json:"currency"`
 }
 // ============================================================================================================================
 // Main - start the chaincode for Account management
@@ -533,8 +535,8 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 // ============================================================================================================================
 func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
-	if len(args) != 8 {
-		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 8\", \"code\" : \"503\"}"
+	if len(args) !=  9{
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 9\", \"code\" : \"503\"}"
 		err = stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
@@ -551,6 +553,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 	_collateralForm			:= args[5]
 	valuePercentage		:= args[6]
 	mtm					:= args[7]
+	_currency			:= args[8]
 		
 	SecurityAsBytes, err := stub.GetState(_securityId)
 		if err != nil {
@@ -592,6 +595,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		`"valuePercentage": "` + valuePercentage + `" ,`+
 		`"mtm": "` + mtm + `" ,`+
 		`"effectiveValue": "` + strconv.FormatFloat(float64(_effectiveValue), 'f', 2, 64) + `" `+
+		`"currency": "` + mtm + `" ,`+
 		`}`
 	fmt.Println("order: " + order)
 	err = stub.PutState(_securityId, []byte(order))									//store Account with AccountId as key
