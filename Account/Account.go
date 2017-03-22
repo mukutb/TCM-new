@@ -535,8 +535,8 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 // ============================================================================================================================
 func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
-	if len(args) !=  9{
-		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 9\", \"code\" : \"503\"}"
+	if len(args) !=  12{
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 12\", \"code\" : \"503\"}"
 		err = stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
@@ -548,12 +548,15 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 	_securityId				:= args[0]
 	_accountNumber 			:= args[1]
 	_securityName			:= args[2]
-	securityQuantity		:= args[3]
+	_securityQuantity		:= args[3]
 	_securityType			:= args[4]
 	_collateralForm			:= args[5]
-	valuePercentage		:= args[6]
-	mtm					:= args[7]
+	_valuePercentage		:= args[6]
+	_mtm					:= args[7]
 	_currency			:= args[8]
+	_effectivePercentage := args[9]
+	_effectiveValueinUSD 	:= args[10]
+	_totalValue 	:= args[11]
 		
 	SecurityAsBytes, err := stub.GetState(_securityId)
 		if err != nil {
@@ -569,33 +572,21 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		} 
 		return nil, nil				//all stop a Account by this name exists
 	}
-	_mtm,err := strconv.ParseFloat(mtm,64)
-	if err != nil {
-		return nil, errors.New("Error while converting string 'mtm' to float ")
-	}
-	_valuePercentage,err := strconv.ParseFloat(valuePercentage,64)
-	if err != nil {
-		return nil, errors.New("Error while converting string 'valuePercentage' to float ")
-	}
-	_securityQuantity,err := strconv.ParseFloat(securityQuantity,64)
-	if err != nil {
-		return nil, errors.New("Error while converting string 'securityQuantity' to float ")
-	}
-	_effectiveValue := _mtm * (_valuePercentage/100);
-	_totalValue := _effectiveValue * _securityQuantity;
+	
 	//build the Account json string manually
 	order := 	`{`+
 		`"securityId": "` + _securityId + `" ,`+
 		`"accountNumber": "` + _accountNumber + `" ,`+
 		`"securityName": "` + _securityName + `" ,`+
-		`"securityQuantity": "` + securityQuantity + `" ,`+
+		`"securityQuantity": "` + _securityQuantity + `" ,`+
 		`"securityType": "` + _securityType + `" ,`+
 		`"collateralForm": "` + _collateralForm + `" ,`+
-		`"totalvalue": "` + strconv.FormatFloat(float64(_totalValue), 'f', 2, 64)+ `" ,`+
-		`"valuePercentage": "` + valuePercentage + `" ,`+
-		`"mtm": "` + mtm + `" ,`+
-		`"effectiveValue": "` + strconv.FormatFloat(float64(_effectiveValue), 'f', 2, 64) + `" `+
-		`"currency": "` + _currency + `" ,`+
+		`"totalvalue": "` + _totalValue + `" ,`+
+		`"valuePercentage": "` + _valuePercentage + `" ,`+
+		`"mtm": "` + _mtm + `" ,`+
+		`"effectivePercentage": "` + _effectivePercentage + `", `+
+		`"effectiveValueinUSD": "` + _effectiveValueinUSD + `", `+
+		`"currency": "` + _currency + `" `+
 		`}`
 	fmt.Println("order: " + order)
 	err = stub.PutState(_securityId, []byte(order))									//store Account with AccountId as key
