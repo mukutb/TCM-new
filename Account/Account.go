@@ -423,7 +423,7 @@ func (t *ManageAccounts) update_Account(stub shim.ChaincodeStubInterface, args [
 		`"pledger": "` + res.Pledger + `" ,`+
 		`"securities": "` + res.Securities + `" `+
 		`}`
-	err = stub.PutState(res.AccountName, []byte(order))									//store Account with id as key
+	err = stub.PutState(res.AccountNumber, []byte(order))									//store Account with id as key
 	if err != nil {
 		return nil, err
 	}
