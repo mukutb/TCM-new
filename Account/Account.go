@@ -535,8 +535,8 @@ func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args [
 // ============================================================================================================================
 func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
-	if len(args) !=  12{
-		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 12\", \"code\" : \"503\"}"
+	if len(args) !=  7{
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 7\", \"code\" : \"503\"}"
 		err = stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
@@ -551,12 +551,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 	_securityQuantity		:= args[3]
 	_securityType			:= args[4]
 	_collateralForm			:= args[5]
-	_valuePercentage		:= args[6]
-	_mtm					:= args[7]
-	_currency			:= args[8]
-	_effectivePercentage := args[9]
-	_effectiveValueinUSD 	:= args[10]
-	_totalValue 	:= args[11]
+	_currency			    := args[6]
 		
 	SecurityAsBytes, err := stub.GetState(_securityId)
 		if err != nil {
@@ -581,11 +576,6 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		`"securityQuantity": "` + _securityQuantity + `" ,`+
 		`"securityType": "` + _securityType + `" ,`+
 		`"collateralForm": "` + _collateralForm + `" ,`+
-		`"totalvalue": "` + _totalValue + `" ,`+
-		`"valuePercentage": "` + _valuePercentage + `" ,`+
-		`"mtm": "` + _mtm + `" ,`+
-		`"effectivePercentage": "` + _effectivePercentage + `", `+
-		`"effectiveValueinUSD": "` + _effectiveValueinUSD + `", `+
 		`"currency": "` + _currency + `" `+
 		`}`
 	fmt.Println("order: " + order)
