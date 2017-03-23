@@ -263,7 +263,7 @@ func(t * ManageDeals) getDeal_byPledger(stub shim.ChaincodeStubInterface, args[]
             }
         } else {
             fmt.Println("Pledger not found: " + val)
-            jsonResp = jsonResp + "\"message\" : \"" + pledgerName + " Not Found.\", \"code\" : \"503\"}"
+            jsonResp = jsonResp + "\"message\" : \"" + pledgerName + " Not Found.\", \"code\" : \"503\""
             errMsg:= "{ \"message\" : \"" + pledgerName + " Not Found.\", \"code\" : \"503\"}"
             err = stub.SetEvent("errEvent", [] byte(errMsg))
             if err != nil {
@@ -332,7 +332,7 @@ func(t * ManageDeals) getDeal_byPledgee(stub shim.ChaincodeStubInterface, args[]
             }
         } else {
              fmt.Println("Pledger not found: " + val)
-            jsonResp = jsonResp + "\"message\" : \"" + pledgeeName + " Not Found.\", \"code\" : \"503\"}"
+            jsonResp = jsonResp + "\"message\" : \"" + pledgeeName + " Not Found.\", \"code\" : \"503\""
             errMsg:= "{ \"message\" : \"" + pledgeeName + " Not Found.\", \"code\" : \"503\"}"
             err = stub.SetEvent("errEvent", [] byte(errMsg))
             if err != nil {
