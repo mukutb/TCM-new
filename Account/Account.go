@@ -211,8 +211,8 @@ func (t *ManageAccounts) getAccount_byName(stub shim.ChaincodeStubInterface, arg
 	fmt.Println("jsonResp : " + jsonResp)
 	if jsonResp == "{}" {
         fmt.Println("Account not found for  " + _AccountName)
-        jsonResp = jsonResp + "\"message\" : \"Account not found for " + _AccountName + ".\", \"code\" : \"503\"}"
-        errMsg:= "{ \"message\" : \"" + _AccountName + " Not Found.\", \"code\" : \"503\"}"
+        jsonResp =  "{\"AccountName\" : \"" + _AccountName + "\", \"message\" : \"Account not found.\", \"code\" : \"503\"}"
+        errMsg:= "{ \"AccountName\" : \"" + _AccountName + "\", \"message\" : \"Account not found.\", \"code\" : \"503\"}"
         err = stub.SetEvent("errEvent", [] byte(errMsg))
         if err != nil {
         	return nil, err
@@ -275,8 +275,8 @@ func (t *ManageAccounts) getAccount_byType(stub shim.ChaincodeStubInterface, arg
 	fmt.Println("jsonResp : " + jsonResp)
 	if jsonResp == "{}" {
         fmt.Println(_AccountType + " account not found")
-        jsonResp = jsonResp + "\"message\" : \"" + _AccountType + " account not found.\", \"code\" : \"503\"}"
-        errMsg:= "{ \"message\" : \"" + _AccountType + " Not Found.\", \"code\" : \"503\"}"
+        jsonResp = "{ \"AccountType\" : \"" + _AccountType + "\", \"message\" : \"Account not found.\", \"code\" : \"503\"}"
+        errMsg:= "{ \"AccountType\" : \"" + _AccountType + "\", \"message\" : \"Account Not Found.\", \"code\" : \"503\"}"
         err = stub.SetEvent("errEvent", [] byte(errMsg))
         if err != nil {
     	    return nil, err
@@ -319,8 +319,8 @@ func (t *ManageAccounts) getAccount_byNumber(stub shim.ChaincodeStubInterface, a
 		jsonResp = jsonResp + "\""+ _AccountNumber + "\":" + string(valueAsBytes[:])
 	}else{
         fmt.Println(_AccountNumber + " not found")
-        jsonResp = jsonResp + "\"message\" : \"" + _AccountNumber + " not found.\", \"code\" : \"503\""
-        errMsg:= "{ \"message\" : \"" + _AccountNumber + " Not Found.\", \"code\" : \"503\"}"
+        jsonResp = jsonResp + "\"AccountNumber\" : \"" + _AccountNumber + "\",\"message\" : \"" + "Account not found.\", \"code\" : \"503\""
+        errMsg:= "{ \"AccountNumber\" : \"" + _AccountNumber + "\",\"message\" : \"" + "Account Not Found.\", \"code\" : \"503\"}"
         err = stub.SetEvent("errEvent", [] byte(errMsg))
         if err != nil {
             return nil, err
@@ -765,9 +765,9 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 	fmt.Print("jsonResp: ")
 	fmt.Println(jsonResp)
 	if jsonResp == "{}" {
-	    fmt.Println(_AccountNumber + " not found")
-	    jsonResp = jsonResp + "\"message\" : \"" + _AccountNumber + " not found.\", \"code\" : \"503\"}"
-	    errMsg:= "{ \"message\" : \"" + _AccountNumber + " Not Found.\", \"code\" : \"503\"}"
+	    fmt.Println("Securities not found")
+	    jsonResp =  "{ \"AccountNumber\" : \"" + _AccountNumber + "\", \"message\" : \"Securities not found.\", \"code\" : \"503\"}"
+	    errMsg:= "{ \"AccountNumber\" : \"" + _AccountNumber + "\", \"message\" : \"Securities not found.\", \"code\" : \"503\"}"
 	    err = stub.SetEvent("errEvent", [] byte(errMsg))
 	    if err != nil {
 	    	return nil, err
