@@ -812,7 +812,7 @@ func(t * ManageDeals) create_transaction(stub shim.ChaincodeStubInterface, args[
     }
     fmt.Println("start create_transaction")
     _transactionId:= args[0]
-    _transactionStatus:= args[9];
+    _transactionStatus:= args[8];
     res:= Transactions {}
     dealAsBytes, err:= stub.GetState(_transactionId)
     json.Unmarshal(dealAsBytes, & res)
@@ -838,10 +838,10 @@ func(t * ManageDeals) create_transaction(stub shim.ChaincodeStubInterface, args[
         `"pledgee": "` + args[4] + `" , ` + 
         `"rqv": "` + args[5] + `" , ` + 
         `"currency": "` + args[6] + `" , ` + 
-        `"currencyConversionRate": "` + args[7] + `" , ` + 
-        `"marginCAllDate": "` + args[8] + `" , ` + 
+        `"currencyConversionRate": "` + " " + `" , ` + 
+        `"marginCAllDate": "` + args[7] + `" , ` + 
         `"allocationStatus": "` + _allocationStatus + `" , ` + 
-        `"transactionStatus": "` + args[10] + `" ` + 
+        `"transactionStatus": "` + args[8] + `" ` + 
         `}`
     fmt.Println("order: " + order)
     //fmt.Print("order in bytes array: ")
