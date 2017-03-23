@@ -159,7 +159,7 @@ func(t * ManageDeals) Query(stub shim.ChaincodeStubInterface, function string, a
         return t.getDeal_byID(stub, args)
     } else if
     function == "getDeal_byPledger" { //Read a Deal by Pledgee's name
-        return t.getDeal_byPledgee(stub, args)
+        return t.getDeal_byPledger(stub, args)
     } else if
     function == "getDeal_byPledgee" { //Read a Deal by Pledgee's name
         return t.getDeal_byPledgee(stub, args)
@@ -236,8 +236,8 @@ func(t * ManageDeals) getDeal_byPledger(stub shim.ChaincodeStubInterface, args[]
     //fmt.Print("dealAsBytes : ")
     //fmt.Println(dealAsBytes)
     json.Unmarshal(dealAsBytes, & dealIndex) //un stringify it aka JSON.parse()
-    //fmt.Print("dealIndex : ")
-    //fmt.Println(dealIndex)
+    fmt.Print("dealIndex : ")
+    fmt.Println(dealIndex)
     //fmt.Println("len(dealIndex) : ")
     //fmt.Println(len(dealIndex))
     jsonResp = "{"
@@ -251,10 +251,10 @@ func(t * ManageDeals) getDeal_byPledger(stub shim.ChaincodeStubInterface, args[]
         //fmt.Print("valueAsBytes : ")
         //fmt.Println(valueAsBytes)
         json.Unmarshal(valueAsBytes, & valIndex)
-        //fmt.Print("valIndex: ")
-        //fmt.Print(valIndex)
+        fmt.Print("valIndex: ")
+        fmt.Print(valIndex)
         if valIndex.Pledger == pledgerName {
-            fmt.Println("Pledgee found: " + val)
+            fmt.Println("Pledger found: " + val)
             jsonResp = jsonResp + "\"" + val + "\":" + string(valueAsBytes[: ])
             //fmt.Println("jsonResp inside if")
             //fmt.Println(jsonResp)
@@ -271,7 +271,7 @@ func(t * ManageDeals) getDeal_byPledger(stub shim.ChaincodeStubInterface, args[]
         }
     }
     jsonResp = jsonResp + "}"
-    //fmt.Println("jsonResp : " + jsonResp)
+    fmt.Println("jsonResp : " + jsonResp)
     //fmt.Print("jsonResp in bytes : ")
     //fmt.Println([]byte(jsonResp))
     fmt.Println("end getDeal_byPledger")
@@ -304,8 +304,8 @@ func(t * ManageDeals) getDeal_byPledgee(stub shim.ChaincodeStubInterface, args[]
     //fmt.Print("dealAsBytes : ")
     //fmt.Println(dealAsBytes)
     json.Unmarshal(dealAsBytes, & dealIndex) //un stringify it aka JSON.parse()
-    //fmt.Print("dealIndex : ")
-    //fmt.Println(dealIndex)
+    fmt.Print("dealIndex : ")
+    fmt.Println(dealIndex)
     //fmt.Println("len(dealIndex) : ")
     //fmt.Println(len(dealIndex))
     jsonResp = "{"
@@ -319,8 +319,8 @@ func(t * ManageDeals) getDeal_byPledgee(stub shim.ChaincodeStubInterface, args[]
         //fmt.Print("valueAsBytes : ")
         //fmt.Println(valueAsBytes)
         json.Unmarshal(valueAsBytes, & valIndex)
-        //fmt.Print("valIndex: ")
-        //fmt.Print(valIndex)
+        fmt.Print("valIndex: ")
+        fmt.Print(valIndex)
         if valIndex.Pledgee == pledgeeName {
             fmt.Println("Pledgee found")
             jsonResp = jsonResp + "\"" + val + "\":" + string(valueAsBytes[: ])
