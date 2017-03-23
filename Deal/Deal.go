@@ -261,18 +261,19 @@ func(t * ManageDeals) getDeal_byPledger(stub shim.ChaincodeStubInterface, args[]
             if i < len(dealIndex) - 1 {
                 jsonResp = jsonResp + ","
             }
-        } else {
-            fmt.Println("Pledger not found: " + val)
-            jsonResp = jsonResp + "\"message\" : \"" + pledgerName + " Not Found.\", \"code\" : \"503\""
-            errMsg:= "{ \"message\" : \"" + pledgerName + " Not Found.\", \"code\" : \"503\"}"
-            err = stub.SetEvent("errEvent", [] byte(errMsg))
-            if err != nil {
-                return nil, err
-            }
-        }
+        } 
     }
     jsonResp = jsonResp + "}"
     fmt.Println("jsonResp : " + jsonResp)
+    if jsonResp == "{}" {
+        fmt.Println("Pledger not found.")
+        jsonResp =  "{ \"message\" : \"" + pledgerName + " Not Found.\", \"code\" : \"503\"}"
+        errMsg:= "{ \"message\" : \"" + pledgerName + " Not Found.\", \"code\" : \"503\"}"
+        err = stub.SetEvent("errEvent", [] byte(errMsg))
+        if err != nil {
+        return nil, err
+        }
+    }
     //fmt.Print("jsonResp in bytes : ")
     //fmt.Println([]byte(jsonResp))
     fmt.Println("end getDeal_byPledger")
@@ -330,18 +331,19 @@ func(t * ManageDeals) getDeal_byPledgee(stub shim.ChaincodeStubInterface, args[]
             if i < len(dealIndex) - 1 {
                 jsonResp = jsonResp + ","
             }
-        } else {
-             fmt.Println("Pledger not found: " + val)
-            jsonResp = jsonResp + "\"message\" : \"" + pledgeeName + " Not Found.\", \"code\" : \"503\""
-            errMsg:= "{ \"message\" : \"" + pledgeeName + " Not Found.\", \"code\" : \"503\"}"
-            err = stub.SetEvent("errEvent", [] byte(errMsg))
-            if err != nil {
-                return nil, err
-            }
         }
     }
     jsonResp = jsonResp + "}"
     fmt.Println("jsonResp : " + jsonResp)
+    if jsonResp == "{}" {
+        fmt.Println("Pledgee not found.")
+        jsonResp = jsonResp + "\"message\" : \"" + pledgeeName + " Not Found.\", \"code\" : \"503\"}"
+        errMsg:= "{ \"message\" : \"" + pledgeeName + " Not Found.\", \"code\" : \"503\"}"
+        err = stub.SetEvent("errEvent", [] byte(errMsg))
+        if err != nil {
+            return nil, err
+        }
+    }
     //fmt.Print("jsonResp in bytes : ")
     //fmt.Println([]byte(jsonResp))
     fmt.Println("end getDeal_byPledgee")
