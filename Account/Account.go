@@ -816,7 +816,7 @@ func (t *ManageAccounts) update_security(stub shim.ChaincodeStubInterface, args 
 		fmt.Println(res);
 		//build the Account json string manually
 		order := 	`{`+
-			`"SecurityId": "` + res.SecurityId + `" ,`+
+			`"securityId": "` + res.SecurityId + `" ,`+
 			`"accountNumber": "` + res.AccountNumber + `" ,`+
 			`"accountNumber": "` + args[2] + `" ,`+
 			`"securityQuantity": "` + args[3] + `" ,`+
@@ -824,6 +824,7 @@ func (t *ManageAccounts) update_security(stub shim.ChaincodeStubInterface, args 
 			`"collateralForm": "` + args[5] + `" ,`+
 			`"currency": "` + args[6] + `"`+
 			`}`
+		fmt.Println(order);
 		err = stub.PutState(accountNumber + "-" + securityId, []byte(order))									//store security with id as key
 		if err != nil {
 			return nil, err
