@@ -127,8 +127,8 @@ func (t *ManageAccounts) Invoke(stub shim.ChaincodeStubInterface, function strin
 		return t.add_security(stub, args)
 	}else if function == "remove_securitiesFromAccount" {									
 		return t.remove_securitiesFromAccount(stub, args)
-	}else if function == "update_Security" {									
-		return t.update_Security(stub, args)
+	}else if function == "update_security" {									
+		return t.update_security(stub, args)
 	}else if function == "delete_security" {									
 		return t.delete_security(stub, args)
 	}
@@ -782,9 +782,9 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 	return []byte(jsonResp), nil
 }
 // ============================================================================================================================
-// update_Security - update Security into chaincode state
+// update_security - update Security into chaincode state
 // ============================================================================================================================
-func (t *ManageAccounts) update_Security(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *ManageAccounts) update_security(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
 	fmt.Println("Updating Security")
 	if len(args) != 7 {
@@ -814,13 +814,21 @@ func (t *ManageAccounts) update_Security(stub shim.ChaincodeStubInterface, args 
 	if res.SecurityId == securityId{
 		fmt.Println("Security found with SecurityId : " + securityId)
 		fmt.Println(res);
-
-		res.SecurityName			=args[2]
-		res.SecurityQuantity		=args[3]
-		res.SecurityType			=args[4]
-		res.CollateralForm			=args[5]
-		res.Currency				=args[6]
-
+		//build the Account json string manually
+		order := 	`{`+
+			`"SecurityId": "` + res.SecurityId + `" ,`+
+			`"accountNumber": "` + res.AccountNumber + `" ,`+
+			`"accountNumber": "` + args[2] + `" ,`+
+			`"securityQuantity": "` + args[3] + `" ,`+
+			`"securityType": "` + args[4] + `" ,`+
+			`"collateralForm": "` + args[5] + `" ,`+
+			`"currency": "` + args[6] + `"`+
+			`}`
+		err = stub.PutState(accountNumber + "-" + securityId, []byte(order))									//store security with id as key
+		if err != nil {
+			return nil, err
+		}
+		fmt.Println("Security updated succcessfully")
 	}else{
 		errMsg := "{ \"message\" : \""+ securityId+ " Not Found.\", \"code\" : \"503\"}"
 		err = stub.SetEvent("errEvent", []byte(errMsg))
@@ -830,28 +838,12 @@ func (t *ManageAccounts) update_Security(stub shim.ChaincodeStubInterface, args 
 		return nil, nil
 	}
 	
-	//build the Account json string manually
-	order := 	`{`+
-		`"SecurityId": "` + res.SecurityId + `" ,`+
-		`"accountNumber": "` + res.AccountNumber + `" ,`+
-		`"accountNumber": "` + res.SecurityName + `" ,`+
-		`"securityQuantity": "` + res.SecurityQuantity + `" ,`+
-		`"securityType": "` + res.SecurityType + `" ,`+
-		`"collateralForm": "` + res.CollateralForm + `" ,`+
-		`"currency": "` + res.Currency + `"`+
-		`}`
-	err = stub.PutState(accountNumber + "-" + securityId, []byte(order))									//store security with id as key
-	if err != nil {
-		return nil, err
-	}
-
 	tosend := "{ \"Security\" : \"" + accountNumber + "-" + securityId + "\", \"message\" : \"Security updated succcessfully\", \"code\" : \"200\"}"
 	err = stub.SetEvent("evtsender", []byte(tosend))
 	if err != nil {
 		return nil, err
 	} 
 
-	fmt.Println("Security updated succcessfully")
 	return nil, nil
 }
 // ============================================================================================================================
@@ -892,9 +884,12 @@ func (t *ManageAccounts) delete_security(stub shim.ChaincodeStubInterface, args 
 	fmt.Println(_SecuritySplit)
 	for i := range _SecuritySplit{
 		fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
-		if _SecuritySplit[i] == _accountNumber+"-"+_securityId {
+		fmt.Println(_SecuritySplit[i] == (_accountNumber+"-"+_securityId))
+		if _SecuritySplit[i] == (_accountNumber+"-"+_securityId) {
 			fmt.Println("Security Found.");
 			_SecuritySplit = append(_SecuritySplit[:i], _SecuritySplit[i+1:]...)			//remove it
+			fmt.Println(_SecuritySplit[:i])
+			fmt.Println(_SecuritySplit)
 		}
 	}
 	//build the Account json string manually
