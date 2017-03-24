@@ -757,27 +757,16 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 			return nil, errors.New(errResp)
 		}
 		json.Unmarshal(valueAsBytes, &_tempJson)
-		fmt.Print("valueAsBytes : ")
-		fmt.Println(valueAsBytes)
-		if _tempJson.AccountNumber == _AccountNumber {
-			jsonResp = jsonResp + "\""+ _SecuritySplit[i] + "\":" + string(valueAsBytes[:])
-			if i < len(_SecuritySplit)-1 {
-				jsonResp = jsonResp + ","
-			}
+		fmt.Print("_tempJson : ")
+		fmt.Println(_tempJson)
+		jsonResp = jsonResp + "\""+ _SecuritySplit[i] + "\":" + string(valueAsBytes[:])
+		if i < len(_SecuritySplit)-1 {
+			jsonResp = jsonResp + ","
 		}
 	}
 	jsonResp = jsonResp + "}"
 	fmt.Print("jsonResp: ")
 	fmt.Println(jsonResp)
-	if jsonResp == "{}" {
-	    fmt.Println("Securities not found")
-	    jsonResp =  "{ \"AccountNumber\" : \"" + _AccountNumber + "\", \"message\" : \"Securities not found.\", \"code\" : \"503\"}"
-	    errMsg:= "{ \"AccountNumber\" : \"" + _AccountNumber + "\", \"message\" : \"Securities not found.\", \"code\" : \"503\"}"
-	    err = stub.SetEvent("errEvent", [] byte(errMsg))
-	    if err != nil {
-	    	return nil, err
-	    }
-    }
 	fmt.Println("end getSecurities_byAccount")
 	return []byte(jsonResp), nil
 }
