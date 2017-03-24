@@ -851,7 +851,8 @@ func (t *ManageAccounts) delete_security(stub shim.ChaincodeStubInterface, args 
 	// set security
 	_securityId := args[0];
 	_accountNumber := args[1];
-	security := _securityId + "-" + _securityId;
+	security := _accountNumber + "-" + _securityId;
+	fmt.Println(security);
 	err := stub.DelState(security)													//remove the key from chaincode state
 	if err != nil {
 		errMsg := "{ \"security\" : \"" + security + "\", \"message\" : \"Failed to delete state\", \"code\" : \"503\"}"
@@ -880,8 +881,13 @@ func (t *ManageAccounts) delete_security(stub shim.ChaincodeStubInterface, args 
 			_SecuritySplit = append(_SecuritySplit[:i], _SecuritySplit[i+1:]...)			//remove it
 			fmt.Println(_SecuritySplit[:i])
 			fmt.Println(_SecuritySplit)
+			for x:= range _SecuritySplit{											//debug prints...
+				fmt.Println(string(x) + " - " + _SecuritySplit[x])
+			}
+			break
 		}
 	}
+	fmt.Println(_SecuritySplit);
 	//build the Account json string manually
 	order := 	`{`+
 		`"accountId": "` + valIndex.AccountID + `" ,`+
@@ -892,6 +898,7 @@ func (t *ManageAccounts) delete_security(stub shim.ChaincodeStubInterface, args 
 		`"currency": "` + valIndex.Currency + `" ,`+
 		`"securities": `+ valIndex.Securities +`" `+
 		`}`
+		
 	fmt.Println("order: " + order)
 	err = stub.PutState(_accountNumber, []byte(order))									//store Account with _accountNumber as key
 	if err != nil {
