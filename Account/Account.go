@@ -49,8 +49,8 @@ type Accounts struct{
 type Securities struct{
 	SecurityId string `json:"securityId"`
 	AccountNumber string `json:"accountNumber"`
-	SecuritiesName string `json:"securityName"`
-	SecuritiesQuantity string `json:"securityQuantity"`
+	SecurityName string `json:"securityName"`
+	SecurityQuantity string `json:"securityQuantity"`
 	SecurityType string `json:"securityType"`
 	CollateralForm string `json:"collateralForm"`
 	Totalvalue string `json:"totalvalue"`
@@ -127,6 +127,10 @@ func (t *ManageAccounts) Invoke(stub shim.ChaincodeStubInterface, function strin
 		return t.add_security(stub, args)
 	}else if function == "remove_securitiesFromAccount" {									
 		return t.remove_securitiesFromAccount(stub, args)
+	}else if function == "update_Security" {									
+		return t.update_Security(stub, args)
+	}else if function == "delete_security" {									
+		return t.delete_security(stub, args)
 	}
 	fmt.Println("invoke did not find func: " + function)
 	errMsg := "{ \"message\" : \"Received unknown function invocation\", \"code\" : \"503\"}"
@@ -574,10 +578,11 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 	_securityType			:= args[4]
 	_collateralForm			:= args[5]
 	_currency			    := args[6]
-		
-	SecurityAsBytes, err := stub.GetState(_securityId)
+	
+
+	SecurityAsBytes, err := stub.GetState(_accountNumber+"-"+_securityId)
 		if err != nil {
-			return nil, errors.New("Failed to get Security " + _securityId)
+			return nil, errors.New("Failed to get Security " + _accountNumber+"-"+_securityId)
 		}
 	res := Securities{}
 	json.Unmarshal(SecurityAsBytes, &res)
@@ -601,7 +606,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		`"currency": "` + _currency + `" `+
 		`}`
 	fmt.Println("order: " + order)
-	err = stub.PutState(_securityId, []byte(order))									//store Account with AccountId as key
+	err = stub.PutState(_accountNumber+"-"+_securityId, []byte(order))									//store Account with AccountId as key
 	if err != nil {
 		return nil, err
 	}
@@ -620,8 +625,8 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		fmt.Println(_SecuritySplit)
 		for i := range _SecuritySplit{
 			fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
-			if _SecuritySplit[i] == _securityId {
-				errMsg := "{ \"SecurityId\" : \""+_securityId+"\",\"message\" : \" SecurityId already exists in the account.\", \"code\" : \"503\"}"
+			if _SecuritySplit[i] == _accountNumber+"-"+_securityId {
+				errMsg := "{ \"SecurityId\" : \""+_accountNumber+"-"+_securityId+"\",\"message\" : \" SecurityId already exists in the account.\", \"code\" : \"503\"}"
 				err = stub.SetEvent("errEvent", []byte(errMsg))
 				if err != nil {
 					return nil, err
@@ -638,9 +643,9 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		return nil, nil
 	}
 	if res2.Securities == " " {
-		res2.Securities = _securityId;
+		res2.Securities = _accountNumber+"-"+_securityId;
 	}else {
-		res2.Securities = res2.Securities+ "," + _securityId;
+		res2.Securities = res2.Securities+ "," + _accountNumber+"-"+_securityId;
 	}
 	order2 := 	`{`+
 		`"accountId": "` + res2.AccountID + `" ,`+
@@ -657,7 +662,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 	if err != nil {
 		return nil, err
 	}
-	tosend := "{ \"SecurityId\" : \""+_securityId+"\", \"message\" : \"Security updated succcesfully\", \"code\" : \"200\"}"
+	tosend := "{ \"SecurityId\" : \""+_accountNumber+"-"+_securityId+"\", \"message\" : \"Security updated succcesfully\", \"code\" : \"200\"}"
 	err = stub.SetEvent("evtsender", []byte(tosend))
 	if err != nil {
 		return nil, err
@@ -775,4 +780,142 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
     }
 	fmt.Println("end getSecurities_byAccount")
 	return []byte(jsonResp), nil
+}
+// ============================================================================================================================
+// update_Security - update Security into chaincode state
+// ============================================================================================================================
+func (t *ManageAccounts) update_Security(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var err error
+	fmt.Println("Updating Security")
+	if len(args) != 7 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 7\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+	// set accountNumber
+	securityId := args[0]
+	accountNumber := args[1]
+	securityAsBytes, err := stub.GetState(accountNumber + "-" + securityId)									//get the Security for the specified accountNumber-securityId from chaincode state
+	if err != nil {
+		errMsg := "{ \"message\" : \"Failed to get state for " + accountNumber + "-" + securityId + "\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+	fmt.Print("securityAsBytes in update Security")
+	fmt.Println(securityAsBytes);
+	res := Securities{}
+	json.Unmarshal(securityAsBytes, &res)
+	if res.SecurityId == securityId{
+		fmt.Println("Security found with SecurityId : " + securityId)
+		fmt.Println(res);
+
+		res.SecurityName			=args[2]
+		res.SecurityQuantity		=args[3]
+		res.SecurityType			=args[4]
+		res.CollateralForm			=args[5]
+		res.Currency				=args[6]
+
+	}else{
+		errMsg := "{ \"message\" : \""+ securityId+ " Not Found.\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+	
+	//build the Account json string manually
+	order := 	`{`+
+		`"SecurityId": "` + res.SecurityId + `" ,`+
+		`"accountNumber": "` + res.AccountNumber + `" ,`+
+		`"accountNumber": "` + res.SecurityName + `" ,`+
+		`"securityQuantity": "` + res.SecurityQuantity + `" ,`+
+		`"securityType": "` + res.SecurityType + `" ,`+
+		`"collateralForm": "` + res.CollateralForm + `" ,`+
+		`"currency": "` + res.Currency + `"`+
+		`}`
+	err = stub.PutState(accountNumber + "-" + securityId, []byte(order))									//store security with id as key
+	if err != nil {
+		return nil, err
+	}
+
+	tosend := "{ \"Security\" : \"" + accountNumber + "-" + securityId + "\", \"message\" : \"Security updated succcessfully\", \"code\" : \"200\"}"
+	err = stub.SetEvent("evtsender", []byte(tosend))
+	if err != nil {
+		return nil, err
+	} 
+
+	fmt.Println("Security updated succcessfully")
+	return nil, nil
+}
+// ============================================================================================================================
+// Delete - remove a Security from state and then remove from account
+// ============================================================================================================================
+func (t *ManageAccounts) delete_security(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	if len(args) != 2 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting \"accountNumber,securityId\" arguments.\", \"code\" : \"503\"}"
+		err := stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+	// set security
+	_securityId := args[0];
+	_accountNumber := args[1];
+	security := _securityId + "-" + _securityId;
+	err := stub.DelState(security)													//remove the key from chaincode state
+	if err != nil {
+		errMsg := "{ \"security\" : \"" + security + "\", \"message\" : \"Failed to delete state\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+
+	//get the account Number details
+	accountAsBytes, err := stub.GetState(_accountNumber)
+	if err != nil {
+		return nil, errors.New("Failed to get Account number")
+	}
+	valIndex := Accounts{}
+	json.Unmarshal(accountAsBytes, &valIndex)	
+	_SecuritySplit := strings.Split(valIndex.Securities, ",")
+	fmt.Print("_SecuritySplit: " )
+	fmt.Println(_SecuritySplit)
+	for i := range _SecuritySplit{
+		fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
+		if _SecuritySplit[i] == _accountNumber+"-"+_securityId {
+			fmt.Println("Security Found.");
+			_SecuritySplit = append(_SecuritySplit[:i], _SecuritySplit[i+1:]...)			//remove it
+		}
+	}
+	//build the Account json string manually
+	order := 	`{`+
+		`"accountId": "` + valIndex.AccountID + `" ,`+
+		`"accountName": "` + valIndex.AccountName + `" ,`+
+		`"accountNumber": "` + valIndex.AccountNumber + `" ,`+
+		`"accountType": "` + valIndex.AccountType + `" ,`+
+		`"totalValue": "` + valIndex.TotalValue + `" ,`+
+		`"currency": "` + valIndex.Currency + `" ,`+
+		`"securities": `+ valIndex.Securities +`" `+
+		`}`
+	fmt.Println("order: " + order)
+	err = stub.PutState(_accountNumber, []byte(order))									//store Account with _accountNumber as key
+	if err != nil {
+		return nil, err
+	}
+	tosend := "{ \"security\" : \""+security+"\", \"message\" : \"Security deleted succcessfully\", \"code\" : \"200\"}"
+	err = stub.SetEvent("evtsender", []byte(tosend))
+	if err != nil {
+		return nil, err
+	} 
+	return nil, nil
 }
