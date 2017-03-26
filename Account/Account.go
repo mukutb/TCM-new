@@ -751,7 +751,6 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 	jsonResp = "{"
 	for i := range _SecuritySplit{
 		fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
-		if _SecuritySplit[i] != "" || _SecuritySplit[i] != " "{
 			valueAsBytes, err := stub.GetState(_SecuritySplit[i])
 			if err != nil {
 				errResp = "{\"Error\":\"Failed to get state for " + _SecuritySplit[i] + "\"}"
@@ -764,12 +763,11 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 			if i < len(_SecuritySplit)-1 {
 				jsonResp = jsonResp + ","
 			}
-		}
 	}
 	jsonResp = jsonResp + "}"
 	fmt.Print("jsonResp: ")
 	fmt.Println(jsonResp)
-	if jsonResp == "{}" {
+	if jsonResp == "{"":}" || jsonResp == "{" ":}" {
 		jsonResp = "{ \"AccountNumber\" : \"" + _AccountNumber + "\", \"message\" : \"No securities found.\", \"code\" : \"503\"}"
 	}
 	fmt.Println("end getSecurities_byAccount")
