@@ -891,6 +891,8 @@ func (t *ManageAccounts) delete_security(stub shim.ChaincodeStubInterface, args 
 		}
 	}
 	fmt.Println(_SecuritySplit);
+	valIndex.Securities = strings.Join(_SecuritySplit,",");
+	fmt.Println(_SecuritySplit);
 	//build the Account json string manually
 	order := 	`{`+
 		`"accountId": "` + valIndex.AccountID + `" ,`+
@@ -899,7 +901,7 @@ func (t *ManageAccounts) delete_security(stub shim.ChaincodeStubInterface, args 
 		`"accountType": "` + valIndex.AccountType + `" ,`+
 		`"totalValue": "` + valIndex.TotalValue + `" ,`+
 		`"currency": "` + valIndex.Currency + `" ,`+
-		`"securities": `+ valIndex.Securities +`" `+
+		`"securities": "`+ valIndex.Securities +`" `+
 		`}`
 		
 	fmt.Println("order: " + order)
