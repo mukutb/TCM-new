@@ -642,7 +642,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		} 
 		return nil, nil
 	}
-	if res2.Securities == " " {
+	if res2.Securities == " " || res2.Securities == "" {
 		res2.Securities = _accountNumber+"-"+_securityId;
 	}else {
 		res2.Securities = res2.Securities+ "," + _accountNumber+"-"+_securityId;
@@ -751,22 +751,27 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 	jsonResp = "{"
 	for i := range _SecuritySplit{
 		fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
-		valueAsBytes, err := stub.GetState(_SecuritySplit[i])
-		if err != nil {
-			errResp = "{\"Error\":\"Failed to get state for " + _SecuritySplit[i] + "\"}"
-			return nil, errors.New(errResp)
-		}
-		json.Unmarshal(valueAsBytes, &_tempJson)
-		fmt.Print("_tempJson : ")
-		fmt.Println(_tempJson)
-		jsonResp = jsonResp + "\""+ _SecuritySplit[i] + "\":" + string(valueAsBytes[:])
-		if i < len(_SecuritySplit)-1 {
-			jsonResp = jsonResp + ","
+		if _SecuritySplit[i] != "" || _SecuritySplit[i] != " "{
+			valueAsBytes, err := stub.GetState(_SecuritySplit[i])
+			if err != nil {
+				errResp = "{\"Error\":\"Failed to get state for " + _SecuritySplit[i] + "\"}"
+				return nil, errors.New(errResp)
+			}
+			json.Unmarshal(valueAsBytes, &_tempJson)
+			fmt.Print("_tempJson : ")
+			fmt.Println(_tempJson)
+			jsonResp = jsonResp + "\""+ _SecuritySplit[i] + "\":" + string(valueAsBytes[:])
+			if i < len(_SecuritySplit)-1 {
+				jsonResp = jsonResp + ","
+			}
 		}
 	}
 	jsonResp = jsonResp + "}"
 	fmt.Print("jsonResp: ")
 	fmt.Println(jsonResp)
+	if jsonResp == "{}" {
+		jsonResp = "{ \"AccountNumber\" : \"" + _AccountNumber + "\", \"message\" : \"No securities found.\", \"code\" : \"503\"}"
+	}
 	fmt.Println("end getSecurities_byAccount")
 	return []byte(jsonResp), nil
 }
