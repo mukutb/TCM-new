@@ -721,7 +721,6 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 		for x:= range _SecuritySplit{											//debug prints...
 			fmt.Println(string(x) + " - " + _SecuritySplit[x])
 		}
-		break
 	}
 
 	res.Securities = strings.Join(_SecuritySplit,",");
