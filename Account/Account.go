@@ -703,6 +703,7 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 		`"accountType": "` + res.AccountType + `" ,`+
 		`"totalValue": "` + res.TotalValue + `" ,`+
 		`"currency": "` + res.Currency + `" ,`+
+		`"pledger": "` + res.Pledger + `" ,`+
 		`"securities": `+ "" +`" `+
 		`}`
 	fmt.Println("order: " + order)
@@ -901,6 +902,7 @@ func (t *ManageAccounts) delete_security(stub shim.ChaincodeStubInterface, args 
 		`"accountType": "` + valIndex.AccountType + `" ,`+
 		`"totalValue": "` + valIndex.TotalValue + `" ,`+
 		`"currency": "` + valIndex.Currency + `" ,`+
+		`"pledger": "` + valIndex.Pledger + `" ,`+
 		`"securities": "`+ valIndex.Securities +`" `+
 		`}`
 		
