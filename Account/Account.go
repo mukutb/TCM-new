@@ -717,7 +717,10 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 		_SecuritySplit = append(_SecuritySplit[:i], _SecuritySplit[i+1:]...)			//remove it
 		fmt.Println(_SecuritySplit)
 	}
+
 	res.Securities = strings.Join(_SecuritySplit,",");
+	fmt.Println(res.Securities)
+	fmt.Println(_SecuritySplit)
 	//build the Account json string manually
 	order := 	`{`+
 		`"accountId": "` + res.AccountID + `" ,`+
