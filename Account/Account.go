@@ -703,7 +703,7 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 	_SecuritySplit := strings.Split(res.Securities, ",")
 	fmt.Print("_SecuritySplit: " )
 	fmt.Println(_SecuritySplit)
-	for i := range _SecuritySplit{
+	for i:=0;i<len(_SecuritySplit);{
 		fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
 		err := stub.DelState(_SecuritySplit[i])													//remove the key from chaincode state
 		if err != nil {
