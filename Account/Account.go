@@ -603,7 +603,13 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		`"securityQuantity": "` + _securityQuantity + `" ,`+
 		`"securityType": "` + _securityType + `" ,`+
 		`"collateralForm": "` + _collateralForm + `" ,`+
-		`"currency": "` + _currency + `" `+
+		`"totalvalue": "` + "0" + `" ,`+
+		`"valuePercentage": "` + "0" + `" ,`+
+		`"mtm": "` + "0" + `" ,`+
+		`"effectivePercentage": "` + "0" + `" ,`+
+		`"effectiveValueinUSD": "` + "0" + `" ,`+
+		`"currency": "` + _currency + `"`+
+
 		`}`
 	fmt.Println("order: " + order)
 	err = stub.PutState(_accountNumber+"-"+_securityId, []byte(order))									//store Account with AccountId as key
@@ -709,7 +715,6 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 			return nil, nil
 		}
 		_SecuritySplit = append(_SecuritySplit[:i], _SecuritySplit[i+1:]...)			//remove it
-		fmt.Println(_SecuritySplit[:i])
 		fmt.Println(_SecuritySplit)
 	}
 	res.Securities = strings.Join(_SecuritySplit,",");
@@ -767,7 +772,7 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 	_SecuritySplit := strings.Split(res.Securities, ",")
 	fmt.Print("_SecuritySplit: " )
 	fmt.Println(_SecuritySplit)
-	jsonResp = "{["
+	jsonResp = "[{"
 	for i := range _SecuritySplit{
 		fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
 		valueAsBytes, err := stub.GetState(_SecuritySplit[i])
@@ -783,10 +788,10 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 			jsonResp = jsonResp + ","
 		}
 	}
-	jsonResp = jsonResp + "]}"
+	jsonResp = jsonResp + "}]"
 	fmt.Print("jsonResp: ")
 	fmt.Println(jsonResp)
-	if jsonResp == "{\"\":}" || jsonResp == "{\" \":}" {
+	if jsonResp == "[{\"\":}]" || jsonResp == "[{\" \":}]" {
 		jsonResp = "{ \"AccountNumber\" : \"" + _AccountNumber + "\", \"message\" : \"No securities found.\", \"code\" : \"503\"}"
 	}
 	fmt.Println("end getSecurities_byAccount")
@@ -798,8 +803,8 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 func (t *ManageAccounts) update_security(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
 	fmt.Println("Updating Security")
-	if len(args) != 7 {
-		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 7\", \"code\" : \"503\"}"
+	if len(args) != 12 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 12\", \"code\" : \"503\"}"
 		err = stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
@@ -833,7 +838,12 @@ func (t *ManageAccounts) update_security(stub shim.ChaincodeStubInterface, args 
 			`"securityQuantity": "` + args[3] + `" ,`+
 			`"securityType": "` + args[4] + `" ,`+
 			`"collateralForm": "` + args[5] + `" ,`+
-			`"currency": "` + args[6] + `"`+
+			`"totalvalue": "` + args[6]+ `" ,`+
+			`"valuePercentage": "` + args[7]+ `" ,`+
+			`"mtm": "` + args[8]+ `" ,`+
+			`"effectivePercentage": "` + args[9]+ `" ,`+
+			`"effectiveValueinUSD": "` + args[10]+ `" ,`+
+			`"currency": "` + args[11] + `"`+
 			`}`
 		fmt.Println(order);
 		err = stub.PutState(accountNumber + "-" + securityId, []byte(order))									//store security with id as key
