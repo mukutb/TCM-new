@@ -714,11 +714,18 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 			} 
 			return nil, nil
 		}
+		_SecuritySplit = append(_SecuritySplit[:i], _SecuritySplit[i+1:]...)			//remove it
+		fmt.Println(_SecuritySplit[:i])
+		fmt.Println(_SecuritySplit[i+1])
 		fmt.Println(_SecuritySplit)
+		for x:= range _SecuritySplit{											//debug prints...
+			fmt.Println(string(x) + " - " + _SecuritySplit[x])
+		}
+		break
 	}
 
-	_Securities := strings.Join(_SecuritySplit,",");
-	fmt.Println(_Securities)
+	res.Securities = strings.Join(_SecuritySplit,",");
+	fmt.Println(res.Securities)
 	fmt.Println(_SecuritySplit)
 	//build the Account json string manually
 	order := 	`{`+
@@ -729,7 +736,7 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 		`"totalValue": "` + res.TotalValue + `" ,`+
 		`"currency": "` + res.Currency + `" ,`+
 		`"pledger": "` + res.Pledger + `" ,`+
-		`"securities": "`+ _Securities +`" `+
+		`"securities": "`+ res.Securities +`" `+
 		`}`
 	fmt.Println("order: " + order)
 	err = stub.PutState(_accountNumber, []byte(order))									//store Account with _accountNumber as key
