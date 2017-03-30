@@ -780,7 +780,7 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 	_SecuritySplit := strings.Split(res.Securities, ",")
 	fmt.Print("_SecuritySplit: " )
 	fmt.Println(_SecuritySplit)
-	jsonResp = "[{"
+	jsonResp = "["
 	for i := range _SecuritySplit{
 		fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
 		valueAsBytes, err := stub.GetState(_SecuritySplit[i])
@@ -796,7 +796,7 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 			jsonResp = jsonResp + ","
 		}
 	}
-	jsonResp = jsonResp + "}]"
+	jsonResp = jsonResp + "]"
 	fmt.Print("jsonResp: ")
 	fmt.Println(jsonResp)
 	if jsonResp == "[{\"\":}]" || jsonResp == "[{\" \":}]" {
