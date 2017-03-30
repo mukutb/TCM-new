@@ -28,7 +28,9 @@ import ("errors"
 type ManageDeals struct {}
 
 var DealIndexStr = "_Dealindex" //name for the key/value that will store a list of all known RQv's
-var transactionIndexStr = "_transactionIndex" //name for the key/value that will store a list of all known transactionIds
+/*  `transactionIndexStr` stores list of all the transactions stored on the blockchain.It is commented right now, since it is creating an extra load on the blockchain.If it is needed later, comment out its code and execute.
+*/
+//var transactionIndexStr = "_transactionIndex" //name for the key/value that will store a list of all known transactionIds
 
 type Transactions struct {
     TransactionId string `json:"transactionId"`
@@ -129,8 +131,8 @@ func(t * ManageDeals) Invoke(stub shim.ChaincodeStubInterface, function string, 
     function == "update_deal" { //update a deal
         return t.update_deal(stub, args)
     } else if
-    function == "addTransaction_inDeal" { //update a deal
-        return t.addTransaction_inDeal(stub, args)
+    function == "getTransactions_byUser" { //update a deal
+        return t.getTransactions_byUser(stub, args)
     } else if
     function == "create_transaction" { //create a new deal
         return t.create_transaction(stub, args)
@@ -165,11 +167,11 @@ func(t * ManageDeals) Query(stub shim.ChaincodeStubInterface, function string, a
         return t.get_AllDeal(stub, args)
     } else if function == "getTransactions_byDealID" { //Read all Transactions by Deal ID
         return t.getTransactions_byDealID(stub, args)
-    }else if function == "getTransaction_byUser" { //Read all Transactions by user 
-        return t.getTransaction_byUser(stub, args)
-    } else if function == "get_AllTransactions" { //Read all Transactions
+    }else if function == "getTransactions_byUser" { //Read all Transactions by user 
+        return t.getTransactions_byUser(stub, args)
+    } /*else if function == "get_AllTransactions" { //Read all Transactions
         return t.get_AllTransactions(stub, args)
-    }
+    }*/
     fmt.Println("query did not find func: " + function) //errors
     errMsg:= "{ \"message\" : \"Received unknown function query\", \"code\" : \"503\"}"
     err:= stub.SetEvent("errEvent", [] byte(errMsg))
@@ -402,7 +404,7 @@ func(t * ManageDeals) get_AllDeal(stub shim.ChaincodeStubInterface, args[] strin
 // ============================================================================================================================
 //  get_AllTransactions- get details of all Deal from chaincode state
 // ============================================================================================================================
-func(t * ManageDeals) get_AllTransactions(stub shim.ChaincodeStubInterface, args[] string)([] byte, error) {
+/*func(t * ManageDeals) get_AllTransactions(stub shim.ChaincodeStubInterface, args[] string)([] byte, error) {
     var jsonResp, errResp string
     var transactionIndex[] string
     fmt.Println("start get_AllTransactions")
@@ -448,7 +450,7 @@ func(t * ManageDeals) get_AllTransactions(stub shim.ChaincodeStubInterface, args
     fmt.Println("end get_AllTransactions")
     return [] byte(jsonResp), nil
     //send it onward
-}
+}*/
 // ============================================================================================================================
 // Write - update Deal into chaincode state
 // ============================================================================================================================
@@ -481,6 +483,28 @@ func(t * ManageDeals) update_deal(stub shim.ChaincodeStubInterface, args[] strin
     if res.DealID == dealId {
         fmt.Println("Deal found with dealId : " + dealId)
         //fmt.Println(res);
+        //build the Deal json string manually
+        order:= `{` + 
+            `"dealId": "` + res.DealID + `" , ` + 
+            `"pledger": "` + args[1] + `" , ` + 
+            `"pledgee": "` + args[2] + `" , ` + 
+            `"maxValue": "` + args[3] + `" , ` + 
+            `"totalValueLongBoxAccount": "` + args[4] + `" , ` + 
+            `"totalValueSegregatedAccount": "` + args[5] + `" , ` + 
+            `"issueDate": "` + args[6] + `" , ` + 
+            `"lastSuccessfulAllocationDate": "` + args[7] + `" ` + 
+            `"transactions": "` + args[8] + `" , ` + 
+            `}`
+        err = stub.PutState(dealId, [] byte(order)) //store Deal with id as key
+        if err != nil {
+            return nil, err
+        }
+        tosend:= "{ \"dealId\" : \"" + dealId + "\", \"message\" : \"Deal updated succcessfully\", \"code\" : \"200\"}"
+        err = stub.SetEvent("evtsender", [] byte(tosend))
+        if err != nil {
+            return nil, err
+        }
+        fmt.Println("Deal updated succcessfully")
     } else {
         errMsg:= "{ \"message\" : \"" + dealId + " Not Found.\", \"code\" : \"503\"}"
         err = stub.SetEvent("errEvent", [] byte(errMsg))
@@ -489,18 +513,6 @@ func(t * ManageDeals) update_deal(stub shim.ChaincodeStubInterface, args[] strin
         }
         return nil,nil
     }
-    //build the Deal json string manually
-    order:= `{` + `"dealId": "` + dealId + `" , ` + `"pledger": "` + args[1] + `" , ` + `"pledgee": "` + args[2] + `" , ` + `"maxValue": "` + args[3] + `" , ` + `"totalValueLongBoxAccount": "` + args[4] + `" , ` + `"totalValueSegregatedAccount": "` + args[5] + `" , ` + `"issueDate": "` + args[6] + `" , ` + `"lastSuccessfulAllocationDate": "` + args[7] + `" ` + `"transactions": "` + args[8] + `" , ` + `}`
-    err = stub.PutState(dealId, [] byte(order)) //store Deal with id as key
-    if err != nil {
-        return nil, err
-    }
-    tosend:= "{ \"dealId\" : \"" + dealId + "\", \"message\" : \"Deal updated succcessfully\", \"code\" : \"200\"}"
-    err = stub.SetEvent("evtsender", [] byte(tosend))
-    if err != nil {
-        return nil, err
-    }
-    fmt.Println("Deal updated succcessfully")
     return nil, nil
 }
 // ============================================================================================================================
@@ -620,7 +632,7 @@ func(t * ManageDeals) getTransactions_byDealID(stub shim.ChaincodeStubInterface,
     _transactionSplit:= strings.Split(dealIndex.Transactions, ",")
     fmt.Print("_transactionSplit: ")
     fmt.Println(_transactionSplit)
-    jsonResp := "{"
+    jsonResp := "["
     for i:= range _transactionSplit {
         fmt.Println("_transactionSplit[i]: " + _transactionSplit[i])
         valueAsBytes, err:= stub.GetState(_transactionSplit[i])
@@ -631,12 +643,21 @@ func(t * ManageDeals) getTransactions_byDealID(stub shim.ChaincodeStubInterface,
         json.Unmarshal(valueAsBytes, &_tempJson)
         fmt.Print("valueAsBytes : ")
         fmt.Println(valueAsBytes)
-        jsonResp = jsonResp + "\"" + _transactionSplit[i] + "\":" + string(valueAsBytes[: ])
+        jsonResp = jsonResp + string(valueAsBytes[: ])
         if i < len(_transactionSplit) - 1 {
             jsonResp = jsonResp + ","
         }
     }
-    jsonResp = jsonResp + "}"
+    jsonResp = jsonResp + "]"
+    if jsonResp == "[]" {
+        fmt.Println("Transactions not found.")
+        jsonResp =  "{ \"message\" : \" No transactions found.\", \"code\" : \"503\"}"
+        errMsg:= "{ \"message\" : \" No transactions found.\", \"code\" : \"503\"}"
+        err = stub.SetEvent("errEvent", [] byte(errMsg))
+        if err != nil {
+        return nil, err
+        }
+    }
     fmt.Print("jsonResp: ")
     fmt.Println(jsonResp)
     fmt.Println("end getTransactions_byDealID")
@@ -645,11 +666,12 @@ func(t * ManageDeals) getTransactions_byDealID(stub shim.ChaincodeStubInterface,
 // ============================================================================================================================
 //  getTransaction_byUser - get Transactions by User from chaincode state
 // ============================================================================================================================
-func(t * ManageDeals) getTransaction_byUser(stub shim.ChaincodeStubInterface, args[] string)([] byte, error) {
+func(t * ManageDeals) getTransactions_byUser(stub shim.ChaincodeStubInterface, args[] string)([] byte, error) {
     var jsonResp, errResp string
-    var transactionIndex[] string
-    var valIndex Transactions
-    fmt.Println("start getTransaction_byUser")
+    var dealIndex[] string
+    var valIndex Deals
+    var _tempJson Transactions
+    fmt.Println("start getTransactions_byUser")
     var err error
     if len(args) != 2 {
         errMsg:= "{ \"message\" : \"Incorrect number of arguments. Expecting 'user' and 'role' as an argument\", \"code\" : \"503\"}"
@@ -664,55 +686,73 @@ func(t * ManageDeals) getTransaction_byUser(stub shim.ChaincodeStubInterface, ar
     // set role
     _role := args[1]
     //fmt.Println("user" + _user)
-    transactionAsBytes, err:= stub.GetState(transactionIndexStr)
+    dealIndexAsBytes, err:= stub.GetState(DealIndexStr)
     if err != nil {
         return nil, errors.New("Failed to get transaction index string")
     }
-    //fmt.Print("transactionAsBytes : ")
-    //fmt.Println(transactionAsBytes)
-    json.Unmarshal(transactionAsBytes, &transactionIndex) //un stringify it aka JSON.parse()
-    fmt.Print("transactionIndex : ")
-    fmt.Println(transactionIndex)
-    //fmt.Println("len(transactionIndex) : ")
-    //fmt.Println(len(transactionIndex))
-    jsonResp = "{"
-    for i, val:= range transactionIndex {
+    json.Unmarshal(dealIndexAsBytes, &dealIndex) //un stringify it aka JSON.parse()
+    fmt.Print("dealIndex : ")
+    fmt.Println(dealIndex)
+    jsonResp = "["
+    for i, val:= range dealIndex {
         fmt.Println(strconv.Itoa(i) + " - looking at " + val + " for getTransaction_byUser")
-        valueAsBytes, err:= stub.GetState(val)
+        dealAsBytes, err:= stub.GetState(val)
         if err != nil {
             errResp = "{\"Error\":\"Failed to get state for " + val + "\"}"
             return nil, errors.New(errResp)
         }
-        //fmt.Print("valueAsBytes : ")
-        //fmt.Println(valueAsBytes)
-        json.Unmarshal(valueAsBytes, &valIndex)
+        //fmt.Print("dealAsBytes : ")
+        //fmt.Println(dealAsBytes)
+        json.Unmarshal(dealAsBytes, &valIndex)
         fmt.Print("valIndex: ")
         fmt.Print(valIndex)
-        if _role == "Pledger" {
-            if valIndex.Pledger == _user {
-                fmt.Println("User found: " + val)
-                jsonResp = jsonResp + "\"" + val + "\":" + string(valueAsBytes[: ])
-                //fmt.Println("jsonResp inside if")
-                //fmt.Println(jsonResp)
-                if i < len(transactionIndex) - 1 {
-                    jsonResp = jsonResp + ","
-                }
+        if valIndex.Transactions == "" || valIndex.Transactions == " "{
+            errMsg:= "{ \"message\" : \"Transactions Not Found.\", \"code\" : \"503\"}"
+            err = stub.SetEvent("errEvent", [] byte(errMsg))
+            if err != nil {
+            return nil, err
             }
-        } else if _role == "Pledgee" {
-            if valIndex.Pledgee == _user {
-                fmt.Println("User found: " + val)
-                jsonResp = jsonResp + "\"" + val + "\":" + string(valueAsBytes[: ])
-                //fmt.Println("jsonResp inside if")
-                //fmt.Println(jsonResp)
-                if i < len(transactionIndex) - 1 {
-                    jsonResp = jsonResp + ","
+        }else {
+            _transactionSplit:= strings.Split(valIndex.Transactions, ",")
+            fmt.Print("_transactionSplit: ")
+            fmt.Println(_transactionSplit)
+            for i:= range _transactionSplit {
+                fmt.Println("_transactionSplit[i]: " + _transactionSplit[i])
+                valueAsBytes, err:= stub.GetState(_transactionSplit[i])
+                if err != nil {
+                    errResp := "{\"Error\":\"Failed to get state for " + _transactionSplit[i] + "\"}"
+                    return nil, errors.New(errResp)
+                }
+                json.Unmarshal(valueAsBytes, &_tempJson)
+                fmt.Print("_tempJson : ")
+                fmt.Println(_tempJson)
+                if _role == "Pledger" {
+                    if _tempJson.Pledger == _user {
+                        fmt.Println("User found: " + val)
+                        jsonResp = jsonResp + string(valueAsBytes[: ])
+                        //fmt.Println("jsonResp inside if")
+                        //fmt.Println(jsonResp)
+                        if i < len(_transactionSplit) - 1 {
+                            jsonResp = jsonResp + ","
+                        }
+                    }
+                } else if _role == "Pledgee" {
+                    if _tempJson.Pledgee == _user {
+                        fmt.Println("User found: " + val)
+                        jsonResp = jsonResp + string(valueAsBytes[: ])
+                        //fmt.Println("jsonResp inside if")
+                        //fmt.Println(jsonResp)
+                        if i < len(_transactionSplit) - 1 {
+                            jsonResp = jsonResp + ","
+                        }
+                    }
                 }
             }
         }
     }
-    jsonResp = jsonResp + "}"
+    jsonResp = jsonResp + "]"
     fmt.Println("jsonResp : " + jsonResp)
-    if jsonResp == "{}" {
+    if jsonResp == "[]" {
         fmt.Println("User not found.")
         jsonResp =  "{ \"message\" : \"" + _user + " Not Found.\", \"code\" : \"503\"}"
         errMsg:= "{ \"message\" : \"" + _user + " Not Found.\", \"code\" : \"503\"}"
@@ -723,7 +763,7 @@ func(t * ManageDeals) getTransaction_byUser(stub shim.ChaincodeStubInterface, ar
     }
     //fmt.Print("jsonResp in bytes : ")
     //fmt.Println([]byte(jsonResp))
-    fmt.Println("end getTransaction_byUser")
+    fmt.Println("end getTransactions_byUser")
     return [] byte(jsonResp), nil //send it onward
 }
 // ============================================================================================================================
@@ -829,7 +869,17 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
     }
 
     //build the Deal json string manually
-    order:= `{` + `"dealId": "` + res.DealID + `" , ` + `"pledger": "` + res.Pledger + `" , ` + `"pledgee": "` + res.Pledgee + `" , ` + `"maxValue": "` + res.MaxValue + `" , ` + `"totalValueLongBoxAccount": "` + res.TotalValueLongBoxAccount + `" , ` + `"totalValueSegregatedAccount": "` + res.TotalValueSegregatedAccount + `" , ` + `"issueDate": "` + res.IssueDate + `" , ` + `"transactions": "` + res.Transactions + `" , ` + `"lastSuccessfulAllocationDate": "` + res.LastSuccessfulAllocationDate + `" ` + `}`
+    order:= `{` + 
+    `"dealId": "` + res.DealID + `" , ` + 
+    `"pledger": "` + res.Pledger + `" , ` + 
+    `"pledgee": "` + res.Pledgee + `" , ` + 
+    `"maxValue": "` + res.MaxValue + `" , ` + 
+    `"totalValueLongBoxAccount": "` + res.TotalValueLongBoxAccount + `" , ` + 
+    `"totalValueSegregatedAccount": "` + res.TotalValueSegregatedAccount + `" , ` + 
+    `"issueDate": "` + res.IssueDate + `" , ` + 
+    `"transactions": "` + res.Transactions + `" , ` + 
+    `"lastSuccessfulAllocationDate": "` + res.LastSuccessfulAllocationDate + `" ` + 
+    `}`
     err = stub.PutState(dealId, [] byte(order)) //store Deal with id as key
     if err != nil {
         return nil, err
@@ -872,8 +922,32 @@ func(t * ManageDeals) update_transaction(stub shim.ChaincodeStubInterface, args[
     res:= Transactions {}
     json.Unmarshal(dealAsBytes, &res)
     if res.TransactionId == _transactionId {
-        fmt.Println("Deal found with _transactionId : " + _transactionId)
+        fmt.Println("Transaction found with _transactionId : " + _transactionId)
         //fmt.Println(res);
+        //build the Deal json string manually
+        order:= `{` + 
+            `"transactionId": "` + res.TransactionId + `" , ` + 
+            `"transactionDate": "` + args[1] + `" , ` + 
+            `"dealId": "` + args[2] + `" , ` + 
+            `"pledger": "` + args[3] + `" , ` + 
+            `"pledgee": "` + args[4] + `" , ` + 
+            `"rqv": "` + args[5] + `" , ` +
+            `"currency": "` + args[6] + `" , ` + 
+            `"currencyConversionRate": "` + args[7] + `" , ` +  
+            `"marginCAllDate": "` + args[8] + `" , ` + 
+            `"allocationStatus": "` + args[9] + `" , ` + 
+            `"transactionStatus": "` + args[10] + `" ` + 
+            `}`
+        err = stub.PutState(_transactionId, [] byte(order)) //store Deal with id as key
+        if err != nil {
+            return nil, err
+        }
+        tosend:= "{ \"transactionId\" : \"" + _transactionId + "\", \"message\" : \"Transaction updated succcessfully\", \"code\" : \"200\"}"
+        err = stub.SetEvent("evtsender", [] byte(tosend))
+        if err != nil {
+            return nil, err
+        }
+        fmt.Println("Transaction updated succcessfully")
     } else {
         errMsg:= "{ \"message\" : \"" + _transactionId + " Not Found.\", \"code\" : \"503\"}"
         err = stub.SetEvent("errEvent", [] byte(errMsg))
@@ -882,19 +956,6 @@ func(t * ManageDeals) update_transaction(stub shim.ChaincodeStubInterface, args[
         }
         return nil,nil
     }
-    //build the Deal json string manually
-    order:= `{` + `"transactionId": "` + args[0] + `" , ` + `"transactionDate": "` + args[1] + `" , ` + `"dealId": "` + args[2] + `" , ` + `"pledger": "` + args[3] + `" , ` + `"pledgee": "` + args[4] + `" , ` + `"rqv": "` + args[5] + `" , ` +
-             `"currency": "` + args[6] + `" , ` + `"currencyConversionRate": "` + args[7] + `" , ` +  `"marginCAllDate": "` + args[8] + `" , ` + `"allocationStatus": "` + args[9] + `" , ` + `"transactionStatus": "` + args[10] + `" ` + `}`
-    err = stub.PutState(args[2], [] byte(order)) //store Deal with id as key
-    if err != nil {
-        return nil, err
-    }
-    tosend:= "{ \"transactionId\" : \"" + _transactionId + "\", \"message\" : \"Transaction updated succcessfully\", \"code\" : \"200\"}"
-    err = stub.SetEvent("evtsender", [] byte(tosend))
-    if err != nil {
-        return nil, err
-    }
-    fmt.Println("Transaction updated succcessfully")
     return nil, nil
 }
 // ============================================================================================================================
@@ -926,9 +987,33 @@ func(t * ManageDeals) update_transaction_AllocationStatus(stub shim.ChaincodeStu
     //fmt.Println(dealAsBytes);
     res:= Transactions {}
     json.Unmarshal(dealAsBytes, &res)
+    fmt.Println(res);
     if res.TransactionId == _transactionId {
-        fmt.Println("Deal found with _transactionId : " + _transactionId)
+        fmt.Println("Transaction found with _transactionId : " + _transactionId)
         //fmt.Println(res);
+        //build the Deal json string manually
+        order:= `{` + 
+            `"transactionId": "` + _transactionId + `" , ` + 
+            `"transactionDate": "` + res.TransactionDate + `" , ` + 
+            `"dealId": "` + res.DealID + `" , ` + 
+            `"pledger": "` + res.Pledger + `" , ` + 
+            `"pledgee": "` + res.Pledgee + `" , ` + 
+            `"rqv": "` + res.RQV + `" , ` + 
+            `"currency": "` + res.Currency + `" , ` + 
+            `"marginCAllDate": "` + res.MarginCAllDate + `" , ` + 
+            `"allocationStatus": "` + args[1] + `" , ` + 
+            `"transactionStatus": "` + res.TransactionStatus + `" ` + 
+            `}`
+        err = stub.PutState(_transactionId, [] byte(order)) //store Deal with id as key
+        if err != nil {
+            return nil, err
+        }
+        tosend:= "{ \"transactionId\" : \"" + _transactionId + "\", \"message\" : \"Transaction updated succcessfully\", \"code\" : \"200\"}"
+        err = stub.SetEvent("evtsender", [] byte(tosend))
+        if err != nil {
+            return nil, err
+        }
+        fmt.Println("update_transaction_AllocationStatus")
     } else {
         errMsg:= "{ \"message\" : \"" + _transactionId + " Not Found.\", \"code\" : \"503\"}"
         err = stub.SetEvent("errEvent", [] byte(errMsg))
@@ -937,18 +1022,6 @@ func(t * ManageDeals) update_transaction_AllocationStatus(stub shim.ChaincodeStu
         }
         return nil,nil
     }
-    //build the Deal json string manually
-    order:= `{` + `"transactionId": "` + _transactionId + `" , ` + `"transactionDate": "` + res.TransactionDate + `" , ` + `"dealId": "` + res.DealID + `" , ` + `"pledger": "` + res.Pledger + `" , ` + `"pledgee": "` + res.Pledgee + `" , ` + `"rqv": "` + res.RQV + `" , ` + `"currency": "` + res.Currency + `" , ` + `"marginCAllDate": "` + res.MarginCAllDate + `" , ` + `"allocationStatus": "` + args[1] + `" , ` + `"transactionStatus": "` + res.TransactionStatus + `" ` + `}`
-    err = stub.PutState(_transactionId, [] byte(order)) //store Deal with id as key
-    if err != nil {
-        return nil, err
-    }
-    tosend:= "{ \"transactionId\" : \"" + _transactionId + "\", \"message\" : \"Transaction updated succcessfully\", \"code\" : \"200\"}"
-    err = stub.SetEvent("evtsender", [] byte(tosend))
-    if err != nil {
-        return nil, err
-    }
-    fmt.Println("update_transaction_AllocationStatus")
     return nil, nil
 }
 // ============================================================================================================================
@@ -1006,7 +1079,7 @@ func(t * ManageDeals) create_transaction(stub shim.ChaincodeStubInterface, args[
         return nil, err
     }
      //get the Transaction index
-    transactionIndexAsBytes, err:= stub.GetState(transactionIndexStr)
+    /*transactionIndexAsBytes, err:= stub.GetState(transactionIndexStr)
     if err != nil {
         return nil, errors.New("Failed to get Transaction index")
     }
@@ -1025,7 +1098,7 @@ func(t * ManageDeals) create_transaction(stub shim.ChaincodeStubInterface, args[
     err = stub.PutState(transactionIndexStr, jsonAsBytes) //store name of Transaction
     if err != nil {
         return nil, err
-    }
+    }*/
     tosend:= "{ \"transactionId\" : \"" + args[0] + "\", \"message\" : \"Transaction created succcessfully\", \"code\" : \"200\"}"
     err = stub.SetEvent("evtsender", [] byte(tosend))
     if err != nil {
