@@ -379,8 +379,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	fmt.Println("Pledgee : " , Pledgee)
 
 	// Fetch Transaction details from Blockchain
-	function := "getTransactions_byDealID"
-	queryArgs = util.ToChaincodeArgs(function, DealID)
+	function := "getTransaction_byID"
+	queryArgs = util.ToChaincodeArgs(function, TransactionID)
 	transactionAsBytes, err := stub.QueryChaincode(DealChaincode, queryArgs)
 	if err != nil {
 		errStr := fmt.Sprintf("Failed to query chaincode. Got error: %s", err.Error())
