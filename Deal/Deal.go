@@ -165,9 +165,11 @@ func(t * ManageDeals) Query(stub shim.ChaincodeStubInterface, function string, a
         return t.getDeal_byPledgee(stub, args)
     } else if function == "get_AllDeal" { //Read all Deals
         return t.get_AllDeal(stub, args)
+    } else if function == "getTransaction_byID" { //Read all Transactions by Transaction ID
+        return t.getTransaction_byID(stub, args)
     } else if function == "getTransactions_byDealID" { //Read all Transactions by Deal ID
         return t.getTransactions_byDealID(stub, args)
-    }else if function == "getTransactions_byUser" { //Read all Transactions by user 
+    } else if function == "getTransactions_byUser" { //Read all Transactions by user 
         return t.getTransactions_byUser(stub, args)
     } /*else if function == "get_AllTransactions" { //Read all Transactions
         return t.get_AllTransactions(stub, args)
@@ -209,6 +211,37 @@ func(t * ManageDeals) getDeal_byID(stub shim.ChaincodeStubInterface, args[] stri
     //fmt.Print("valAsbytes : ")
     //fmt.Println(valAsbytes)
     fmt.Println("end getDeal_byID")
+    return valAsbytes, nil //send it onward
+}
+// ============================================================================================================================
+// getTransaction_byID - get Transaction details for a specific ID from chaincode state
+// ============================================================================================================================
+func(t * ManageDeals) getTransaction_byID(stub shim.ChaincodeStubInterface, args[] string)([] byte, error) {
+    var TransactionId string
+    var err error
+    fmt.Println("start getTransaction_byID")
+    if len(args) != 1 {
+        errMsg:= "{ \"message\" : \"Incorrect number of arguments. Expecting 'TransactionId' as an argument\", \"code\" : \"503\"}"
+        err = stub.SetEvent("errEvent", [] byte(errMsg))
+        if err != nil {
+            return nil, err
+        }
+        return nil,nil
+    }
+    // set TransactionId
+    TransactionId = args[0]
+    valAsbytes, err:= stub.GetState(TransactionId) //get the TransactionId from chaincode state
+    if err != nil {
+        errMsg:= "{ \"message\" : \"" + TransactionId + " not Found.\", \"code\" : \"503\"}"
+        err = stub.SetEvent("errEvent", [] byte(errMsg))
+        if err != nil {
+            return nil, err
+        }
+        return nil,nil
+    }
+    //fmt.Print("valAsbytes : ")
+    //fmt.Println(valAsbytes)
+    fmt.Println("end getTransaction_byID")
     return valAsbytes, nil //send it onward
 }
 // ============================================================================================================================
