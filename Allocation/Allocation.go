@@ -351,16 +351,14 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	//-----------------------------------------------------------------------------
 
 	// Fetch Deal details from Blockchain
-	dealAsBytes, err := stub.GetState(DealID)
+	f := "getDeal_byID"
+	queryArgs := util.ToChaincodeArgs(f, DealID)
+	dealAsBytes, err := stub.QueryChaincode(DealChaincode, queryArgs)
 	if err != nil {
-		fmt.Println("Failed to get state for "+ DealID);
-		errMsg := "{ \"message\" : \"Failed to get state for " + DealID + "\", \"code\" : \"503\"}"
-		err = stub.SetEvent("errEvent", []byte(errMsg))
-		if err != nil {
-			return nil, err
-		} 
-		return nil, nil
-	}
+		errStr := fmt.Sprintf("Failed to query chaincode. Got error: %s", err.Error())
+		fmt.Printf(errStr)
+		return nil, errors.New(errStr)
+	} 	
 	DealData := Deals{}
 	json.Unmarshal(dealAsBytes, &DealData)
 	fmt.Println(DealData);
@@ -381,15 +379,14 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	fmt.Println("Pledgee : " , Pledgee)
 
 	// Fetch Transaction details from Blockchain
-	transactionAsBytes, err := stub.GetState(TransactionID)
+	function := "getTransactions_byDealID"
+	queryArgs = util.ToChaincodeArgs(function, DealID)
+	transactionAsBytes, err := stub.QueryChaincode(DealChaincode, queryArgs)
 	if err != nil {
-		errMsg := "{ \"message\" : \"Failed to get state for " + TransactionID + "\", \"code\" : \"503\"}"
-		err = stub.SetEvent("errEvent", []byte(errMsg))
-		if err != nil {
-			return nil, err
-		} 
-		return nil, nil
-	}
+		errStr := fmt.Sprintf("Failed to query chaincode. Got error: %s", err.Error())
+		fmt.Printf(errStr)
+		return nil, errors.New(errStr)
+	} 
 	TransactionData := Transactions{}
 	json.Unmarshal(transactionAsBytes, &TransactionData)
 	fmt.Println(TransactionData);
@@ -411,7 +408,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	//-----------------------------------------------------------------------------
 
 	// Update allocation status to "Allocation in progress"
-	function := "update_transaction_AllocationStatus"
+	function = "update_transaction_AllocationStatus"
 	invokeArgs := util.ToChaincodeArgs(function, TransactionID, "Allocation in progress")
 	result, err := stub.InvokeChaincode(DealChaincode, invokeArgs)
 	if err != nil {
