@@ -164,7 +164,7 @@ func (t *ManageAllocations) Init(stub shim.ChaincodeStubInterface, function stri
 	}
 	var empty []string
 	jsonAsBytes, _ := json.Marshal(empty)								//marshal an emtpy array of strings to clear the index
-	err = stub.PutState("", jsonAsBytes)
+	err = stub.PutState(" ", jsonAsBytes)
 	if err != nil {
 		return nil, err
 	}
