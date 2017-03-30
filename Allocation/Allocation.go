@@ -164,7 +164,7 @@ func (t *ManageAllocations) Init(stub shim.ChaincodeStubInterface, function stri
 	}
 	var empty []string
 	jsonAsBytes, _ := json.Marshal(empty)								//marshal an emtpy array of strings to clear the index
-	err = stub.PutState(" ", jsonAsBytes)
+	err = stub.PutState("_init", jsonAsBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -337,7 +337,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	}
 	fmt.Println("start start_allocation")
 	
-	// Alloting Pramas
+	// Alloting Params
 	DealChaincode							:= args[0]
 	AccountChainCode 						:= args[1]
 	APIIP									:= args[2]
@@ -353,6 +353,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	// Fetch Deal details from Blockchain
 	dealAsBytes, err := stub.GetState(DealID)
 	if err != nil {
+		fmt.Println("Failed to get state for "+ DealID);
 		errMsg := "{ \"message\" : \"Failed to get state for " + DealID + "\", \"code\" : \"503\"}"
 		err = stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
@@ -362,6 +363,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	}
 	DealData := Deals{}
 	json.Unmarshal(dealAsBytes, &DealData)
+	fmt.Println(DealData);
 	if DealData.DealID == DealID{
 		fmt.Println("Deal found with DealID : " + DealID)
 	}else{
@@ -390,6 +392,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	}
 	TransactionData := Transactions{}
 	json.Unmarshal(transactionAsBytes, &TransactionData)
+	fmt.Println(TransactionData);
 	if TransactionData.TransactionId == TransactionID{
 		fmt.Println("Deal found with TransactionID : " + TransactionID)
 	}else{
