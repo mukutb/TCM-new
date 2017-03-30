@@ -484,8 +484,8 @@ func(t * ManageDeals) update_deal(stub shim.ChaincodeStubInterface, args[] strin
         //build the Deal json string manually
         order:= `{` + 
             `"dealId": "` + res.DealID + `" , ` + 
-            `"pledger": "` + args[1] + `" , ` + 
-            `"pledgee": "` + args[2] + `" , ` + 
+            `"pledger": "` + res.Pledger + `" , ` + 
+            `"pledgee": "` + res.Pledgee + `" , ` + 
             `"maxValue": "` + args[3] + `" , ` + 
             `"totalValueLongBoxAccount": "` + args[4] + `" , ` + 
             `"totalValueSegregatedAccount": "` + args[5] + `" , ` + 
