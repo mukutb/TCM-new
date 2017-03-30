@@ -857,29 +857,6 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
                 }
             }
             fmt.Println(res.Transactions);
-            //build the Deal json string manually
-            order:= `{` + 
-            `"dealId": "` + res.DealID + `" , ` + 
-            `"pledger": "` + res.Pledger + `" , ` + 
-            `"pledgee": "` + res.Pledgee + `" , ` + 
-            `"maxValue": "` + res.MaxValue + `" , ` + 
-            `"totalValueLongBoxAccount": "` + res.TotalValueLongBoxAccount + `" , ` + 
-            `"totalValueSegregatedAccount": "` + res.TotalValueSegregatedAccount + `" , ` + 
-            `"issueDate": "` + res.IssueDate + `" , ` + 
-            `"transactions": "` + res.Transactions + `" , ` + 
-            `"lastSuccessfulAllocationDate": "` + res.LastSuccessfulAllocationDate + `" ` + 
-            `}`
-            fmt.Println(order);
-            err = stub.PutState(dealId, [] byte(order)) //store Deal with id as key
-            if err != nil {
-                return nil, err
-            }
-            tosend:= "{ \"dealId\" : \"" + dealId + "\", \"message\" : \"Transaction added succcessfully\", \"code\" : \"200\"}"
-            err = stub.SetEvent("evtsender", [] byte(tosend))
-            if err != nil {
-                return nil, err
-            }
-            fmt.Println("addTransaction_inDeal")
         }
     } else {
         errMsg:= "{ \"message\" : \"" + dealId + " Not Found.\", \"code\" : \"503\"}"
@@ -889,6 +866,29 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
         }
         return nil,nil
     }
+    //build the Deal json string manually
+    order:= `{` + 
+    `"dealId": "` + res.DealID + `" , ` + 
+    `"pledger": "` + res.Pledger + `" , ` + 
+    `"pledgee": "` + res.Pledgee + `" , ` + 
+    `"maxValue": "` + res.MaxValue + `" , ` + 
+    `"totalValueLongBoxAccount": "` + res.TotalValueLongBoxAccount + `" , ` + 
+    `"totalValueSegregatedAccount": "` + res.TotalValueSegregatedAccount + `" , ` + 
+    `"issueDate": "` + res.IssueDate + `" , ` + 
+    `"transactions": "` + res.Transactions + `" , ` + 
+    `"lastSuccessfulAllocationDate": "` + res.LastSuccessfulAllocationDate + `" ` + 
+    `}`
+    fmt.Println(order);
+    err = stub.PutState(dealId, [] byte(order)) //store Deal with id as key
+    if err != nil {
+    return nil, err
+    }
+    tosend:= "{ \"dealId\" : \"" + dealId + "\", \"message\" : \"Transaction added succcessfully\", \"code\" : \"200\"}"
+    err = stub.SetEvent("evtsender", [] byte(tosend))
+    if err != nil {
+        return nil, err
+    }
+    fmt.Println("addTransaction_inDeal")
     return nil, nil
 }
 // ============================================================================================================================
