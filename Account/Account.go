@@ -799,7 +799,7 @@ func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterfac
 	jsonResp = jsonResp + "]"
 	fmt.Print("jsonResp: ")
 	fmt.Println(jsonResp)
-	if jsonResp == "[{\"\":}]" || jsonResp == "[{\" \":}]" {
+	if jsonResp == "[\"\":]" || jsonResp == "[\" \":]" {
 		jsonResp = "{ \"AccountNumber\" : \"" + _AccountNumber + "\", \"message\" : \"No securities found.\", \"code\" : \"503\"}"
 	}
 	fmt.Println("end getSecurities_byAccount")
