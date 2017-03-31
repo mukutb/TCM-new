@@ -631,6 +631,49 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		// Check if Current Collateral Form type is acceptied in ruleset. If not skip it!
 		if len(rulesetFetched.Security[tempSecurity.CollateralForm]) > 0 {
 
+
+
+			url2 := fmt.Sprintf("http://"+ APIIP +"/MarketData/" + tempSecurity.SecurityId)
+
+			// Build the request
+			req2, err2 := http.NewRequest("GET", url2, nil)
+			if err2 != nil {
+				fmt.Println("Market rate fetch error: ", err2)
+				return nil, err2
+			}
+
+			// For control over HTTP client headers, redirect policy, and other settings, create a Client
+			// A Client is an HTTP client
+			client2 := &http.Client{}
+
+			// Send the request via a client 
+			// Do sends an HTTP request and returns an HTTP response
+			resp2, err2 := client2.Do(req2)
+			if err2 != nil {
+				fmt.Println("Do: ", err2)
+				errMsg := "{ \"message\" : \"Unable to fetch Market Rates from: "+ url2 +".\", \"code\" : \"503\"}"
+				err2 = stub.SetEvent("errEvent", []byte(errMsg))
+				if err2 != nil {
+					return nil, err2
+				}
+			}
+
+			fmt.Println("The MarketData response is::"+strconv.Itoa(resp2.StatusCode))
+
+			// Callers should close resp.Body when done reading from it 
+			// Defer the closing of the body
+			defer resp2.Body.Close()
+
+			var stringArr []string
+
+			// Use json.Decode for reading streams of JSON data and store it
+			if err := json.NewDecoder(resp2.Body).Decode(&stringArr); 
+			err != nil {
+				fmt.Println(err)
+			}
+
+			tempSecurity.MTM = stringArr[0]
+
 			// Storing the Value percentage in the security ruleset data itself
 			tempSecurity.EffectivePercentage = strconv.Itoa(rulesetFetched.Security[tempSecurity.CollateralForm][2])
 
