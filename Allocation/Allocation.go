@@ -417,9 +417,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		fmt.Printf(errStr)
 		return nil, errors.New(errStr)
 	}
-
-	fmt.Print("Transaction hash returned: ");
-	fmt.Println(result)
+	fmt.Sprintf("Transaction hash returned: %s",result)
 	fmt.Println("Successfully updated allocation status to 'Allocation in progress'")
 
 	//-----------------------------------------------------------------------------
@@ -457,10 +455,6 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 	fmt.Println("The SecurityRuleset response is::"+strconv.Itoa(resp.StatusCode))
 
-	// Callers should close resp.Body when done reading from it 
-	// Defer the closing of the body
-	defer resp.Body.Close()
-
 	// Varaible record to be filled with the data from the JSON
 	var rulesetFetched Ruleset
 
@@ -469,6 +463,11 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	err != nil {
 		fmt.Println(err)
 	}
+
+	// Callers should close resp.Body when done reading from it 
+	// Defer the closing of the body
+	defer resp.Body.Close()
+
 	fmt.Println("Ruleset : ")
 	fmt.Println(rulesetFetched)
 
@@ -541,10 +540,6 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 	fmt.Println("The SecurityRuleset response is::"+strconv.Itoa(resp2.StatusCode))
 
-	// Callers should close resp.Body when done reading from it 
-	// Defer the closing of the body
-	defer resp2.Body.Close()
-
 	// Varaible ConversionRate to be filled with the data from the JSON
 	var ConversionRate CurrencyConversion
 
@@ -553,6 +548,12 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	err != nil {
 		fmt.Println(err)
 	}
+
+	// Callers should close resp.Body when done reading from it 
+	// Defer the closing of the body
+	defer resp2.Body.Close()
+
+
 	fmt.Println("Exchange Rate : ")
 	fmt.Println(ConversionRate)
 
