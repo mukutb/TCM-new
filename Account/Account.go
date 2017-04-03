@@ -842,7 +842,7 @@ func (t *ManageAccounts) update_security(stub shim.ChaincodeStubInterface, args 
 		order := 	`{`+
 			`"securityId": "` + res.SecurityId + `" ,`+
 			`"accountNumber": "` + res.AccountNumber + `" ,`+
-			`"accountNumber": "` + args[2] + `" ,`+
+			`"securityName": "` + args[2] + `" ,`+
 			`"securityQuantity": "` + args[3] + `" ,`+
 			`"securityType": "` + args[4] + `" ,`+
 			`"collateralForm": "` + args[5] + `" ,`+
