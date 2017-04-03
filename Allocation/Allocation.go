@@ -230,8 +230,8 @@ func (t *ManageAllocations) Query(stub shim.ChaincodeStubInterface, function str
 func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 
 	var err error
-	if len(args) != 3 {
-		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 3\", \"code\" : \"503\"}"
+	if len(args) != 4 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 4\", \"code\" : \"503\"}"
 		err = stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
