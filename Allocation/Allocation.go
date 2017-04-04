@@ -288,22 +288,21 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 				newTxStatus 	= "Failed"
 				newAllStatus 	= "Allocation Failed"
 			}
-			
-			order:= 
-				`"` + ValueTransaction.TransactionId + `" , ` + 
-				`"` + ValueTransaction.TransactionDate + `" , ` + 
-				`"` + ValueTransaction.DealID + `" , ` + 
-				`"` + ValueTransaction.Pledger + `" , ` + 
-				`"` + ValueTransaction.Pledgee + `" , ` + 
-				`"` + ValueTransaction.RQV + `" , ` +
-		        `"` + ValueTransaction.Currency + `" , ` + 
-		        `"` + ValueTransaction.CurrencyConversionRate + `" , ` +  
-		        `"` + ValueTransaction.MarginCAllDate + `" , ` + 
-		        `"` + newAllStatus + `" , ` + 
-		        `"` + newTxStatus + `" ` 
+							
 		    // Update allocation status of a transaction
 			function = "update_transaction"
-			invokeArgs := util.ToChaincodeArgs(function, order)
+			invokeArgs := util.ToChaincodeArgs(function, 
+				ValueTransaction.TransactionId ,
+				ValueTransaction.TransactionDate ,
+				ValueTransaction.DealID ,
+				ValueTransaction.Pledger ,
+				ValueTransaction.Pledgee ,
+				ValueTransaction.RQV,
+		        ValueTransaction.Currency ,
+		        ValueTransaction.CurrencyConversionRate,
+		        ValueTransaction.MarginCAllDate,
+		        newAllStatus ,
+		        newTxStatus)
 			result, err := stub.InvokeChaincode(_DealChaincode, invokeArgs)
 			if err != nil {
 				errStr := fmt.Sprintf("Failed to update Transaction status from 'Deal' chaincode. Got error: %s", err.Error())
@@ -785,7 +784,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 		// Update transaction's allocation status to "Pending due to insufficient collateral" and transaction status to "Pending"
 		f := "update_transaction"
-		input:= 
+		/*input:= 
 			`"` + TransactionData.TransactionId + `" , ` + 
 			`"` + TransactionData.TransactionDate + `" ,`+ 
 			`"` + TransactionData.DealID + `" , ` + 
@@ -797,8 +796,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	        `"` + MarginCallTimpestamp + `" , ` + 
 	        `"` + "Pending due to insufficient collateral" + `" , ` + 
 	        `"` + "Pending" + `" ` 
-	    fmt.Println(input);
-		invoke_args := util.ToChaincodeArgs(f, input)
+	    fmt.Println(input);*/
+		invoke_args := util.ToChaincodeArgs(f, TransactionData.TransactionId,TransactionData.TransactionDate, TransactionData.DealID, TransactionData.Pledger,TransactionData.Pledgee, TransactionData.RQV, TransactionData.Currency,"", MarginCallTimpestamp, "Pending due to insufficient collateral","Pending")
 		result, err := stub.InvokeChaincode(DealChaincode, invoke_args)
 		if err != nil {
 			errStr := fmt.Sprintf("Failed to invoke chaincode. Got error: %s", err.Error())
@@ -990,21 +989,18 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				newQuantity := _SecurityQuantity - _SecurityId
 				if _SecurityQuantity != _SecurityId {
 					
-					order := 
-						`"` + valueSecurity.SecurityId + `", `+
-						`"` + PledgerLongboxAccount + `", `+													
-						`"` + valueSecurity.SecuritiesName + `", `+
-						`"` + strconv.FormatFloat(newQuantity, 'E', -1, 64) + `", `+
-						`"` + valueSecurity.SecurityType + `", `+
-						`"` + valueSecurity.CollateralForm + `", `+
-						`"` + valueSecurity.CollateralForm + `", `+
-						`"", `+
-						`"` + valueSecurity.MTM + `", `+
-						`"` + valueSecurity.EffectivePercentage + `", `+
-						`"` + valueSecurity.EffectiveValueinUSD + `", `+
-						`"` + valueSecurity.Currency + `" `
-
-					invokeArgs := util.ToChaincodeArgs(functionUpdateSecurity, order)
+					invokeArgs := util.ToChaincodeArgs(functionUpdateSecurity, valueSecurity.SecurityId, 
+						PledgerLongboxAccount,
+						valueSecurity.SecuritiesName, 
+						strconv.FormatFloat(newQuantity, 'E', -1, 64), 
+						valueSecurity.SecurityType ,
+						valueSecurity.CollateralForm ,
+						valueSecurity.CollateralForm ,
+						"",
+						valueSecurity.MTM ,
+						valueSecurity.EffectivePercentage ,
+						valueSecurity.EffectiveValueinUSD ,
+						valueSecurity.Currency)
 					result, err := stub.InvokeChaincode(AccountChainCode, invokeArgs)
 					if err != nil {
 						errStr := fmt.Sprintf("Failed to update Security from 'Account' chaincode. Got error: %s", err.Error())
@@ -1020,23 +1016,20 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		// Update the new Securities to Pledgee Segregated A/c
 		for _, valueSecurity := range ReallocatedSecurities {
 			
-			order := 
-				`"` + valueSecurity.SecurityId + `" ,`+
-				`"` + PledgeeSegregatedAccount + `" ,`+													
-				`"` + valueSecurity.SecuritiesName + `" ,`+
-				`"` + valueSecurity.SecuritiesQuantity + `" ,`+
-				`"` + valueSecurity.SecurityType + `" ,`+
-				`"` + valueSecurity.CollateralForm + `" ,`+
-				`"` + valueSecurity.CollateralForm + `" ,`+
-				`"" ,`+
-				`"` + valueSecurity.MTM + `" ,`+
-				`"` + valueSecurity.EffectivePercentage + `" ,`+
-				`"` + valueSecurity.EffectiveValueinUSD + `" ,`+
-				`"` + valueSecurity.Currency + `" `
-				
 
 
-			invokeArgs := util.ToChaincodeArgs(functionAddSecurity, order)
+			invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId,
+				PledgeeSegregatedAccount ,												
+				valueSecurity.SecuritiesName,
+				valueSecurity.SecuritiesQuantity,
+				valueSecurity.SecurityType,
+				valueSecurity.CollateralForm,
+				valueSecurity.CollateralForm,
+				"",
+				valueSecurity.MTM,
+				valueSecurity.EffectivePercentage,
+				valueSecurity.EffectiveValueinUSD,
+				valueSecurity.Currency)
 			result, err := stub.InvokeChaincode(AccountChainCode, invokeArgs)
 			if err != nil {
 				errStr := fmt.Sprintf("Failed to update Security from 'Account' chaincode. Got error: %s", err.Error())
@@ -1053,22 +1046,20 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		// Update Transaction data finally
 
 		ConversionRateAsBytes, _ := json.Marshal(ConversionRate)								//marshal an emtpy array of strings to clear the index
-		
-		order:= 
-			`"` + TransactionData.TransactionId + `" , ` + 
-			`"` + TransactionData.TransactionDate + `" , ` + 
-			`"` + TransactionData.DealID + `" , ` + 
-			`"` + TransactionData.Pledger + `" , ` + 
-			`"` + TransactionData.Pledgee + `" , ` + 
-			`"` + TransactionData.RQV + `" , ` +
-	        `"` + TransactionData.Currency + `" , ` + 
-	        `"` + string(ConversionRateAsBytes) + `" , ` +  
-	        `"` + MarginCallTimpestamp + `" , ` + 
-	        `"` + "Allocation Successful" + `" , ` + 
-	       	`"` + "Complete"  + `" ` 
 	        
 	    f := "update_transaction"
-		invoke_args := util.ToChaincodeArgs(f, order)
+		invoke_args := util.ToChaincodeArgs(f, 
+			TransactionData.TransactionId ,
+			TransactionData.TransactionDate ,
+			TransactionData.DealID ,
+			TransactionData.Pledger ,
+			TransactionData.Pledgee ,
+			TransactionData.RQV,
+	        TransactionData.Currency ,
+	        string(ConversionRateAsBytes),
+	        MarginCallTimpestamp ,
+	        "Allocation Successful" ,
+	       	"Completed")
 		res, err := stub.InvokeChaincode(DealChaincode, invoke_args)
 		if err != nil {
 			errStr := fmt.Sprintf("Failed to invoke chaincode. Got error: %s", err.Error())
