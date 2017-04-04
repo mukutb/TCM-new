@@ -242,14 +242,14 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 
 	_DealChaincode	:= args[0]
 	_AccountName	:= args[1]
-	_AccountType	:= args[2]
+	_Role	:= args[2]
 	_CurrentTimeStamp	:= args[3]
 
 	var TransactionsDataFetched []Transactions
 
 	// Fetching Attl transactions for the user
 	function := "getTransactions_byUser"
-	QueryArgs := util.ToChaincodeArgs(function, _AccountName, _AccountType)
+	QueryArgs := util.ToChaincodeArgs(function, _AccountName, _Role)
 	result, err := stub.QueryChaincode(_DealChaincode, QueryArgs)
 	if err != nil {
 		errStr := fmt.Sprintf("Error in fetching Transactions from 'Deal' chaincode. Got error: %s", err.Error())
