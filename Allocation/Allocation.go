@@ -249,8 +249,8 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 
 	// Fetching Attl transactions for the user
 	function := "getTransactions_byUser"
-	invokeArgs := util.ToChaincodeArgs(function, _AccountName, _AccountType)
-	result, err := stub.InvokeChaincode(_DealChaincode, invokeArgs)
+	QueryArgs := util.ToChaincodeArgs(function, _AccountName, _AccountType)
+	result, err := stub.QueryChaincode(_DealChaincode, QueryArgs)
 	if err != nil {
 		errStr := fmt.Sprintf("Error in fetching Transactions from 'Deal' chaincode. Got error: %s", err.Error())
 		fmt.Printf(errStr)
@@ -421,7 +421,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		fmt.Printf(errStr)
 		return nil, errors.New(errStr)
 	}
-	fmt.Sprintf("Transaction hash returned: %s",result)
+	fmt.Print("Transaction hash returned: ")
+	fmt.Println(result)
 	fmt.Println("Successfully updated allocation status to 'Allocation in progress'")
 
 	//-----------------------------------------------------------------------------
@@ -606,7 +607,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	//-----------------------------------------------------------------------------
 
 	// Fetch Pledger & Pledgee securities for longbox and segregated accounts
-	function = "getSecrurities_byAccount"
+	function = "getSecurities_byAccount"
 	
 	queryArgs = util.ToChaincodeArgs(function, PledgerLongboxAccount)
 	PledgerLongboxSecuritiesString, err := stub.QueryChaincode(AccountChainCode, queryArgs)
