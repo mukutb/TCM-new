@@ -289,7 +289,7 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 				newAllStatus 	= "Allocation Failed"
 			}
 			
-			order:= `[` +
+			order:= 
 				`"` + ValueTransaction.TransactionId + `" , ` + 
 				`"` + ValueTransaction.TransactionDate + `" , ` + 
 				`"` + ValueTransaction.DealID + `" , ` + 
@@ -300,8 +300,7 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 		        `"` + ValueTransaction.CurrencyConversionRate + `" , ` +  
 		        `"` + ValueTransaction.MarginCAllDate + `" , ` + 
 		        `"` + newAllStatus + `" , ` + 
-		        `"` + newTxStatus + `" ` + 
-		        `]`
+		        `"` + newTxStatus + `" ` 
 		    // Update allocation status of a transaction
 			function = "update_transaction"
 			invokeArgs := util.ToChaincodeArgs(function, order)
@@ -785,19 +784,18 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 		// Update transaction's allocation status to "Pending due to insufficient collateral" and transaction status to "Pending"
 		f := "update_transaction"
-		input:= `[` +
-			TransactionData.TransactionId + `" , ` + 
-			TransactionData.TransactionDate + `" ,`+ 
-			TransactionData.DealID + `" , ` + 
-			TransactionData.Pledger + `" , ` + 
-			TransactionData.Pledgee + `" , ` + 
-			TransactionData.RQV + `" , ` +
-	        TransactionData.Currency + `" , ` + 
-	        "" + `" , ` +  
-	        MarginCallTimpestamp + `" , ` + 
-	        "Pending due to insufficient collateral" + `" , ` + 
-	        "Pending" + `" ` + 
-	        `]`
+		input:= 
+			`"` + TransactionData.TransactionId + `" , ` + 
+			`"` + TransactionData.TransactionDate + `" ,`+ 
+			`"` + TransactionData.DealID + `" , ` + 
+			`"` + TransactionData.Pledger + `" , ` + 
+			`"` + TransactionData.Pledgee + `" , ` + 
+			`"` + TransactionData.RQV + `" , ` +
+	        `"` + TransactionData.Currency + `" , ` + 
+	        `"" , ` +  
+	        `"` + MarginCallTimpestamp + `" , ` + 
+	        `"` + "Pending due to insufficient collateral" + `" , ` + 
+	        `"` + "Pending" + `" ` 
 	    fmt.Println(input);
 		invoke_args := util.ToChaincodeArgs(f, input)
 		result, err := stub.InvokeChaincode(DealChaincode, invoke_args)
@@ -806,7 +804,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			fmt.Printf(errStr)
 			return nil, errors.New(errStr)
 		} 	
-		fmt.Printf("Update transaction returned : %s",result)
+		fmt.Print("Update transaction returned : ")
+		fmt.Println(result)
 		fmt.Println("Successfully updated allocation status to 'Pending due to insufficient collateral'")
 	    //Send a event to event handler
 	    tosend:= "{ \"transactionId\" : \"" + TransactionData.TransactionId + "\", \"message\" : \"Transaction updated succcessfully with status \"Pending\"\", \"code\" : \"200\"}"
@@ -990,7 +989,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				newQuantity := _SecurityQuantity - _SecurityId
 				if _SecurityQuantity != _SecurityId {
 					
-					order := 	`[`+
+					order := 
 						`"` + valueSecurity.SecurityId + `", `+
 						`"` + PledgerLongboxAccount + `", `+													
 						`"` + valueSecurity.SecuritiesName + `", `+
@@ -1002,8 +1001,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						`"` + valueSecurity.MTM + `", `+
 						`"` + valueSecurity.EffectivePercentage + `", `+
 						`"` + valueSecurity.EffectiveValueinUSD + `", `+
-						`"` + valueSecurity.Currency + `" `+
-						`]`
+						`"` + valueSecurity.Currency + `" `
 
 					invokeArgs := util.ToChaincodeArgs(functionUpdateSecurity, order)
 					result, err := stub.InvokeChaincode(AccountChainCode, invokeArgs)
@@ -1021,7 +1019,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		// Update the new Securities to Pledgee Segregated A/c
 		for _, valueSecurity := range ReallocatedSecurities {
 			
-			order := 	`[`+
+			order := 
 				`"` + valueSecurity.SecurityId + `" ,`+
 				`"` + PledgeeSegregatedAccount + `" ,`+													
 				`"` + valueSecurity.SecuritiesName + `" ,`+
@@ -1033,8 +1031,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				`"` + valueSecurity.MTM + `" ,`+
 				`"` + valueSecurity.EffectivePercentage + `" ,`+
 				`"` + valueSecurity.EffectiveValueinUSD + `" ,`+
-				`"` + valueSecurity.Currency + `" `+
-				`]`
+				`"` + valueSecurity.Currency + `" `
+				
 
 
 			invokeArgs := util.ToChaincodeArgs(functionAddSecurity, order)
@@ -1053,10 +1051,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 		// Update Transaction data finally
 
-		fmt.Println("Successfully updated allocation status to 'Allocation Successful'")
 		ConversionRateAsBytes, _ := json.Marshal(ConversionRate)								//marshal an emtpy array of strings to clear the index
 		
-		order:= `[` +
+		order:= 
 			`"` + TransactionData.TransactionId + `" , ` + 
 			`"` + TransactionData.TransactionDate + `" , ` + 
 			`"` + TransactionData.DealID + `" , ` + 
@@ -1066,9 +1063,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	        `"` + TransactionData.Currency + `" , ` + 
 	        `"` + string(ConversionRateAsBytes) + `" , ` +  
 	        `"` + MarginCallTimpestamp + `" , ` + 
-	        "Allocation Successful" + ` , ` + 
-	       	"Complete" + 
-	        `]`
+	        `"` + "Allocation Successful" + `" , ` + 
+	       	`"` + "Complete"  + `" ` 
+	        
 	    f := "update_transaction"
 		invoke_args := util.ToChaincodeArgs(f, order)
 		res, err := stub.InvokeChaincode(DealChaincode, invoke_args)
@@ -1077,8 +1074,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			fmt.Printf(errStr)
 			return nil, errors.New(errStr)
 		} 	
-		fmt.Printf("Update transaction returned hash: %s",res)
-	    
+		fmt.Print("Update transaction returned hash: ");
+	    fmt.Println(res);
+		fmt.Println("Successfully updated allocation status to 'Allocation Successful'")
 	    // Actual return of process end. 
 		ret:= "{ \"message\" : \" + TransactionDataTransactionID + \" Completed allocation succcessfully.\", \"code\" : \"200\" }"
 		return []byte(ret), nil
