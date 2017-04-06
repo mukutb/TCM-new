@@ -1103,7 +1103,7 @@ func(t * ManageDeals) create_transaction(stub shim.ChaincodeStubInterface, args[
             return nil, err
         }
          //get the Transaction index
-        /*transactionIndexAsBytes, err:= stub.GetState(transactionIndexStr)
+        transactionIndexAsBytes, err:= stub.GetState(transactionIndexStr)
         if err != nil {
             return nil, errors.New("Failed to get Transaction index")
         }
@@ -1122,7 +1122,7 @@ func(t * ManageDeals) create_transaction(stub shim.ChaincodeStubInterface, args[
         err = stub.PutState(transactionIndexStr, jsonAsBytes) //store name of Transaction
         if err != nil {
             return nil, err
-        }*/
+        }
         tosend:= "{ \"transactionId\" : \"" + args[0] + "\", \"message\" : \"Transaction created succcessfully\", \"code\" : \"200\"}"
         err = stub.SetEvent("evtsender", [] byte(tosend))
         if err != nil {
