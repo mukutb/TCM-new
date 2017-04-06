@@ -583,8 +583,8 @@ func(t * ManageDeals) create_deal(stub shim.ChaincodeStubInterface, args[] strin
     //build the Deal json string manually
     order:= `{` + `"dealId": "` + dealId + `" , ` + `"pledger": "` + Pledger + `" , ` + `"pledgee": "` + Pledgee + `" , ` + `"maxValue": "` + MaxValue + `" , ` + `"totalValueLongBoxAccount": "` + TotalValueLongBoxAccount + `" , ` + `"totalValueSegregatedAccount": "` + TotalValueSegregatedAccount + `" , ` + `"issueDate": "` + IssueDate + `" , ` + `"transactions": "` + Transactions + `" , ` + `"lastSuccessfulAllocationDate": "` + LastSuccessfulAllocationDate + `"  ` + `}`
     //fmt.Println("order: " + order)
-    fmt.Print("order in bytes array: ")
-    fmt.Println([] byte(order))
+    //fmt.Print("order in bytes array: ")
+    fmt.Println(order);
     err = stub.PutState(dealId, [] byte(order)) //store Deal with dealId as key
     if err != nil {
         return nil, err
