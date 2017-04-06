@@ -28,9 +28,8 @@ import ("errors"
 type ManageDeals struct {}
 
 var DealIndexStr = "_Dealindex" //name for the key/value that will store a list of all known RQv's
-/*  `transactionIndexStr` stores list of all the transactions stored on the blockchain.It is commented right now, since it is creating an extra load on the blockchain.If it is needed later, comment out its code and execute.
-*/
-//var transactionIndexStr = "_transactionIndex" //name for the key/value that will store a list of all known transactionIds
+
+var transactionIndexStr = "_transactionIndex" //name for the key/value that will store a list of all known transactionIds
 
 type Transactions struct {
     TransactionId string `json:"transactionId"`
@@ -121,26 +120,17 @@ func(t * ManageDeals) Run(stub shim.ChaincodeStubInterface, function string, arg
 func(t * ManageDeals) Invoke(stub shim.ChaincodeStubInterface, function string, args[] string)([] byte, error) {
     fmt.Println("invoke is running " + function)
     // Handle different functions
-    if
-    function == "init" { //initialize the chaincode state, used as reset
+    if function == "init" { //initialize the chaincode state, used as reset
         return t.Init(stub, "init", args)
-    } else if
-    function == "create_deal" { //create a new deal
+    } else if function == "create_deal" { //create a new deal
         return t.create_deal(stub, args)
-    } else if
-    function == "update_deal" { //update a deal
+    } else if function == "update_deal" { //update a deal
         return t.update_deal(stub, args)
-    } else if
-    function == "getTransactions_byUser" { //update a deal
-        return t.getTransactions_byUser(stub, args)
-    } else if
-    function == "create_transaction" { //create a new deal
+    } else if function == "create_transaction" { //create a new deal
         return t.create_transaction(stub, args)
-    } else if
-    function == "update_transaction" { //update a deal
+    } else if function == "update_transaction" { //update a deal
         return t.update_transaction(stub, args)
-    } else if
-    function == "update_transaction_AllocationStatus" { //update a deal
+    } else if function == "update_transaction_AllocationStatus" { //update a deal
         return t.update_transaction_AllocationStatus(stub, args)
     }
     fmt.Println("invoke did not find func: " + function)
@@ -171,9 +161,9 @@ func(t * ManageDeals) Query(stub shim.ChaincodeStubInterface, function string, a
         return t.getTransactions_byDealID(stub, args)
     } else if function == "getTransactions_byUser" { //Read all Transactions by user 
         return t.getTransactions_byUser(stub, args)
-    } /*else if function == "get_AllTransactions" { //Read all Transactions
+    } else if function == "get_AllTransactions" { //Read all Transactions
         return t.get_AllTransactions(stub, args)
-    }*/
+    }
     fmt.Println("query did not find func: " + function) //errors
     errMsg:= "{ \"message\" : \"Received unknown function query\", \"code\" : \"503\"}"
     err:= stub.SetEvent("errEvent", [] byte(errMsg))
@@ -437,7 +427,7 @@ func(t * ManageDeals) get_AllDeal(stub shim.ChaincodeStubInterface, args[] strin
 // ============================================================================================================================
 //  get_AllTransactions- get details of all Deal from chaincode state
 // ============================================================================================================================
-/*func(t * ManageDeals) get_AllTransactions(stub shim.ChaincodeStubInterface, args[] string)([] byte, error) {
+func(t * ManageDeals) get_AllTransactions(stub shim.ChaincodeStubInterface, args[] string)([] byte, error) {
     var jsonResp, errResp string
     var transactionIndex[] string
     fmt.Println("start get_AllTransactions")
@@ -483,7 +473,7 @@ func(t * ManageDeals) get_AllDeal(stub shim.ChaincodeStubInterface, args[] strin
     fmt.Println("end get_AllTransactions")
     return [] byte(jsonResp), nil
     //send it onward
-}*/
+}
 // ============================================================================================================================
 // Write - update Deal into chaincode state
 // ============================================================================================================================
