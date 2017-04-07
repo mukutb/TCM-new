@@ -204,9 +204,9 @@ func (t *ManageAccounts) getAccount_byName(stub shim.ChaincodeStubInterface, arg
 		fmt.Println(valueAsBytes)
 		if _tempJson.AccountName == _AccountName {
 			jsonResp = jsonResp + "\""+ val + "\":" + string(valueAsBytes[:])
-			if i < len(AccountIndex)-1 {
+		}
+		if i < len(AccountIndex)-1 {
 				jsonResp = jsonResp + ","
-			}
 		}
 	}
 	fmt.Println("len(AccountIndex) : ")
@@ -268,9 +268,9 @@ func (t *ManageAccounts) getAccount_byType(stub shim.ChaincodeStubInterface, arg
 		fmt.Println(valueAsBytes)
 		if _tempJson.AccountType == _AccountType {
 			jsonResp = jsonResp + "\""+ val + "\":" + string(valueAsBytes[:])
-			if i < len(AccountIndex)-1 {
-				jsonResp = jsonResp + ","
-			}
+		}
+		if i < len(AccountIndex)-1 {
+			jsonResp = jsonResp + ","
 		}
 	}
 	fmt.Println("len(AccountIndex) : ")
@@ -842,7 +842,7 @@ func (t *ManageAccounts) update_security(stub shim.ChaincodeStubInterface, args 
 		order := 	`{`+
 			`"securityId": "` + res.SecurityId + `" ,`+
 			`"accountNumber": "` + res.AccountNumber + `" ,`+
-			`"securityName": "` + args[2] + `" ,`+
+			`"accountNumber": "` + args[2] + `" ,`+
 			`"securityQuantity": "` + args[3] + `" ,`+
 			`"securityType": "` + args[4] + `" ,`+
 			`"collateralForm": "` + args[5] + `" ,`+
