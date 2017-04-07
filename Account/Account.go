@@ -222,6 +222,9 @@ func (t *ManageAccounts) getAccount_byName(stub shim.ChaincodeStubInterface, arg
         	return nil, err
         }
     }
+    if strings.Contains(jsonResp,"},}"){
+    	jsonResp = strings.Replace(jsonResp, "},}", "}}", -1)
+    }
 	fmt.Println("end getAccount_byName")
 	return []byte(jsonResp), nil
 											//send it onward
@@ -255,6 +258,8 @@ func (t *ManageAccounts) getAccount_byType(stub shim.ChaincodeStubInterface, arg
 	json.Unmarshal(AccountAsBytes, &AccountIndex)								//un stringify it aka JSON.parse()
 	fmt.Print("AccountIndex : ")
 	fmt.Println(AccountIndex)
+	fmt.Println("len(AccountIndex) : ")
+	fmt.Println(len(AccountIndex))
 	jsonResp = "{"
 	for i,val := range AccountIndex{
 		fmt.Println(strconv.Itoa(i) + " - looking at " + val + " for all Account")
@@ -273,10 +278,7 @@ func (t *ManageAccounts) getAccount_byType(stub shim.ChaincodeStubInterface, arg
 			}
 		}
 	}
-	fmt.Println("len(AccountIndex) : ")
-	fmt.Println(len(AccountIndex))
 	jsonResp = jsonResp + "}"
-	fmt.Println("jsonResp : " + jsonResp)
 	if jsonResp == "{}" {
         fmt.Println(_AccountType + " account not found")
         jsonResp = "{ \"AccountType\" : \"" + _AccountType + "\", \"message\" : \"Account not found.\", \"code\" : \"503\"}"
@@ -286,6 +288,10 @@ func (t *ManageAccounts) getAccount_byType(stub shim.ChaincodeStubInterface, arg
     	    return nil, err
         }
     }
+    if strings.Contains(jsonResp,"},}"){
+    	jsonResp = strings.Replace(jsonResp, "},}", "}}", -1)
+    }
+	fmt.Println("jsonResp : " + jsonResp)
 	fmt.Println("end getAccount_byType")
 	return []byte(jsonResp), nil
 											//send it onward
