@@ -232,7 +232,7 @@ func (t *ManageAccounts) getAccount_byName(stub shim.ChaincodeStubInterface, arg
 func (t *ManageAccounts) getAccount_byType(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var jsonResp, errResp string
 	var AccountIndex []string
-	fmt.Println("start getAccount_byNumber")
+	fmt.Println("start getAccount_byType")
 	var err error
 	if len(args) != 1 {
 		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 1\" \" as an argument\", \"code\" : \"503\"}"
