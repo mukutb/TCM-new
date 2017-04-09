@@ -808,7 +808,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		fmt.Println(result)
 		fmt.Println("Successfully updated allocation status to 'Pending' due to insufficient collateral'")
 	    //Send a event to event handler
-	    tosend:= "{ \"transactionId\" : \"" + TransactionData.TransactionId + "\", \"message\" : \"Transaction Allocation updated succcessfully with status \'Pending\' due to insufficient collateral.\", \"code\" : \"200\"}"
+	    tosend:= "{ \"transactionId\" : \"" + TransactionData.TransactionId + "\", \"message\" : \"Transaction Allocation updated succcessfully with status 'Pending' due to insufficient collateral.\", \"code\" : \"200\"}"
 	    err = stub.SetEvent("evtsender", [] byte(tosend))
 	    if err != nil {
 	        return nil, err
