@@ -299,6 +299,9 @@ func(t * ManageDeals) getDeal_byPledger(stub shim.ChaincodeStubInterface, args[]
         return nil, err
         }
     }
+    if strings.Contains(jsonResp,"},}"){
+        jsonResp = strings.Replace(jsonResp, "},}", "}}", -1)
+    }
     //fmt.Print("jsonResp in bytes : ")
     //fmt.Println([]byte(jsonResp))
     fmt.Println("end getDeal_byPledger")
@@ -368,6 +371,9 @@ func(t * ManageDeals) getDeal_byPledgee(stub shim.ChaincodeStubInterface, args[]
         if err != nil {
             return nil, err
         }
+    }
+    if strings.Contains(jsonResp,"},}"){
+        jsonResp = strings.Replace(jsonResp, "},}", "}}", -1)
     }
     //fmt.Print("jsonResp in bytes : ")
     //fmt.Println([]byte(jsonResp))
@@ -782,6 +788,9 @@ func(t * ManageDeals) getTransactions_byUser(stub shim.ChaincodeStubInterface, a
         if err != nil {
         return nil, err
         }
+    }
+    if strings.Contains(jsonResp,"},}"){
+        jsonResp = strings.Replace(jsonResp, "},}", "}}", -1)
     }
     //fmt.Print("jsonResp in bytes : ")
     //fmt.Println([]byte(jsonResp))
