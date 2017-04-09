@@ -808,15 +808,15 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		fmt.Println(result)
 		fmt.Println("Successfully updated allocation status to 'Pending due to insufficient collateral'")
 	    //Send a event to event handler
-	    tosend:= "{ \"transactionId\" : \"" + TransactionData.TransactionId + "\", \"message\" : \"Transaction updated succcessfully with status \"Pending\"\", \"code\" : \"200\"}"
+	    tosend:= "{ \"transactionId\" : \"" + TransactionData.TransactionId + "\", \"message\" : \"Transaction Allocation updated succcessfully with status \"Pending\" due to insufficient collateral.\", \"code\" : \"200\"}"
 	    err = stub.SetEvent("evtsender", [] byte(tosend))
 	    if err != nil {
 	        return nil, err
 	    }
 
 	    // Actual return of process end. 
-		ret:= "{ \"message\" : \""+TransactionID+" pending due to insufficient collateral. Notification sent to user.\", \"code\" : \"200\"}"
-		return []byte(ret), nil
+		//ret:= "{ \"message\" : \""+TransactionID+" pending due to insufficient collateral. Notification sent to user.\", \"code\" : \"200\"}"
+		return nil, nil
 
 	} else {
 
@@ -1070,8 +1070,13 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	    fmt.Println(res);
 		fmt.Println("Successfully updated allocation status to 'Allocation Successful'")
 	    // Actual return of process end. 
-		ret:= "{ \"message\" : \" + TransactionDataTransactionID + \" Completed allocation succcessfully.\", \"code\" : \"200\" }"
-		return []byte(ret), nil
+		tosend:= "{ \"Transaction ID\" : \"" + TransactionData.TransactionId + "\", \"message\" : \"Transaction allocation completed successfully.\", \"code\" : \"200\"}"
+	    	err = stub.SetEvent("evtsender", [] byte(tosend))
+	    		if err != nil {
+		        return nil, err
+		}
+		//ret:= "{ \"message\" : \" + TransactionDataTransactionID + \" Completed allocation succcessfully.\", \"code\" : \"200\" }"
+		return nil, nil
 
 	}
 
