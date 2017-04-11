@@ -593,10 +593,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				return nil, err
 			} 
 		} else {
-			RQVtemp, errBool := strconv.ParseFloat(SecurityJSON[key]["Priority"],64)
-			if errBool != nil { fmt.Println(errBool) }
-
-			RQVEligibleValue[key] = float64(RQVtemp * ConcentrationLimitPri)
+			RQVEligibleValue[key] = float64(RQV * ConcentrationLimitPri)
 		}
 	}
 	fmt.Println("RQVEligibleValue after calculation:")
