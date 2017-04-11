@@ -593,7 +593,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				return nil, err
 			} 
 		} else {
-			RQVEligibleValue[key] = float64(RQV * ConcentrationLimitPri)
+			RQVEligibleValue[key] = float64((RQV * ConcentrationLimitPri)/100)
 		}
 	}
 	fmt.Println("RQVEligibleValue after calculation:")
