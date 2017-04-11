@@ -767,7 +767,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	}
 	
 	fmt.Println("AvailableEligibleCollateral after calculation:")
-	fmt.Printf(AvailableEligibleCollateral)
+	fmt.Printf("%#v",AvailableEligibleCollateral)
 	fmt.Println("PledgerLongboxSecurities after calculation:")
 	fmt.Printf("%#v",PledgerLongboxSecurities)
 	fmt.Println("PledgeeSegregatedSecurities after calculation:")
@@ -857,7 +857,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		// Iterating through all the securities 
 		// Label: CombinedSecuritiesIterator --> to be used for break statements
 		CombinedSecuritiesIterator: for _,valueSecurity := range CombinedSecurities {
-			fmt.Prntln("RQVLeft: ", RQVLeft)
+			fmt.Println("RQVLeft: ", RQVLeft)
 			if RQVLeft > 0 {
 				// More Security need to be taken out
 				temp1 := RQVEligibleValueLeft[valueSecurity.CollateralForm]
