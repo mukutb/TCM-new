@@ -625,6 +625,11 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	TotalValuePledgerLongboxSecurities := make(map[string]float64)
 	TotalValuePledgeeSegregatedSecurities := make(map[string]float64)
 
+	fmt.Println("PledgerLongboxSecuritiesJSON after calculation:")
+	fmt.Printf("%#v",PledgerLongboxSecuritiesJSON)
+	fmt.Println("PledgeeSegregatedSecuritiesJSON after calculation:")
+	fmt.Printf("%#v",PledgeeSegregatedSecuritiesJSON)
+
 	//Operations for Pledger Longbox Securities
 	for _,value := range PledgerLongboxSecuritiesJSON {
 		// Key = Security ID && value = Security Structure
@@ -633,8 +638,6 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 		// Check if Current Collateral Form type is acceptied in ruleset. If not skip it!
 		if len(rulesetFetched.Security[tempSecurity.CollateralForm]) > 0 {
-
-
 
 			url2 := fmt.Sprintf("http://"+ APIIP +"/MarketData/" + tempSecurity.SecurityId)
 
@@ -646,7 +649,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			}
 
 			// For control over HTTP client headers, redirect policy, and other settings, create a Client
-			// A Client is an HTTP client
+			// A Client is an HTTP cliPledgeeSegregatedSecuritiesent
 			client2 := &http.Client{}
 
 			// Send the request via a client 
@@ -662,7 +665,6 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			}
 
 			fmt.Println("The MarketData response is::"+strconv.Itoa(resp2.StatusCode))
-
 
 			var stringArr []string
 
@@ -706,7 +708,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				This is just for using the limited sorting application provided by GOlang
 				By no chance is this to be stored on Blockchain. 
 			*/
-			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][1], 'E', -1, 64)
+			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'E', -1, 64)
 
 			// Append Securities to an array
 			PledgerLongboxSecurities = append(PledgerLongboxSecurities,tempSecurity)
@@ -754,11 +756,11 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				This is just for using the limited sorting application provided by GOlang
 				By no chance is this to be stored on Blockchain. 
 			*/
-			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][1], 'E', -1, 64)
+			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'E', -1, 64)
 
 			// Append Securities to an array
 			PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, tempSecurity)
-			CombinedSecurities = append(CombinedSecurities,tempSecurity)
+			CombinedSecurities = append(CombinedSecurities, tempSecurity)
 		}
 
 	}
