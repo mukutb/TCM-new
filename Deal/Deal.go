@@ -964,7 +964,7 @@ func(t * ManageDeals) update_transaction(stub shim.ChaincodeStubInterface, args[
             `"pledgee": "` + args[4] + `" , ` + 
             `"rqv": "` + args[5] + `" , ` +
             `"currency": "` + args[6] + `" , ` + 
-            `"currencyConversionRate": "` + args[7] + `" , ` +  
+            `"currencyConversionRate": ` + args[7] + ` , ` +  
             `"marginCAllDate": "` + args[8] + `" , ` + 
             `"allocationStatus": "` + args[9] + `" , ` + 
             `"transactionStatus": "` + args[10] + `" ` + 
