@@ -969,6 +969,7 @@ func(t * ManageDeals) update_transaction(stub shim.ChaincodeStubInterface, args[
             `"allocationStatus": "` + args[9] + `" , ` + 
             `"transactionStatus": "` + args[10] + `" ` + 
             `}`
+        fmt.Println(order)
         err = stub.PutState(_transactionId, [] byte(order)) //store Deal with id as key
         if err != nil {
             return nil, err
