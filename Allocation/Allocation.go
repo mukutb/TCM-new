@@ -1057,7 +1057,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		// Update Transaction data finally
 
 		ConversionRateAsBytes, _ := json.Marshal(ConversionRate)								//marshal an emtpy array of strings to clear the index
-	        
+	    ConversionRateAsString := string(ConversionRateAsBytes);
 	    f := "update_transaction"
 		invoke_args := util.ToChaincodeArgs(f, 
 			TransactionData.TransactionId ,
@@ -1067,7 +1067,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			TransactionData.Pledgee ,
 			TransactionData.RQV,
 	        TransactionData.Currency ,
-	        ConversionRateAsBytes,
+	        ConversionRateAsString,
 	        MarginCallTimpestamp ,
 	        "Allocation Successful" ,
 	       	"Completed")
