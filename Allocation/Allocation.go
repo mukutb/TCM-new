@@ -1067,7 +1067,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			TransactionData.Pledgee ,
 			TransactionData.RQV,
 	        TransactionData.Currency ,
-	        string(ConversionRateAsBytes),
+	        ConversionRateAsBytes,
 	        MarginCallTimpestamp ,
 	        "Allocation Successful" ,
 	       	"Completed")
