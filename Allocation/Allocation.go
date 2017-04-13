@@ -299,11 +299,11 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 				ValueTransaction.Pledgee ,
 				ValueTransaction.RQV,
 		        ValueTransaction.Currency ,
-		        ValueTransaction.CurrencyConversionRate,
+		        "\""+ValueTransaction.CurrencyConversionRate+"\"",
 		        ValueTransaction.MarginCAllDate,
 		        newAllStatus ,
 		        newTxStatus)
-			fmt.Println(invokeArgs);
+			fmt.Println(ValueTransaction);
 			result, err := stub.InvokeChaincode(_DealChaincode, invokeArgs)
 			if err != nil {
 				errStr := fmt.Sprintf("Failed to update Transaction status from 'Deal' chaincode. Got error: %s", err.Error())
@@ -803,7 +803,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	        `"` + "Pending" + `" ` 
 	    fmt.Println(input);*/
 		invoke_args := util.ToChaincodeArgs(f, TransactionData.TransactionId,TransactionData.TransactionDate, TransactionData.DealID, TransactionData.Pledger,TransactionData.Pledgee, TransactionData.RQV, TransactionData.Currency,"\" \"", MarginCallTimpestamp, "Pending due to insufficient collateral","Pending")
-		fmt.Println(invoke_args);
+		fmt.Println(TransactionData);
 		result, err := stub.InvokeChaincode(DealChaincode, invoke_args)
 		if err != nil {
 			errStr := fmt.Sprintf("Failed to invoke chaincode. Got error: %s", err.Error())
@@ -1073,7 +1073,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	        MarginCallTimpestamp ,
 	        "Allocation Successful" ,
 	       	"Completed")
-		fmt.Println(invoke_args);
+		fmt.Println(TransactionData);
 		res, err := stub.InvokeChaincode(DealChaincode, invoke_args)
 		if err != nil {
 			errStr := fmt.Sprintf("Failed to invoke chaincode. Got error: %s", err.Error())
