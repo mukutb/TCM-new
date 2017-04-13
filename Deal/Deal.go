@@ -878,7 +878,7 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
                         }
                         fmt.Println(_oldMarginCallDate);
                         if _tempJson.AllocationStatus != "Allocation Succcessful" || _oldMarginCallDate < _newMarginCallDate{
-                            fmt.Println("Replace old transaction with "+ _transactionSplit[i] +" with new transactionid: "+_transactionId);
+                            fmt.Println("Replace old transaction "+ _transactionSplit[i] +" with new transactionid: "+_transactionId);
                             err := stub.DelState(_transactionSplit[i])                                                  //remove the key from chaincode state
                             if err != nil {
                                 errMsg := "{ \"TransactionID\" : \"" + _transactionSplit[i] + "\", \"message\" : \"Failed to delete state\", \"code\" : \"503\"}"
@@ -891,6 +891,8 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
                             _transactionSplit = append(_transactionSplit[:i], _transactionSplit[i+1:]...)
                             _transactionSplit = append(_transactionSplit,_transactionId);
                         }
+                    }else{
+                        _transactionSplit = append(_transactionSplit,_transactionId);
                     }
                 }
             }
