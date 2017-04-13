@@ -1041,6 +1041,7 @@ func(t * ManageDeals) update_transaction_AllocationStatus(stub shim.ChaincodeStu
             `"pledgee": "` + res.Pledgee + `" , ` + 
             `"rqv": "` + res.RQV + `" , ` + 
             `"currency": "` + res.Currency + `" , ` + 
+            `"currencyConversionRate": "` + res.CurrencyConversionRate + `" , ` + 
             `"marginCAllDate": "` + res.MarginCAllDate + `" , ` + 
             `"allocationStatus": "` + args[1] + `" , ` + 
             `"transactionStatus": "` + res.TransactionStatus + `" ` + 
