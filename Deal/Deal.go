@@ -132,7 +132,10 @@ func(t * ManageDeals) Invoke(stub shim.ChaincodeStubInterface, function string, 
         return t.update_transaction(stub, args)
     } else if function == "update_transaction_AllocationStatus" { //update a deal
         return t.update_transaction_AllocationStatus(stub, args)
+    } else if function == "addTransaction_inDeal" { //add transactions to a deal
+        return t.addTransaction_inDeal(stub, args)
     }
+
     fmt.Println("invoke did not find func: " + function)
     errMsg:= "{ \"message\" : \"Received unknown function invocation\", \"code\" : \"503\"}"
     err:= stub.SetEvent("errEvent", [] byte(errMsg))
@@ -866,28 +869,32 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
                     json.Unmarshal(valueAsBytes, &_tempJson)
                     fmt.Print("_tempJson : ")
                     fmt.Println(_tempJson)
-                    _oldMarginCallDate,err := strconv.Atoi(_tempJson.MarginCAllDate)
-                    if err != nil {
-                        fmt.Sprintf("Error while converting string '_tempJson.marginCAllDate' to int : %s", err.Error())
-                        return nil, errors.New("Error while converting string '_tempJson.marginCAllDate' to int ")
-                    }
-                    fmt.Println(_oldMarginCallDate);
                     if _tempJson.Pledger == _pledger && _tempJson.Pledgee == _pledgee{
                         fmt.Println("Pledger and Pledgee matched")
-                        if _tempJson.AllocationStatus != "Allocation Succcessful" {
-                            fmt.Println("allocation status is not allocation Succcessful.So, replace "+ _transactionSplit[i] +" with new transactionid: "+_transactionId);
-                            _tempJson.TransactionId = _transactionId;
-                            _transactionSplit[i] = _transactionId;
+                        _oldMarginCallDate,err := strconv.Atoi(_tempJson.MarginCAllDate)
+                        if err != nil {
+                            fmt.Sprintf("Error while converting string '_tempJson.marginCAllDate' to int : %s", err.Error())
+                            return nil, errors.New("Error while converting string '_tempJson.marginCAllDate' to int ")
                         }
-                        if _oldMarginCallDate < _newMarginCallDate {
-                            fmt.Println("MarginCAllDate is older than the _newMarginCallDate")
-                            _tempJson.TransactionId = _transactionId;
-                            _transactionSplit[i] = _transactionId;
+                        fmt.Println(_oldMarginCallDate);
+                        if _tempJson.AllocationStatus != "Allocation Succcessful" || _oldMarginCallDate < _newMarginCallDate{
+                            fmt.Println("Replace old transaction with "+ _transactionSplit[i] +" with new transactionid: "+_transactionId);
+                            err := stub.DelState(_transactionSplit[i])                                                  //remove the key from chaincode state
+                            if err != nil {
+                                errMsg := "{ \"TransactionID\" : \"" + _transactionSplit[i] + "\", \"message\" : \"Failed to delete state\", \"code\" : \"503\"}"
+                                err = stub.SetEvent("errEvent", []byte(errMsg))
+                                if err != nil {
+                                    return nil, err
+                                } 
+                                return nil, nil
+                            }
+                            _transactionSplit = append(_transactionSplit[:i], _transactionSplit[i+1:]...)
+                            _transactionSplit = append(_transactionSplit,_transactionId);
                         }
                     }
-                    res.Transactions = res.Transactions + "," + _transactionSplit[i]
                 }
             }
+            res.Transactions = strings.Join(_transactionSplit,",");
             fmt.Println(res.Transactions);
         }
     } else {
