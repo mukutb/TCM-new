@@ -998,16 +998,36 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					errStr := fmt.Sprintf("Failed to convert SecurityQuantity(string) to SecurityQuantity(int). Got error: %s", err.Error())
 					fmt.Printf(errStr)
 				}
-				_SecurityId := SecuritiesChanged[valueSecurity.SecurityId]
-				newQuantity := _SecurityQuantity - _SecurityId
-				if _SecurityQuantity != _SecurityId {
+				_tempQuantity := SecuritiesChanged[valueSecurity.SecurityId]
+				newQuantity := _SecurityQuantity - _tempQuantity
+
+				if _SecurityQuantity == _tempQuantity {
 					
+					invokeArgs := util.ToChaincodeArgs(functionUpdateSecurity, valueSecurity.SecurityId, 
+						PledgerLongboxAccount,
+						valueSecurity.SecuritiesName, 
+						valueSecurity.SecuritiesQuantity, 
+						valueSecurity.SecurityType ,
+						valueSecurity.CollateralForm ,
+						"",
+						valueSecurity.MTM ,
+						valueSecurity.EffectivePercentage ,
+						valueSecurity.EffectiveValueinUSD ,
+						valueSecurity.Currency)
+					result, err := stub.InvokeChaincode(AccountChainCode, invokeArgs)
+					if err != nil {
+						errStr := fmt.Sprintf("Failed to update Security from 'Account' chaincode. Got error: %s", err.Error())
+						fmt.Printf(errStr)
+						return nil, errors.New(errStr)
+					}
+					fmt.Print("Transaction hash returned: ");
+					fmt.Println(result)
+				} else if newQuantity < _SecurityQuantity && _tempQuantity > 0  {
 					invokeArgs := util.ToChaincodeArgs(functionUpdateSecurity, valueSecurity.SecurityId, 
 						PledgerLongboxAccount,
 						valueSecurity.SecuritiesName, 
 						strconv.FormatFloat(newQuantity, 'E', -1, 64), 
 						valueSecurity.SecurityType ,
-						valueSecurity.CollateralForm ,
 						valueSecurity.CollateralForm ,
 						"",
 						valueSecurity.MTM ,
@@ -1036,7 +1056,6 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				valueSecurity.SecuritiesName,
 				valueSecurity.SecuritiesQuantity,
 				valueSecurity.SecurityType,
-				valueSecurity.CollateralForm,
 				valueSecurity.CollateralForm,
 				"",
 				valueSecurity.MTM,
