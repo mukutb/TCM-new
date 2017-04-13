@@ -890,6 +890,31 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
                             }
                             _transactionSplit = append(_transactionSplit[:i], _transactionSplit[i+1:]...)
                             _transactionSplit = append(_transactionSplit,_transactionId);
+
+                            // Removing transaction from transaction index String
+
+                            transactionIndexAsBytes, err:= stub.GetState(transactionIndexStr)
+                            if err != nil {
+                                return nil, errors.New("Failed to get Transaction index")
+                            }
+                            var transactionIndex[] string
+                            //fmt.Print("transactionIndexAsBytes: ")
+                            //fmt.Println(transactionIndexAsBytes)
+                            json.Unmarshal(transactionIndexAsBytes, &transactionIndex) //un stringify it aka JSON.parse()
+                            fmt.Print("transactionIndex before replacement: ")
+                            //fmt.Println(transactionIndex)
+                            //Replacing old transactionId with new transactionId
+                            for i:= range transactionIndex {
+                                transactionIndex[i] = strings.Replace(transactionIndex[i],_transactionSplit[i],_transactionId, -1)
+                            }
+                            fmt.Println("transaction index after Replacement: ", transactionIndex);
+                            jsonAsBytes, _:= json.Marshal(transactionIndex)
+                            //fmt.Print("jsonAsBytes: ")
+                            //fmt.Println(jsonAsBytes)
+                            err = stub.PutState(transactionIndexStr, jsonAsBytes) //store name of Transaction
+                            if err != nil {
+                                return nil, err
+                            }
                         }
                     }else{
                         _transactionSplit = append(_transactionSplit,_transactionId);
