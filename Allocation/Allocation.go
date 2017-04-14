@@ -1002,7 +1002,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			fmt.Printf(errStr)
 			return nil, errors.New(errStr)
 		}
-		
+		fmt.Println(result)
 		invokeArgs = util.ToChaincodeArgs(function, PledgeeSegregatedAccount)
 		result, err = stub.InvokeChaincode(AccountChainCode, invokeArgs)
 		if err != nil {
@@ -1066,6 +1066,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						fmt.Printf(errStr)
 						return nil, errors.New(errStr)
 					}
+					fmt.Println(result)
 					
 				} else if newQuantity < _SecurityQuantity && _tempQuantity > 0  {
 					invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId, 
