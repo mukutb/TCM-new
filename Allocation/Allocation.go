@@ -698,7 +698,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			if errBool != nil { fmt.Println(errBool) }
 
 			_rate := ConversionRate.Rates[tempSecurity.Currency]
-			if _rate < 0 {
+			if _rate <= 0 {
 				_rate = 1
 			}
 
@@ -753,7 +753,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			if errBool != nil { fmt.Println(errBool) }
 
 			_rate := ConversionRate.Rates[tempSecurity.Currency]
-			if _rate < 0 {
+			if _rate <= 0 {
 				_rate = 1
 			}
 			fmt.Println("_rate")
