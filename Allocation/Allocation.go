@@ -606,6 +606,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	}
 	fmt.Println("RQVEligibleValue after calculation:")
 	fmt.Printf("%#v",RQVEligibleValue)
+	fmt.Println()
 
 
 	//-----------------------------------------------------------------------------
@@ -635,8 +636,10 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 	fmt.Println("PledgerLongboxSecuritiesJSON after calculation:")
 	fmt.Printf("%#v",PledgerLongboxSecuritiesJSON)
+	fmt.Println()
 	fmt.Println("PledgeeSegregatedSecuritiesJSON after calculation:")
 	fmt.Printf("%#v",PledgeeSegregatedSecuritiesJSON)
+	fmt.Println()
 
 	//Operations for Pledger Longbox Securities
 	for _,value := range PledgerLongboxSecuritiesJSON {
@@ -789,10 +792,13 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	
 	fmt.Println("AvailableEligibleCollateral after calculation:")
 	fmt.Printf("%#v",AvailableEligibleCollateral)
+	fmt.Println()
 	fmt.Println("PledgerLongboxSecurities after calculation:")
 	fmt.Printf("%#v",PledgerLongboxSecurities)
+	fmt.Println()
 	fmt.Println("PledgeeSegregatedSecurities after calculation:")
 	fmt.Printf("%#v",PledgeeSegregatedSecurities)
+	fmt.Println()
 	//-----------------------------------------------------------------------------
 
 	if AvailableEligibleCollateral < float64(RQV) {
@@ -976,10 +982,13 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		
 		fmt.Println("ReallocatedSecurities after calculation:")
 		fmt.Printf("%#v",ReallocatedSecurities)
+		fmt.Println()
 		fmt.Println("SecuritiesChanged after calculation:")
 		fmt.Printf("%#v",SecuritiesChanged)
+		fmt.Println()
 		fmt.Println("RQVEligibleValueLeft after calculation:")
 		fmt.Printf("%#v",RQVEligibleValueLeft)
+		fmt.Println()
 		//-----------------------------------------------------------------------------
 		
 		// Flushing securities from both Accounts
@@ -993,8 +1002,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			fmt.Printf(errStr)
 			return nil, errors.New(errStr)
 		}
-		fmt.Print("Transaction hash returned: ");
-		fmt.Println(result)
+		
 		invokeArgs = util.ToChaincodeArgs(function, PledgeeSegregatedAccount)
 		result, err = stub.InvokeChaincode(AccountChainCode, invokeArgs)
 		if err != nil {
@@ -1002,13 +1010,13 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			fmt.Printf(errStr)
 			return nil, errors.New(errStr)
 		}
-		
+		fmt.Print("Securities removed from accounts")
 		//-----------------------------------------------------------------------------
 
 		// Committing the state to Blockchain
 
 		// Function from Account Chaincode for 
-		functionUpdateSecurity 	:= "update_security" 		// Securities Object
+		//functionUpdateSecurity 	:= "update_security" 		// Securities Object
 		//functionDeleteSecurity	:= "delete_security"	// SecurityId, AccountNumber
 		functionAddSecurity 	:= "add_security"			// Security Object
 
@@ -1038,7 +1046,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				
 				if _SecurityQuantity == _tempQuantity {
 					
-					invokeArgs := util.ToChaincodeArgs(functionUpdateSecurity, valueSecurity.SecurityId, 
+					invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId, 
 						PledgerLongboxAccount,
 						valueSecurity.SecuritiesName, 
 						valueSecurity.SecuritiesQuantity, 
@@ -1058,10 +1066,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						fmt.Printf(errStr)
 						return nil, errors.New(errStr)
 					}
-					fmt.Print("Transaction hash returned: ");
-					fmt.Println(result)
+					
 				} else if newQuantity < _SecurityQuantity && _tempQuantity > 0  {
-					invokeArgs := util.ToChaincodeArgs(functionUpdateSecurity, valueSecurity.SecurityId, 
+					invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId, 
 						PledgerLongboxAccount,
 						valueSecurity.SecuritiesName, 
 						strconv.FormatFloat(newQuantity, 'f', -1, 64), 
