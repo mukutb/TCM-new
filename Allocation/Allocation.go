@@ -692,6 +692,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				_rate = 1
 			}
 
+			fmt.Println("_rate")
+			fmt.Println(_rate)
+			
 			temp3 := _rate * float64(temp)
 			tempSecurity.EffectiveValueinUSD = strconv.FormatFloat(temp3, 'f', -1, 64)
 
@@ -743,7 +746,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			if _rate < 0 {
 				_rate = 1
 			}
-
+			fmt.Println("_rate")
+			fmt.Println(_rate)
 			temp3 := _rate * float64(temp)
 			tempSecurity.EffectiveValueinUSD = strconv.FormatFloat(temp3, 'f', -1, 64)
 
