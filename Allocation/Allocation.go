@@ -315,7 +315,14 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 		    fmt.Println(ValueTransaction.TransactionId + " updated with TransactionStatus as " + newTxStatus) 
 
 		    //Sending event call
-		    tosend:= "{ \"transactionId\" : \"" + ValueTransaction.TransactionId + "\", \"message\" : \"Transaction updated succcessfully with AllocationStatus"		    			+ newAllStatus +" \", \"code\" : \"200\"}"
+		    tosend:= "{ \"transactionId\" : \"" + ValueTransaction.TransactionId + "\", \"message\" : \"Transaction updated succcessfully with Allocation Status as '"+ newAllStatus +"' \", \"code\" : \"200\"}"
+		    err = stub.SetEvent("evtsender", [] byte(tosend))
+		    if err != nil {
+		        return nil, err
+		    }
+		}else if ValueTransaction.TransactionStatus == "Ready for Allocation"{
+			//Sending event call
+		    tosend:= "{ \"transactionId\" : \"" + ValueTransaction.TransactionId + "\", \"message\" : \"Transaction updated succcessfully with Allocation Status as 'Ready for Allocation' \", \"code\" : \"200\"}"
 		    err = stub.SetEvent("evtsender", [] byte(tosend))
 		    if err != nil {
 		        return nil, err
@@ -694,7 +701,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 			fmt.Println("_rate")
 			fmt.Println(_rate)
-			
+
 			temp3 := _rate * float64(temp)
 			tempSecurity.EffectiveValueinUSD = strconv.FormatFloat(temp3, 'f', -1, 64)
 
