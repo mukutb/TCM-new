@@ -807,8 +807,8 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
     // dealid,transactionid
     var err error
     fmt.Println("addTransaction_inDeal")
-    if len(args) != 5 {
-        errMsg:= "{ \"message\" : \"Incorrect number of arguments. Expecting 5\", \"code\" : \"503\"}"
+    if len(args) != 2{
+        errMsg:= "{ \"message\" : \"Incorrect number of arguments. Expecting 2\", \"code\" : \"503\"}"
         err = stub.SetEvent("errEvent", [] byte(errMsg))
         if err != nil {
             return nil, err
@@ -819,15 +819,15 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
     dealId:= args[0]
     // set transactionId
     _transactionId:= args[1]
-    _pledger:= args[2]
-    _pledgee:= args[3]
-    _marginCallDate := args[4]
+    //_pledger:= args[2]
+   // _pledgee:= args[3]
+    //_marginCallDate := args[4]
     // converting string marginCallDate to int
-    _newMarginCallDate,err := strconv.Atoi(_marginCallDate)
+    /*_newMarginCallDate,err := strconv.Atoi(_marginCallDate)
     if err != nil {
         fmt.Sprintf("Error while converting string '_marginCallDate' to int : %s", err.Error())
         return nil, errors.New("Error while converting string '_marginCallDate' to int ")
-    }
+    }*/
 
     dealAsBytes, err:= stub.GetState(dealId) //get the Deal for the specified dealId from chaincode state
     if err != nil {
@@ -839,7 +839,7 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
         return nil,nil
     }
     res:= Deals {}
-    _tempJson := Transactions{}
+    //_tempJson := Transactions{}
     json.Unmarshal(dealAsBytes, &res)
     fmt.Println(res);
     if res.DealID == dealId {
@@ -861,7 +861,7 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
                     }
                     return nil,nil
                 }else{
-                    valueAsBytes, err:= stub.GetState(_transactionSplit[i])
+                    /*valueAsBytes, err:= stub.GetState(_transactionSplit[i])
                     if err != nil {
                         errResp := "{\"Error\":\"Failed to get state for " + _transactionSplit[i] + "\"}"
                         return nil, errors.New(errResp)
@@ -877,7 +877,7 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
                             return nil, errors.New("Error while converting string '_tempJson.marginCAllDate' to int ")
                         }
                         fmt.Println(_oldMarginCallDate);
-                        if _tempJson.AllocationStatus != "Allocation Succcessful" || _oldMarginCallDate < _newMarginCallDate{
+                        if _tempJson.AllocationStatus != "Allocation Succcessful" {
                             fmt.Println("Replace old transaction "+ _transactionSplit[i] +" with new transactionid: "+_transactionId);
                             err := stub.DelState(_transactionSplit[i])                                                  //remove the key from chaincode state
                             if err != nil {
@@ -916,9 +916,15 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
                                 return nil, err
                             }
                         }
+                        if _oldMarginCallDate >_newMarginCallDate {
+                            //DO NOTHING
+                        }else{
+
+                        }
                     }else{
                         _transactionSplit = append(_transactionSplit,_transactionId);
-                    }
+                    }*/
+                    _transactionSplit = append(_transactionSplit,_transactionId);
                 }
             }
             res.Transactions = strings.Join(_transactionSplit,",");
@@ -1175,7 +1181,7 @@ func(t * ManageDeals) create_transaction(stub shim.ChaincodeStubInterface, args[
         }
         //Send dealId, transactionId, pledger, pledgee & marginCallDate
         var temp[] string
-        temp = append(temp, args[2], args[0], args[3], args[4],args[7])
+        temp = append(temp, args[2], args[0])
         t.addTransaction_inDeal(stub, temp)
         fmt.Println("end create_transaction")
 
