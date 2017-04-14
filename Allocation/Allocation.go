@@ -681,14 +681,14 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			tempSecurity.MTM = stringArr[0]
 
 			// Storing the Value percentage in the security ruleset data itself
-			tempSecurity.EffectivePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'E', -1, 64)
+			tempSecurity.EffectivePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'f', -1, 64)
 
 			// Effective Value = Currency conversion rate(to USD) * MTM(market Value)
 			temp, errBool := strconv.ParseFloat(tempSecurity.MTM,64)
 			if errBool != nil { fmt.Println(errBool) }
 
 			temp3 := ConversionRate.Rates[tempSecurity.Currency] * float64(temp)
-			tempSecurity.EffectiveValueinUSD = strconv.FormatFloat(temp3, 'E', -1, 64)
+			tempSecurity.EffectiveValueinUSD = strconv.FormatFloat(temp3, 'f', -1, 64)
 
 			// Adding it to TotalValue
 			temp, errBool = strconv.ParseFloat(tempSecurity.EffectiveValueinUSD,64)
@@ -697,7 +697,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			if errBool != nil { fmt.Println(errBool) }
 
 			tempTotal := temp * temp2
-			tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'E', -1, 64)
+			tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', -1, 64)
 
 			// Calculate Total based on Security Type
 			TotalValuePledgerLongboxSecurities[tempSecurity.CollateralForm] += float64(tempTotal)
@@ -709,7 +709,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				This is just for using the limited sorting application provided by GOlang
 				By no chance is this to be stored on Blockchain. 
 			*/
-			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'E', -1, 64)
+			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'f', -1, 64)
 
 			// Append Securities to an array
 			PledgerLongboxSecurities = append(PledgerLongboxSecurities,tempSecurity)
@@ -735,7 +735,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			if errBool != nil { fmt.Println(errBool) }
 
 			temp3 := ConversionRate.Rates[tempSecurity.Currency] * float64(temp)
-			tempSecurity.EffectiveValueinUSD = strconv.FormatFloat(temp3, 'E', -1, 64)
+			tempSecurity.EffectiveValueinUSD = strconv.FormatFloat(temp3, 'f', -1, 64)
 
 			// Adding it to TotalValue
 
@@ -745,7 +745,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			if errBool != nil { fmt.Println(errBool) }
 
 			tempTotal := temp * temp2
-			tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'E', -1, 64)
+			tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', -1, 64)
 
 			// Calculate Total based on Security Type
 			TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm] += float64(tempTotal)
@@ -757,7 +757,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				This is just for using the limited sorting application provided by GOlang
 				By no chance is this to be stored on Blockchain. 
 			*/
-			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'E', -1, 64)
+			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'f', -1, 64)
 
 			// Append Securities to an array
 			PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, tempSecurity)
@@ -897,8 +897,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							RQVLeft -= EffectiveValueinUSDtoAllocate
 							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= EffectiveValueinUSDtoAllocate
 							tempSecurity2 := valueSecurity 
-							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'E', -1, 64)
-							tempSecurity2.EffectiveValueinUSD = strconv.FormatFloat(EffectiveValueinUSDtoAllocate, 'E', -1, 64)
+							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'f', -1, 64)
+							tempSecurity2.EffectiveValueinUSD = strconv.FormatFloat(EffectiveValueinUSDtoAllocate, 'f', -1, 64)
 							ReallocatedSecurities = append(ReallocatedSecurities, valueSecurity)
 							SecuritiesChanged[valueSecurity.SecurityId] = QuantityToTakeout
 						}
@@ -916,9 +916,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							RQVLeft -= EffectiveValueinUSDtoAllocate
 							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= float64(EffectiveValueinUSDtoAllocate)
 							tempSecurity2 := valueSecurity 
-							tempSecurity2.SecuritiesQuantity= strconv.FormatFloat(QuantityToTakeout, 'E', -1, 64)
+							tempSecurity2.SecuritiesQuantity= strconv.FormatFloat(QuantityToTakeout, 'f', -1, 64)
 							//strconv.ParseFloat(QuantityToTakeout)
-							tempSecurity2.EffectiveValueinUSD= strconv.FormatFloat(EffectiveValueinUSDtoAllocate, 'E', -1, 64)
+							tempSecurity2.EffectiveValueinUSD= strconv.FormatFloat(EffectiveValueinUSDtoAllocate, 'f', -1, 64)
 							//strconv.ParseFloat(EffectiveValueinUSDtoAllocate)
 							ReallocatedSecurities = append(ReallocatedSecurities, valueSecurity)
 							SecuritiesChanged[valueSecurity.SecurityId] = float64(QuantityToTakeout)
@@ -936,8 +936,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							RQVLeft -= EffectiveValueinUSDtoAllocate
 							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= float64(EffectiveValueinUSDtoAllocate)
 							tempSecurity2 := valueSecurity 
-							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'E', -1, 64)
-							tempSecurity2.EffectiveValueinUSD = strconv.FormatFloat(EffectiveValueinUSDtoAllocate, 'E', -1, 64)
+							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'f', -1, 64)
+							tempSecurity2.EffectiveValueinUSD = strconv.FormatFloat(EffectiveValueinUSDtoAllocate, 'f', -1, 64)
 							ReallocatedSecurities = append(ReallocatedSecurities, valueSecurity)
 							SecuritiesChanged[valueSecurity.SecurityId] = float64(QuantityToTakeout)						
 						}
@@ -1023,7 +1023,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						valueSecurity.SecuritiesQuantity, 
 						valueSecurity.SecurityType ,
 						valueSecurity.CollateralForm ,
-						strconv.FormatFloat(_totalValue, 'E', -1, 64), 
+						strconv.FormatFloat(_totalValue, 'f', -1, 64), 
 						"",
 						valueSecurity.MTM ,
 						valueSecurity.EffectivePercentage ,
@@ -1043,10 +1043,10 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					invokeArgs := util.ToChaincodeArgs(functionUpdateSecurity, valueSecurity.SecurityId, 
 						PledgerLongboxAccount,
 						valueSecurity.SecuritiesName, 
-						strconv.FormatFloat(newQuantity, 'E', -1, 64), 
+						strconv.FormatFloat(newQuantity, 'f', -1, 64), 
 						valueSecurity.SecurityType ,
 						valueSecurity.CollateralForm ,
-						strconv.FormatFloat(_totalValue, 'E', -1, 64), 
+						strconv.FormatFloat(_totalValue, 'f', -1, 64), 
 						"",
 						valueSecurity.MTM ,
 						valueSecurity.EffectivePercentage ,
@@ -1088,7 +1088,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				valueSecurity.SecuritiesQuantity,
 				valueSecurity.SecurityType,
 				valueSecurity.CollateralForm,
-				strconv.FormatFloat(_totalValue, 'E', -1, 64),
+				strconv.FormatFloat(_totalValue, 'f', -1, 64),
 				"",
 				valueSecurity.MTM,
 				valueSecurity.EffectivePercentage,
