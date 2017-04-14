@@ -844,91 +844,20 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
     fmt.Println(res);
     if res.DealID == dealId {
         fmt.Println("Deal found with dealId : " + dealId)
-        if res.Transactions == " " || res.Transactions == "" {
-            res.Transactions = _transactionId;
-        }else{
-            _transactionSplit:= strings.Split(res.Transactions, ",")
-            fmt.Print("_transactionSplit: ")
-            fmt.Println(_transactionSplit)
-            for i:= range _transactionSplit {
-                fmt.Println("_transactionSplit[i]: " + _transactionSplit[i])
-                if _transactionSplit[i] == _transactionId {
-                    fmt.Println("Transaction already exists.")
-                    errMsg:= "{ \"TransactionId\" : \"" + _transactionId + "\",\"message\" : \" Transaction already exists.\", \"code\" : \"503\"}"
-                    err = stub.SetEvent("errEvent", [] byte(errMsg))
-                    if err != nil {
-                        return nil, err
-                    }
-                    return nil,nil
-                }else{
-                    /*valueAsBytes, err:= stub.GetState(_transactionSplit[i])
-                    if err != nil {
-                        errResp := "{\"Error\":\"Failed to get state for " + _transactionSplit[i] + "\"}"
-                        return nil, errors.New(errResp)
-                    }
-                    json.Unmarshal(valueAsBytes, &_tempJson)
-                    fmt.Print("_tempJson : ")
-                    fmt.Println(_tempJson)
-                    if _tempJson.Pledger == _pledger && _tempJson.Pledgee == _pledgee{
-                        fmt.Println("Pledger and Pledgee matched")
-                        _oldMarginCallDate,err := strconv.Atoi(_tempJson.MarginCAllDate)
-                        if err != nil {
-                            fmt.Sprintf("Error while converting string '_tempJson.marginCAllDate' to int : %s", err.Error())
-                            return nil, errors.New("Error while converting string '_tempJson.marginCAllDate' to int ")
-                        }
-                        fmt.Println(_oldMarginCallDate);
-                        if _tempJson.AllocationStatus != "Allocation Succcessful" {
-                            fmt.Println("Replace old transaction "+ _transactionSplit[i] +" with new transactionid: "+_transactionId);
-                            err := stub.DelState(_transactionSplit[i])                                                  //remove the key from chaincode state
-                            if err != nil {
-                                errMsg := "{ \"TransactionID\" : \"" + _transactionSplit[i] + "\", \"message\" : \"Failed to delete state\", \"code\" : \"503\"}"
-                                err = stub.SetEvent("errEvent", []byte(errMsg))
-                                if err != nil {
-                                    return nil, err
-                                } 
-                                return nil, nil
-                            }
-                            _transactionSplit = append(_transactionSplit[:i], _transactionSplit[i+1:]...)
-                            _transactionSplit = append(_transactionSplit,_transactionId);
-
-                            // Removing transaction from transaction index String
-
-                            transactionIndexAsBytes, err:= stub.GetState(transactionIndexStr)
-                            if err != nil {
-                                return nil, errors.New("Failed to get Transaction index")
-                            }
-                            var transactionIndex[] string
-                            //fmt.Print("transactionIndexAsBytes: ")
-                            //fmt.Println(transactionIndexAsBytes)
-                            json.Unmarshal(transactionIndexAsBytes, &transactionIndex) //un stringify it aka JSON.parse()
-                            fmt.Print("transactionIndex before replacement: ")
-                            //fmt.Println(transactionIndex)
-                            //Replacing old transactionId with new transactionId
-                            for i:= range transactionIndex {
-                                transactionIndex[i] = strings.Replace(transactionIndex[i],_transactionSplit[i],_transactionId, -1)
-                            }
-                            fmt.Println("transaction index after Replacement: ", transactionIndex);
-                            jsonAsBytes, _:= json.Marshal(transactionIndex)
-                            //fmt.Print("jsonAsBytes: ")
-                            //fmt.Println(jsonAsBytes)
-                            err = stub.PutState(transactionIndexStr, jsonAsBytes) //store name of Transaction
-                            if err != nil {
-                                return nil, err
-                            }
-                        }
-                        if _oldMarginCallDate >_newMarginCallDate {
-                            //DO NOTHING
-                        }else{
-
-                        }
-                    }else{
-                        _transactionSplit = append(_transactionSplit,_transactionId);
-                    }*/
-                    _transactionSplit = append(_transactionSplit,_transactionId);
+        _transactionSplit:= strings.Split(res.Transactions, ",")
+        fmt.Print("_transactionSplit: ")
+        fmt.Println(_transactionSplit)
+        for i:= range _transactionSplit {
+            fmt.Println("_transactionSplit[i]: " + _transactionSplit[i])
+            if _transactionSplit[i] == _transactionId {
+                fmt.Println("Transaction already exists.")
+                errMsg:= "{ \"TransactionId\" : \"" + _transactionId + "\",\"message\" : \" Transaction already exists.\", \"code\" : \"503\"}"
+                err = stub.SetEvent("errEvent", [] byte(errMsg))
+                if err != nil {
+                    return nil, err
                 }
+                return nil,nil
             }
-            res.Transactions = strings.Join(_transactionSplit,",");
-            fmt.Println(res.Transactions);
         }
     } else {
         errMsg:= "{ \"message\" : \"" + dealId + " Not Found.\", \"code\" : \"503\"}"
@@ -938,6 +867,12 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
         }
         return nil,nil
     }
+    if res.Transactions == " " || res.Transactions == "" {
+        res.Transactions = _transactionId;
+    }else {
+        res.Transactions = res.Transactions+ "," + _transactionId;
+    }
+    fmt.Println(res.Transactions);
     //build the Deal json string manually
     order:= `{` + 
     `"dealId": "` + res.DealID + `" , ` + 
@@ -960,6 +895,7 @@ func(t * ManageDeals) addTransaction_inDeal(stub shim.ChaincodeStubInterface, ar
     if err != nil {
         return nil, err
     }
+    
     fmt.Println("addTransaction_inDeal")
     return nil, nil
 }
