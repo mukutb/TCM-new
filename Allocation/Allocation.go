@@ -20,47 +20,20 @@ under the License.
 package main
 
 import (
-	"errors"
-	"fmt"
-	"strconv"
-	"encoding/json"
-	"net/http"
-	"net/url"
-	"sort"
-	"math"
-	"time"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/hyperledger/fabric/core/util"
+"errors"
+"fmt"
+"strconv"
+"encoding/json"
+"strings"
+"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
-type ManageAllocations struct {
+// ManageAccounts example simple Chaincode implementation
+type ManageAccounts struct {
 }
 
-type Transactions struct{
-	TransactionId string `json:"transactionId"`
-	TransactionDate string `json:"transactionDate"`
-	DealID string `json:"dealId"`
-	Pledger string `json:"pledger"`
-	Pledgee string `json:"pledgee"`
-	RQV string `json:"rqv"`
-	Currency string `json:"currency"`
-	CurrencyConversionRate string `json:"currencyConversionRate"`
-	MarginCAllDate string `json:"marginCAllDate"`
-	AllocationStatus string `json:"allocationStatus"`
-	TransactionStatus string `json:"transactionStatus"`
-}
-
-type Deals struct{							// Attributes of a Allocation
-	DealID string `json:"dealId"`
-	Pledger string `json:"pledger"`
-	Pledgee string `json:"pledgee"`
-	MaxValue string `json:"maxValue"`		//Maximum Value of all the securities of each Collateral Form 
-	TotalValueLongBoxAccount string `json:"totalValueLongBoxAccount"`
-	TotalValueSegregatedAccount string `json:"totalValueSegregatedAccount"`
-	IssueDate string `json:"issueDate"`
-	LastSuccessfulAllocationDate string `json:"lastSuccessfulAllocationDate"`
-	Transactions string `json:"transactions"`
-}
+var AccountIndexStr = "_AccountIndex"				//name for the key/value that will store a list of all known RQv's
+var SecurityIndexStr = "_SecurityIndex"
 
 type Accounts struct{
 	AccountID string `json:"accountId"`
@@ -76,75 +49,30 @@ type Accounts struct{
 type Securities struct{
 	SecurityId string `json:"securityId"`
 	AccountNumber string `json:"accountNumber"`
-	SecuritiesName string `json:"securityName"`
-	SecuritiesQuantity string `json:"securityQuantity"`
+	SecurityName string `json:"securityName"`
+	SecurityQuantity string `json:"securityQuantity"`
 	SecurityType string `json:"securityType"`
 	CollateralForm string `json:"collateralForm"`
-	TotalValue string `json:"totalValue"`
+	Totalvalue string `json:"totalvalue"`
 	ValuePercentage string `json:"valuePercentage"`
 	MTM string `json:"mtm"`
 	EffectivePercentage string `json:"effectivePercentage"`
 	EffectiveValueinUSD string `json:"effectiveValueinUSD"`
 	Currency string `json:"currency"`
 }
-
-// Used for Security Array Sort
-// Reference at https://play.golang.org/p/Rz9NCEVhGu
-type SecurityArrayStruct []Securities
-
-func (slice SecurityArrayStruct) Len() int {	return len(slice) }
-func (slice SecurityArrayStruct) Less(i, j int) bool {	// Sorting through the field 'ValuePercentage' for now as it contians the Priority
-	return slice[i].ValuePercentage < slice[j].ValuePercentage;}
-func (slice SecurityArrayStruct) Swap(i, j int) {	slice[i], slice[j] = slice[j], slice[i] }
-
-// Use as Object.Security["CommonStocks"][0]
-// Reference [Tested by Pranav] https://play.golang.org/p/JlQJF5Z14X
-type Ruleset struct{
-	Security map[string][]float64 `json:"Security"`
-	BaseCurrency string `json:"BaseCurrency"`
-	EligibleCurrency []string `json:"EligibleCurrency"`
-}
-
-// Use as Object.Rates["EUR"]
-// Reference [Tested by Pranav] https://play.golang.org/p/j5Act-jN5C
-type CurrencyConversion struct{
-	Base string `json:"base"`
-	Date string `json:"date"`
-	Rates map[string ]float64 `json:"rates"`
-}
-
-// To be used as SecurityJSON["CommonStocks"]["Priority"] ==> 1
- var SecurityJSON = map[string]map[string]string{ 
-					"CommonStocks"				: map[string]string{ "ConcentrationLimit" : "40" ,	"Priority" : "1" ,	"ValuationPercentage" : "97" } ,
-					"CorporateBonds"			: map[string]string{ "ConcentrationLimit" : "30" ,	"Priority" : "2" ,	"ValuationPercentage" : "97" } ,
-					"SovereignBonds"			: map[string]string{ "ConcentrationLimit" : "25" ,	"Priority" : "3" ,	"ValuationPercentage" : "95" } ,
-					"USTreasuryBills"			: map[string]string{ "ConcentrationLimit" : "25" ,	"Priority" : "4" ,	"ValuationPercentage" : "95" } ,
-					"USTreasuryBonds"			: map[string]string{ "ConcentrationLimit" : "25" ,	"Priority" : "5" ,	"ValuationPercentage" : "95" } ,
-					"USTreasuryNotes"			: map[string]string{ "ConcentrationLimit" : "25" ,	"Priority" : "6" ,	"ValuationPercentage" : "95" } ,
-					"Gilt"						: map[string]string{ "ConcentrationLimit" : "25" ,	"Priority" : "7" ,	"ValuationPercentage" : "94" } ,
-					"FederalAgencyBonds"		: map[string]string{ "ConcentrationLimit" : "20" ,	"Priority" : "8" ,	"ValuationPercentage" : "93" } ,
-					"GlobalBonds"				: map[string]string{ "ConcentrationLimit" : "20" ,	"Priority" : "9" ,	"ValuationPercentage" : "92" } ,
-					"PreferrredShares"			: map[string]string{ "ConcentrationLimit" : "20" ,	"Priority" : "10",	"ValuationPercentage" : "91" } ,
-					"ConvertibleBonds"			: map[string]string{ "ConcentrationLimit" : "20" ,	"Priority" : "11",	"ValuationPercentage" : "90" } ,
-					"RevenueBonds"				: map[string]string{ "ConcentrationLimit" : "15" ,	"Priority" : "12",	"ValuationPercentage" : "90" } ,
-					"MediumTermNote"			: map[string]string{ "ConcentrationLimit" : "15" ,	"Priority" : "13",	"ValuationPercentage" : "89" } ,
-					"ShortTermInvestments"		: map[string]string{ "ConcentrationLimit" : "15" ,	"Priority" : "14",	"ValuationPercentage" : "87" } ,
-					"BuilderBonds"				: map[string]string{ "ConcentrationLimit" : "15" ,	"Priority" : "15",	"ValuationPercentage" : "85" }}
-
-
 // ============================================================================================================================
-// Main - start the chaincode for Allocation management
+// Main - start the chaincode for Account management
 // ============================================================================================================================
 func main() {			
-	err := shim.Start(new(ManageAllocations))
+	err := shim.Start(new(ManageAccounts))
 	if err != nil {
-		fmt.Printf("Error starting Allocation management chaincode: %s", err)
+		fmt.Printf("Error starting Account management chaincode: %s", err)
 	}
 }
 // ============================================================================================================================
 // Init - reset all the things
 // ============================================================================================================================
-func (t *ManageAllocations) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+func (t *ManageAccounts) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	var msg string
 	var err error
 	if len(args) != 1 {
@@ -164,12 +92,11 @@ func (t *ManageAllocations) Init(stub shim.ChaincodeStubInterface, function stri
 	}
 	var empty []string
 	jsonAsBytes, _ := json.Marshal(empty)								//marshal an emtpy array of strings to clear the index
-	err = stub.PutState("_init", jsonAsBytes)
+	err = stub.PutState(AccountIndexStr, jsonAsBytes)
 	if err != nil {
 		return nil, err
 	}
-
-	tosend := "{ \"message\" : \"ManageAllocations chaincode is deployed successfully.\", \"code\" : \"200\"}"
+	tosend := "{ \"message\" : \"ManageAccounts chaincode is deployed successfully.\", \"code\" : \"200\"}"
 	err = stub.SetEvent("evtsender", []byte(tosend))
 	if err != nil {
 		return nil, err
@@ -177,25 +104,33 @@ func (t *ManageAllocations) Init(stub shim.ChaincodeStubInterface, function stri
 	return nil, nil
 }
 // ============================================================================================================================
-// Run - Our entry Dealint for Invocations - [LEGACY] obc-peer 4/25/2016
+// Run - Our entry Accountint for Invocations - [LEGACY] obc-peer 4/25/2016
 // ============================================================================================================================
-func (t *ManageAllocations) Run(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+func (t *ManageAccounts) Run(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("run is running " + function)
 	return t.Invoke(stub, function, args)
 }
 // ============================================================================================================================
-// Invoke - Our entry Dealint for Invocations
+// Invoke - Our entry Accountint for Invocations
 // ============================================================================================================================
-func (t *ManageAllocations) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+func (t *ManageAccounts) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("invoke is running " + function)
 
 	// Handle different functions
-	if function == "init" {													// Initialize the chaincode state, used as reset
+	if function == "init" {													//initialize the chaincode state, used as reset
 		return t.Init(stub, "init", args)
-	}else if function == "start_allocation" {								// Create a new Allocation
-		return t.start_allocation(stub, args)
-	}else if function == "LongboxAccountUpdated" {							// Secondary Fire when Longbox account is updated
-		return t.LongboxAccountUpdated(stub, args)
+	} else if function == "create_account" {											//create a new Account
+		return t.create_Account(stub, args)
+	}else if function == "update_account" {									
+		return t.update_Account(stub, args)
+	}else if function == "add_security" {									
+		return t.add_security(stub, args)
+	}else if function == "remove_securitiesFromAccount" {									
+		return t.remove_securitiesFromAccount(stub, args)
+	}else if function == "update_security" {									
+		return t.update_security(stub, args)
+	}else if function == "delete_security" {									
+		return t.delete_security(stub, args)
 	}
 	fmt.Println("invoke did not find func: " + function)
 	errMsg := "{ \"message\" : \"Received unknown function invocation\", \"code\" : \"503\"}"
@@ -203,21 +138,28 @@ func (t *ManageAllocations) Invoke(stub shim.ChaincodeStubInterface, function st
 	if err != nil {
 		return nil, err
 	} 
-	return nil, nil			
+	return nil, nil			//error
 }
 // ============================================================================================================================
-// Query - Our entry Dealint for Queries
+// Query - Our entry Accountint for Queries
 // ============================================================================================================================
-
-func (t *ManageAllocations) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+func (t *ManageAccounts) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("query is running " + function)
 
 	// Handle different functions
-	/*if function == "nil" {									
-		return t.nil(stub, args)
-	}*/
-	fmt.Println("Allocation does not support query functions.")	
-	errMsg := "{ \"message\" : \"Allocation does not support query functions.\", \"code\" : \"503\"}"
+	if function == "getAccount_byName" {													//Read a Account by name
+		return t.getAccount_byName(stub, args)
+	} else if function == "getAccount_byType" {													//Read a Account by Type
+		return t.getAccount_byType(stub, args)
+	} else if function == "getAccount_byNumber" {													//Read a Account by Number
+		return t.getAccount_byNumber(stub, args)
+	} else if function == "get_AllAccount" {													//Read all Accounts
+		return t.get_AllAccount(stub, args)
+	}else if function == "getSecurities_byAccount" {									//update a Account
+		return t.getSecurities_byAccount(stub, args)
+	}
+	fmt.Println("query did not find func: " + function)						//errors
+	errMsg := "{ \"message\" : \"Received unknown function query\", \"code\" : \"503\"}"
 	err := stub.SetEvent("errEvent", []byte(errMsg))
 	if err != nil {
 		return nil, err
@@ -225,111 +167,312 @@ func (t *ManageAllocations) Query(stub shim.ChaincodeStubInterface, function str
 	return nil, nil
 }
 // ============================================================================================================================
-// A used updated his :LongBox Account - create a new Allocation, store into chaincode state
+//  getAccount_byName- get details of all Account from chaincode state
 // ============================================================================================================================
-func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-
+func (t *ManageAccounts) getAccount_byName(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var jsonResp, errResp string
+	var AccountIndex []string
+	fmt.Println("start getAccount_byName")
 	var err error
-	if len(args) != 4 {
-		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 4\", \"code\" : \"503\"}"
+	if len(args) != 1 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 1\" \" as an argument\", \"code\" : \"503\"}"
 		err = stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
 		} 
 		return nil, nil
 	}
-	fmt.Println("start LongboxAccountUpdated")
 
-	_DealChaincode	:= args[0]
-	_AccountName	:= args[1]
-	_Role	:= args[2]
-	_CurrentTimeStamp	:= args[3]
+	_AccountName := args[0]
+	var _tempJson Accounts
 
-	var TransactionsDataFetched []Transactions
-
-	// Fetching Attl transactions for the user
-	function := "getTransactions_byUser"
-	QueryArgs := util.ToChaincodeArgs(function, _AccountName, _Role)
-	result, err := stub.QueryChaincode(_DealChaincode, QueryArgs)
+	AccountAsBytes, err := stub.GetState(AccountIndexStr)
 	if err != nil {
-		errStr := fmt.Sprintf("Error in fetching Transactions from 'Deal' chaincode. Got error: %s", err.Error())
-		fmt.Printf(errStr)
-		return nil, errors.New(errStr)
+		return nil, errors.New("Failed to get Account index")
 	}
-	json.Unmarshal(result, &TransactionsDataFetched)
-
-	// Timestamp to Date/Time Objest in Go and Logic behind cutoff time
-	// Ref: https://play.golang.org/p/KJRigmHzu9
-
-	i, err := strconv.ParseInt(_CurrentTimeStamp , 10, 64)
-	if err != nil {
-		panic(err)
-	}
-	_CurrentTimeObj := time.Unix(i, 0)
-
-	var newTxStatus, newAllStatus string
-
-	for _, ValueTransaction := range TransactionsDataFetched {
-		if ValueTransaction.TransactionStatus == "Pending" {
-
-			i, err := strconv.ParseInt(ValueTransaction.MarginCAllDate , 10, 64)
-			if err != nil {
-				panic(err)
+	json.Unmarshal(AccountAsBytes, &AccountIndex)								//un stringify it aka JSON.parse()
+	jsonResp = "{"
+	for i,val := range AccountIndex{
+		fmt.Println(strconv.Itoa(i) + " - looking at " + val + " for all Account")
+		valueAsBytes, err := stub.GetState(val)
+		if err != nil {
+			errResp = "{\"Error\":\"Failed to get state for " + val + "\"}"
+			return nil, errors.New(errResp)
+		}
+		json.Unmarshal(valueAsBytes, &_tempJson)
+		fmt.Print("valueAsBytes : ")
+		fmt.Println(valueAsBytes)
+		if _tempJson.AccountName == _AccountName {
+			jsonResp = jsonResp + "\""+ val + "\":" + string(valueAsBytes[:])
+			if i < len(AccountIndex)-1 {
+				jsonResp = jsonResp + ","
 			}
-			_MarginCallTimeObj := time.Unix(i, 0)
-
-
-			if _CurrentTimeObj.Sub(_MarginCallTimeObj).Hours() <= 24 && _CurrentTimeObj.Sub(_MarginCallTimeObj).Hours() >= 0 { 	
-				// New securites are uploaded in cutoff time
-				newTxStatus 	= "Ready"
-				newAllStatus 	= "Ready for Allocation"
-			}else{
-				// New securities not uploaded in cutoff time
-				newTxStatus 	= "Failed"
-				newAllStatus 	= "Allocation Failed"
-			}
-							
-		    // Update allocation status of a transaction
-			function = "update_transaction"
-			invokeArgs := util.ToChaincodeArgs(function, 
-				ValueTransaction.TransactionId ,
-				ValueTransaction.TransactionDate ,
-				ValueTransaction.DealID ,
-				ValueTransaction.Pledger ,
-				ValueTransaction.Pledgee ,
-				ValueTransaction.RQV,
-		        ValueTransaction.Currency ,
-		        "\""+ValueTransaction.CurrencyConversionRate+"\"",
-		        ValueTransaction.MarginCAllDate,
-		        newAllStatus ,
-		        newTxStatus)
-			fmt.Println(ValueTransaction);
-			result, err := stub.InvokeChaincode(_DealChaincode, invokeArgs)
-			if err != nil {
-				errStr := fmt.Sprintf("Failed to update Transaction status from 'Deal' chaincode. Got error: %s", err.Error())
-				fmt.Printf(errStr)
-				return nil, errors.New(errStr)
-			}
-			fmt.Println("Transaction hash returned: ",result)
-		    fmt.Println(ValueTransaction.TransactionId + " updated with AllocationStatus as " + newAllStatus) 
-		    fmt.Println(ValueTransaction.TransactionId + " updated with TransactionStatus as " + newTxStatus) 
-
-		    //Sending event call
-		    tosend:= "{ \"transactionId\" : \"" + ValueTransaction.TransactionId + "\", \"message\" : \"Transaction updated succcessfully with AllocationStatus"		    			+ newAllStatus +" \", \"code\" : \"200\"}"
-		    err = stub.SetEvent("evtsender", [] byte(tosend))
-		    if err != nil {
-		        return nil, err
-		    }
 		}
 	}
-
-	fmt.Println("end LongboxAccountUpdated")
-	return nil,nil
+	fmt.Println("len(AccountIndex) : ")
+	fmt.Println(len(AccountIndex))
+	jsonResp = jsonResp + "}"
+	fmt.Println("jsonResp : " + jsonResp)
+	if jsonResp == "{}" {
+        fmt.Println("Account not found for  " + _AccountName)
+        jsonResp =  "{\"AccountName\" : \"" + _AccountName + "\", \"message\" : \"Account not found.\", \"code\" : \"503\"}"
+        errMsg:= "{ \"AccountName\" : \"" + _AccountName + "\", \"message\" : \"Account not found.\", \"code\" : \"503\"}"
+        err = stub.SetEvent("errEvent", [] byte(errMsg))
+        if err != nil {
+        	return nil, err
+        }
+    }
+    if strings.Contains(jsonResp,"},}"){
+    	jsonResp = strings.Replace(jsonResp, "},}", "}}", -1)
+    }
+	fmt.Println("end getAccount_byName")
+	return []byte(jsonResp), nil
+											//send it onward
 }
 // ============================================================================================================================
-// Start Allocation - create a new Allocation, store into chaincode state
+//  getAccount_byType- get details of all Account from chaincode state
 // ============================================================================================================================
-func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *ManageAccounts) getAccount_byType(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var jsonResp, errResp string
+	var AccountIndex []string
+	fmt.Println("start getAccount_byType")
+	var err error
+	if len(args) != 1 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 1\" \" as an argument\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+
+	_AccountType := args[0]
+	_tempJson :=Accounts{}
+
+	AccountAsBytes, err := stub.GetState(AccountIndexStr)
+	if err != nil {
+		return nil, errors.New("Failed to get Account index")
+	}
+	fmt.Print("AccountAsBytes : ")
+	fmt.Println(AccountAsBytes)
+	json.Unmarshal(AccountAsBytes, &AccountIndex)								//un stringify it aka JSON.parse()
+	fmt.Print("AccountIndex : ")
+	fmt.Println(AccountIndex)
+	fmt.Println("len(AccountIndex) : ")
+	fmt.Println(len(AccountIndex))
+	jsonResp = "{"
+	for i,val := range AccountIndex{
+		fmt.Println(strconv.Itoa(i) + " - looking at " + val + " for all Account")
+		valueAsBytes, err := stub.GetState(val)
+		if err != nil {
+			errResp = "{\"Error\":\"Failed to get state for " + val + "\"}"
+			return nil, errors.New(errResp)
+		}
+		json.Unmarshal(valueAsBytes, &_tempJson)
+		fmt.Print("valueAsBytes : ")
+		fmt.Println(valueAsBytes)
+		if _tempJson.AccountType == _AccountType {
+			jsonResp = jsonResp + "\""+ val + "\":" + string(valueAsBytes[:])
+			if i < len(AccountIndex)-1 {
+				jsonResp = jsonResp + ","
+			}
+		}
+	}
+	jsonResp = jsonResp + "}"
+	if jsonResp == "{}" {
+        fmt.Println(_AccountType + " account not found")
+        jsonResp = "{ \"AccountType\" : \"" + _AccountType + "\", \"message\" : \"Account not found.\", \"code\" : \"503\"}"
+        errMsg:= "{ \"AccountType\" : \"" + _AccountType + "\", \"message\" : \"Account Not Found.\", \"code\" : \"503\"}"
+        err = stub.SetEvent("errEvent", [] byte(errMsg))
+        if err != nil {
+    	    return nil, err
+        }
+    }
+    if strings.Contains(jsonResp,"},}"){
+    	jsonResp = strings.Replace(jsonResp, "},}", "}}", -1)
+    }
+	fmt.Println("jsonResp : " + jsonResp)
+	fmt.Println("end getAccount_byType")
+	return []byte(jsonResp), nil
+											//send it onward
+}
+// ============================================================================================================================
+//  getAccount_byNumber- get details of all Account from chaincode state
+// ============================================================================================================================
+func (t *ManageAccounts) getAccount_byNumber(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var jsonResp, errResp string
+	fmt.Println("start getAccount_byNumber")
+	var err error
+	if len(args) != 1 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 1\" \" as an argument\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+
+	_AccountNumber := args[0]
+	_tempJson :=Accounts{}
+
+	jsonResp = "{"
+	fmt.Println(_AccountNumber + " - looking at " + _AccountNumber + " for Account")
+	valueAsBytes, err := stub.GetState(_AccountNumber)
+	if err != nil {
+		errResp = "{\"Error\":\"Failed to get state for " + _AccountNumber + "\"}"
+		return nil, errors.New(errResp)
+	}
+	json.Unmarshal(valueAsBytes, &_tempJson)
+	fmt.Print("valueAsBytes : ")
+	fmt.Println(valueAsBytes)
+	if _tempJson.AccountNumber == _AccountNumber {
+		jsonResp = jsonResp + "\""+ _AccountNumber + "\":" + string(valueAsBytes[:])
+	}else{
+        fmt.Println(_AccountNumber + " not found")
+        jsonResp = jsonResp + "\"AccountNumber\" : \"" + _AccountNumber + "\",\"message\" : \"" + "Account not found.\", \"code\" : \"503\""
+        errMsg:= "{ \"AccountNumber\" : \"" + _AccountNumber + "\",\"message\" : \"" + "Account Not Found.\", \"code\" : \"503\"}"
+        err = stub.SetEvent("errEvent", [] byte(errMsg))
+        if err != nil {
+            return nil, err
+        }
+    }
+	jsonResp = jsonResp + "}"
+	fmt.Println("jsonResp : " + jsonResp)
+	fmt.Print("jsonResp in bytes : ")
+	fmt.Println([]byte(jsonResp))
+	fmt.Println("end getAccount_byNumber")
+	return []byte(jsonResp), nil
+											//send it onward
+}
+// ============================================================================================================================
+//  get_AllAccount- get details of all Account from chaincode state
+// ============================================================================================================================
+func (t *ManageAccounts) get_AllAccount(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var jsonResp, errResp string
+	var AccountIndex []string
+	fmt.Println("start get_AllAccount")
+	var err error
+	if len(args) != 1 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 1\" \" as an argument\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+	AccountAsBytes, err := stub.GetState(AccountIndexStr)
+	if err != nil {
+		return nil, errors.New("Failed to get Account index")
+	}
+	fmt.Print("AccountAsBytes : ")
+	fmt.Println(AccountAsBytes)
+	json.Unmarshal(AccountAsBytes, &AccountIndex)								//un stringify it aka JSON.parse()
+	fmt.Print("AccountIndex : ")
+	fmt.Println(AccountIndex)
+	jsonResp = "{"
+	for i,val := range AccountIndex{
+		fmt.Println(strconv.Itoa(i) + " - looking at " + val + " for all Account")
+		valueAsBytes, err := stub.GetState(val)
+		if err != nil {
+			errResp = "{\"Error\":\"Failed to get state for " + val + "\"}"
+			return nil, errors.New(errResp)
+		}
+		fmt.Print("valueAsBytes : ")
+		fmt.Println(valueAsBytes)
+		jsonResp = jsonResp + "\""+ val + "\":" + string(valueAsBytes[:])
+		if i < len(AccountIndex)-1 {
+			jsonResp = jsonResp + ","
+		}
+	}
+	fmt.Println("len(AccountIndex) : ")
+	fmt.Println(len(AccountIndex))
+	jsonResp = jsonResp + "}"
+	fmt.Println("jsonResp : " + jsonResp)
+	fmt.Print("jsonResp in bytes : ")
+	fmt.Println([]byte(jsonResp))
+	fmt.Println("end get_AllAccount")
+	return []byte(jsonResp), nil
+											//send it onward
+}
+// ============================================================================================================================
+// update_Account - update Account into chaincode state
+// ============================================================================================================================
+func (t *ManageAccounts) update_Account(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var err error
+	fmt.Println("Updating Account")
+	if len(args) != 8 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 8\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+	// set accountNumber
+	accountNumber := args[2]
+	AccountAsBytes, err := stub.GetState(accountNumber)									//get the Account for the specified AccountId from chaincode state
+	if err != nil {
+		errMsg := "{ \"message\" : \"Failed to get state for " + accountNumber + "\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+	fmt.Print("AccountAsBytes in update Account")
+	fmt.Println(AccountAsBytes);
+	res := Accounts{}
+	json.Unmarshal(AccountAsBytes, &res)
+	if res.AccountNumber == accountNumber{
+		fmt.Println("Account found with AccountNumber : " + accountNumber)
+		fmt.Println(res);
+		res.AccountID				=args[0]
+		res.AccountName				=args[1]
+		res.AccountNumber			=args[2]
+		res.AccountType				=args[3]
+		res.TotalValue				=args[4]
+		res.Currency				=args[5]
+		res.Pledger				    =args[6]
+		res.Securities				=args[7]
+
+	}else{
+		errMsg := "{ \"message\" : \""+ accountNumber+ " Not Found.\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+	
+	//build the Account json string manually
+	order := 	`{`+
+		`"accountId": "` + res.AccountID + `" ,`+
+		`"accountName": "` + res.AccountName + `" ,`+
+		`"accountNumber": "` + res.AccountNumber + `" ,`+
+		`"accountType": "` + res.AccountType + `" ,`+
+		`"totalValue": "` + res.TotalValue + `" ,`+
+		`"currency": "` + res.Currency + `" ,`+
+		`"pledger": "` + res.Pledger + `" ,`+
+		`"securities": "` + res.Securities + `" `+
+		`}`
+	err = stub.PutState(res.AccountNumber, []byte(order))									//store Account with id as key
+	if err != nil {
+		return nil, err
+	}
+
+	tosend := "{ \"AccountNumber\" : \"" + accountNumber + "\", \"message\" : \"Account updated succcessfully\", \"code\" : \"200\"}"
+	err = stub.SetEvent("evtsender", []byte(tosend))
+	if err != nil {
+		return nil, err
+	} 
+
+	fmt.Println("Account updated succcessfully")
+	return nil, nil
+}
+// ============================================================================================================================
+// create Account - create a new Account, store into chaincode state
+// ============================================================================================================================
+func (t *ManageAccounts) create_Account(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
 	if len(args) != 8 {
 		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 8\", \"code\" : \"503\"}"
@@ -339,780 +482,485 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		} 
 		return nil, nil
 	}
-	fmt.Println("start start_allocation")
+	fmt.Println("start create_Account")
+
+	accountId				:=args[0]
+	accountName				:=args[1] 
+	accountNumber			:=args[2]
+	accountType				:=args[3]
+	totalValue				:=args[4]
+	currency				:=args[5]
+	pledger 				:=args[6]
+	securities				:=args[7]
 	
-	// Alloting Params
-	DealChaincode							:= args[0]
-	AccountChainCode 						:= args[1]
-	APIIP									:= args[2]
-	DealID 									:= args[3]
-	TransactionID 							:= args[4]
-	PledgerLongboxAccount					:= args[5]
-	PledgeeSegregatedAccount				:= args[6]
-	MarginCallTimpestamp					:= args[7]
-
-
-	//-----------------------------------------------------------------------------
-
-	// Fetch Deal details from Blockchain
-	f := "getDeal_byID"
-	queryArgs := util.ToChaincodeArgs(f, DealID)
-	dealAsBytes, err := stub.QueryChaincode(DealChaincode, queryArgs)
+	AccountAsBytes, err := stub.GetState(accountNumber)
 	if err != nil {
-		errStr := fmt.Sprintf("Failed to query chaincode. Got error: %s", err.Error())
-		fmt.Printf(errStr)
-		return nil, errors.New(errStr)
-	} 	
-	DealData := Deals{}
-	json.Unmarshal(dealAsBytes, &DealData)
-	fmt.Println(DealData);
-	if DealData.DealID == DealID{
-		fmt.Println("Deal found with DealID : " + DealID)
-	}else{
-		errMsg := "{ \"message\" : \""+ DealID+ " Not Found.\", \"code\" : \"503\"}"
-		err = stub.SetEvent("errEvent", []byte(errMsg))
+		return nil, errors.New("Failed to get Account " + accountNumber)
+	}
+	fmt.Print("AccountAsBytes: ")
+	fmt.Println(AccountAsBytes)
+	res := Accounts{}
+	json.Unmarshal(AccountAsBytes, &res)
+	fmt.Print("res: ")
+	fmt.Println(res)
+	if res.AccountNumber == accountNumber{
+		fmt.Println("This Account already exists: " + accountNumber)
+		fmt.Println(res);
+		errMsg := "{ \"AccountNumber\" : \""+accountNumber+"\", \"message\" : \"This account already exists\", \"code\" : \"503\"}"
+		err := stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
 		} 
-		return nil, nil
+		return nil, nil				//all stop a Account by this name exists
 	}
-
-	Pledger := DealData.Pledger
-	Pledgee := DealData.Pledgee
-	fmt.Println("Pledger : " , Pledger)
-	fmt.Println("Pledgee : " , Pledgee)
-
-	// Fetch Transaction details from Blockchain
-	function := "getTransaction_byID"
-	queryArgs = util.ToChaincodeArgs(function, TransactionID)
-	transactionAsBytes, err := stub.QueryChaincode(DealChaincode, queryArgs)
+	
+	//build the Account json string manually
+	order := 	`{`+
+		`"accountId": "` + accountId + `" ,`+
+		`"accountName": "` + accountName + `" ,`+
+		`"accountNumber": "` + accountNumber + `" ,`+
+		`"accountType": "` + accountType + `" ,`+
+		`"totalValue": "` + totalValue + `" ,`+
+		`"currency": "` + currency + `" ,`+
+		`"pledger": "` + pledger + `" ,`+
+		`"securities": "` + securities + `" `+
+		`}`
+	fmt.Println("order: " + order)
+	err = stub.PutState(accountNumber, []byte(order))									//store Account with AccountId as key
 	if err != nil {
-		errStr := fmt.Sprintf("Failed to query chaincode. Got error: %s", err.Error())
-		fmt.Printf(errStr)
-		return nil, errors.New(errStr)
-	} 
-	TransactionData := Transactions{}
-	json.Unmarshal(transactionAsBytes, &TransactionData)
-	fmt.Println(TransactionData);
-	if TransactionData.TransactionId == TransactionID{
-		fmt.Println("Transaction found with TransactionID : " + TransactionID)
-	}else{
-		errMsg := "{ \"message\" : \""+ TransactionID+ " Not Found.\", \"code\" : \"503\"}"
-		err = stub.SetEvent("errEvent", []byte(errMsg))
-		if err != nil {
-			return nil, err
-		} 
-		return nil, nil
+		return nil, err
 	}
-
-	/*RQV,errBool := strconv.ParseFloat(TransactionData.RQV)*/
-	RQV, errBool := strconv.ParseFloat(TransactionData.RQV,64)
-	if errBool != nil { fmt.Println(errBool) }
-	fmt.Println("RQV : " , RQV)
-
-	//-----------------------------------------------------------------------------
-
-	// Update allocation status to "Allocation in progress"
-	function = "update_transaction_AllocationStatus"
-	invokeArgs := util.ToChaincodeArgs(function, TransactionID, "Allocation in progress")
-	result, err := stub.InvokeChaincode(DealChaincode, invokeArgs)
+	//get the Account index
+	AccountIndexAsBytes, err := stub.GetState(AccountIndexStr)
 	if err != nil {
-		errStr := fmt.Sprintf("Failed to update Transaction status from 'Deal' chaincode. Got error: %s", err.Error())
-		fmt.Printf(errStr)
-		return nil, errors.New(errStr)
+		return nil, errors.New("Failed to get Account index")
 	}
-	fmt.Print("Transaction hash returned: ")
-	fmt.Println(result)
-	fmt.Println("Successfully updated allocation status to 'Allocation in progress'")
-
-	//-----------------------------------------------------------------------------
-
-	// Fetching the Private Securtiy Ruleset based on Pledger & Pledgee
-	// Escaping the values to be put in URL
-	PledgerESC := url.QueryEscape(Pledger)
-	PledgeeESC := url.QueryEscape(Pledgee)
-
-	url := fmt.Sprintf("http://%s/securityRuleset/%s/%s", APIIP, PledgerESC, PledgeeESC)
-	fmt.Println("URL for Ruleset : " + url)
-
-	// Build the request
-	req, err := http.NewRequest("GET", url, nil)
+	var AccountIndex []string
+	fmt.Print("AccountIndexAsBytes: ")
+	fmt.Println(AccountIndexAsBytes)
+	
+	json.Unmarshal(AccountIndexAsBytes, &AccountIndex)							//un stringify it aka JSON.parse()
+	fmt.Print("AccountIndex after unmarshal..before append: ")
+	fmt.Println(AccountIndex)
+	//append
+	AccountIndex = append(AccountIndex, accountNumber)									//add Account AccountId to index list
+	fmt.Println("! Account index after appending accountNumber: ", AccountIndex)
+	jsonAsBytes, _ := json.Marshal(AccountIndex)
+	fmt.Print("jsonAsBytes: ")
+	fmt.Println(jsonAsBytes)
+	err = stub.PutState(AccountIndexStr, jsonAsBytes)						//store name of Account
 	if err != nil {
-		fmt.Println("Ruleset fetch error: ", err)
 		return nil, err
 	}
 
-	// For control over HTTP client headers, redirect policy, and other settings, create a Client
-	// A Client is an HTTP client
-	client := &http.Client{}
-
-	// Send the request via a client 
-	// Do sends an HTTP request and returns an HTTP response
-	resp, err := client.Do(req)
+	tosend := "{ \"AccountNumber\" : \""+accountNumber+"\", \"message\" : \"Account created succcessfully\", \"code\" : \"200\"}"
+	err = stub.SetEvent("evtsender", []byte(tosend))
 	if err != nil {
-		fmt.Println("Do: ", err)
-		errMsg := "{ \"message\" : \"Unable to fetch Security Ruleset at "+ APIIP +".\", \"code\" : \"503\"}"
+		return nil, err
+	} 
+
+	fmt.Println("end create_Account")
+	return nil, nil
+}
+// ============================================================================================================================
+// Add Securities - Update Securities for an account, store into chaincode state
+// ============================================================================================================================
+func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var err error
+	if len(args) !=  12{
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 12\", \"code\" : \"503\"}"
 		err = stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
 		} 
+		return nil, nil
 	}
-
-	fmt.Println("The SecurityRuleset response is::"+strconv.Itoa(resp.StatusCode))
-
-	// Varaible record to be filled with the data from the JSON
-	var rulesetFetched Ruleset
-
-	// Use json.Decode for reading streams of JSON data and store it
-	if err := json.NewDecoder(resp.Body).Decode(&rulesetFetched); 
-	err != nil {
-		fmt.Println(err)
-	}
-
-	// Callers should close resp.Body when done reading from it 
-	// Defer the closing of the body
-	defer resp.Body.Close()
-
-	fmt.Println("Ruleset : ")
-	fmt.Println(rulesetFetched)
-
-	//-----------------------------------------------------------------------------
+	fmt.Println("start add_security")
 	
-	/*	Fetching Currency coversion rates in bast form of USD.
-		Sample Response as JSON:
-		{
-			"base": "USD",
-			"date": "2017-03-20",
-			"rates": {
-				"AUD": 1.2948,
-				"BGN": 1.819,
-				"BRL": 3.1079,
-				"CAD": 1.3355,
-				"CHF": 0.99702,
-				"CNY": 6.9074,
-				"CZK": 25.131,
-				"DKK": 6.9146,
-				"GBP": 0.80723,
-				"HKD": 7.7657,
-				"HRK": 6.8876,
-				"HUF": 287.05,
-				"IDR": 13314,
-				"ILS": 3.6313,
-				"INR": 65.365,
-				"JPY": 112.71,
-				"KRW": 1115.7,
-				"MXN": 19.114,
-				"MYR": 4.4265,
-				"NOK": 8.4894,
-				"NZD": 1.4203,
-				"PHP": 50.061,
-				"PLN": 3.9825,
-				"RON": 4.2415,
-				"RUB": 57.53,
-				"SEK": 8.8428,
-				"SGD": 1.3979,
-				"THB": 34.725,
-				"TRY": 3.6335,
-				"ZAR": 12.676,
-				"EUR": 0.93006
+	_securityId				:= args[0]
+	_accountNumber 			:= args[1]
+	_securityName			:= args[2]
+	_securityQuantity		:= args[3]
+	_securityType			:= args[4]
+	_collateralForm			:= args[5]
+	_totalValue			    := args[6]
+	_valuePercentage		:= args[7]
+	_mtm					:= args[8]
+	_effectivePercentage	:= args[9]
+	_effectiveValueinUSD	:= args[10];
+	_currency			    := args[11]
+	
+
+	SecurityAsBytes, err := stub.GetState(_accountNumber+"-"+_securityId)
+		if err != nil {
+			return nil, errors.New("Failed to get Security " + _accountNumber+"-"+_securityId)
+		}
+	res := Securities{}
+	json.Unmarshal(SecurityAsBytes, &res)
+	if res.SecurityId == _securityId{
+		errMsg := "{ \"SecurityId\" : \""+_securityId+"\",\"message\" : \"This Security already exists\", \"code\" : \"503\"}"
+		err := stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil				//all stop a Account by this name exists
+	}
+	
+	//build the Account json string manually
+	order := 	`{`+
+		`"securityId": "` + _securityId + `" ,`+
+		`"accountNumber": "` + _accountNumber + `" ,`+
+		`"securityName": "` + _securityName + `" ,`+
+		`"securityQuantity": "` + _securityQuantity + `" ,`+
+		`"securityType": "` + _securityType + `" ,`+
+		`"collateralForm": "` + _collateralForm + `" ,`+
+		`"totalvalue": "` + _totalValue + `" ,`+
+		`"valuePercentage": "` + _valuePercentage + `" ,`+
+		`"mtm": "` + _mtm + `" ,`+
+		`"effectivePercentage": "` + _effectivePercentage + `" ,`+
+		`"effectiveValueinUSD": "` + _effectiveValueinUSD + `" ,`+
+		`"currency": "` + _currency + `"`+
+		`}`
+	fmt.Println("order: " + order)
+	err = stub.PutState(_accountNumber+"-"+_securityId, []byte(order))									//store Account with AccountId as key
+	if err != nil {
+		return nil, err
+	}
+	AccountAsBytes, err := stub.GetState(_accountNumber)
+	if err != nil {
+		return nil, errors.New("Failed to get account " + _accountNumber)
+	}
+	//Adding Security to the account
+	res2 := Accounts{}
+	json.Unmarshal(AccountAsBytes, &res2)
+	fmt.Println(res2);
+	if res2.AccountNumber == _accountNumber{
+		fmt.Println("Account found with AccountNumber : " + _accountNumber)
+		_SecuritySplit := strings.Split(res2.Securities, ",")
+		fmt.Print("_SecuritySplit: " )
+		fmt.Println(_SecuritySplit)
+		for i := range _SecuritySplit{
+			fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
+			if _SecuritySplit[i] == _accountNumber+"-"+_securityId {
+				errMsg := "{ \"SecurityId\" : \""+_accountNumber+"-"+_securityId+"\",\"message\" : \" SecurityId already exists in the account.\", \"code\" : \"503\"}"
+				err = stub.SetEvent("errEvent", []byte(errMsg))
+				if err != nil {
+					return nil, err
+				} 
+				return nil, nil
 			}
 		}
-	*/
-	url2 := fmt.Sprintf("http://api.fixer.io/latest?base=USD")
-
-	// Build the request
-	req2, err2 := http.NewRequest("GET", url2, nil)
-	if err2 != nil {
-		fmt.Println("Currency coversion rate fetch error: ", err2)
-		return nil, err2
-	}
-
-	// For control over HTTP client headers, redirect policy, and other settings, create a Client
-	// A Client is an HTTP client
-	client2 := &http.Client{}
-
-	// Send the request via a client 
-	// Do sends an HTTP request and returns an HTTP response
-	resp2, err2 := client2.Do(req2)
-	if err2 != nil {
-		fmt.Println("Do: ", err2)
-		errMsg := "{ \"message\" : \"Unable to fetch Currency Exchange Rates from: "+ url2 +".\", \"code\" : \"503\"}"
-		err2 = stub.SetEvent("errEvent", []byte(errMsg))
-		if err2 != nil {
-			return nil, err2
+	}else{
+		errMsg := "{ \"message\" : \""+ _accountNumber+ " Not Found.\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
 		} 
+		return nil, nil
 	}
-
-	fmt.Println("The SecurityRuleset response is::"+strconv.Itoa(resp2.StatusCode))
-
-	// Varaible ConversionRate to be filled with the data from the JSON
-	var ConversionRate CurrencyConversion
-
-	// Use json.Decode for reading streams of JSON data and store it
-	if err := json.NewDecoder(resp2.Body).Decode(&ConversionRate); 
-	err != nil {
-		fmt.Println(err)
+	if res2.Securities == " " || res2.Securities == "" {
+		res2.Securities = _accountNumber+"-"+_securityId;
+	}else {
+		res2.Securities = res2.Securities+ "," + _accountNumber+"-"+_securityId;
 	}
+	order2 := 	`{`+
+		`"accountId": "` + res2.AccountID + `" ,`+
+		`"accountName": "` + res2.AccountName + `" ,`+
+		`"accountNumber": "` + res2.AccountNumber + `" ,`+
+		`"accountType": "` + res2.AccountType + `" ,`+
+		`"totalValue": "` + res2.TotalValue + `" ,`+
+		`"currency": "` + res2.Currency + `" ,`+
+		`"pledger": "` + res2.Pledger + `" ,`+
+		`"securities": "` + res2.Securities + `" `+
+		`}`
+	fmt.Println("order2: " + order2)
+	err = stub.PutState(res2.AccountNumber, []byte(order2))									//store Account with id as key
+	if err != nil {
+		return nil, err
+	}
+	tosend := "{ \"SecurityId\" : \""+_accountNumber+"-"+_securityId+"\", \"message\" : \"Security updated succcesfully\", \"code\" : \"200\"}"
+	err = stub.SetEvent("evtsender", []byte(tosend))
+	if err != nil {
+		return nil, err
+	} 
 
-	// Callers should close resp.Body when done reading from it 
-	// Defer the closing of the body
-	defer resp2.Body.Close()
+	fmt.Println("end add_security")
+	return nil, nil
+}
+// ============================================================================================================================
+// Remove Securities - Update Securities for an account, store into chaincode state
+// ============================================================================================================================
+func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var err error
+	if len(args) != 1 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 1\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+	fmt.Println("start remove_securitiesFromAccount")
 
-
-	fmt.Println("Exchange Rate : ")
-	fmt.Println(ConversionRate)
-
-	//-----------------------------------------------------------------------------
-
-	// Caluculate eligible Collateral value from RQV
-	RQVEligibleValue := make(map[string]float64)
-
-	//Iterating through all the securities present in the ruleset
-	for key,value := range rulesetFetched.Security {
-		// key = "CommonStocks" && value = [35, 1, 95]
-		// value[0] => ConcentrationLimit
-		// value[1] => Priority
-		// value[2] => ValuationPercentage
-
-		PriorityPri := value[1]
-		PriorityPub, errBool := strconv.ParseFloat(SecurityJSON[key]["Priority"],64)
-		if errBool != nil { fmt.Println(errBool) }
-
-		ConcentrationLimitPri := value[0]
-		ConcentrationLimitPub, errBool := strconv.ParseFloat(SecurityJSON[key]["ConcentrationLimit"],64)
-		if errBool != nil { fmt.Println(errBool) }
-
-		ValuationPercentagePri := value[2]
-		ValuationPercentagePub, errBool := strconv.ParseFloat(SecurityJSON[key]["ValuationPercentage"],64)
-		if errBool != nil { fmt.Println(errBool) }
-
-		// Check if privateset is subset of publicset
-		if PriorityPub > PriorityPri && ConcentrationLimitPub > ConcentrationLimitPri && ValuationPercentagePub > ValuationPercentagePri {
-			errMsg := "{ \"message\" : \"Security Ruleset out of allows values for: "+ key +".\", \"code\" : \"503\"}"
+	_accountNumber	:=args[0]
+		
+	AccountAsBytes, err := stub.GetState(_accountNumber)
+	if err != nil {
+		return nil, errors.New("Failed to get Account " + _accountNumber)
+	}
+	res := Accounts{}
+	json.Unmarshal(AccountAsBytes, &res)
+	_SecuritySplit := strings.Split(res.Securities, ",")
+	fmt.Print("_SecuritySplit: " )
+	fmt.Println(_SecuritySplit)
+	for i:=0;i<len(_SecuritySplit);{
+		fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
+		err := stub.DelState(_SecuritySplit[i])													//remove the key from chaincode state
+		if err != nil {
+			errMsg := "{ \"security\" : \"" + _SecuritySplit[i] + "\", \"message\" : \"Failed to delete state\", \"code\" : \"503\"}"
 			err = stub.SetEvent("errEvent", []byte(errMsg))
 			if err != nil {
 				return nil, err
 			} 
-		} else {
-			RQVEligibleValue[key] = float64((RQV * ConcentrationLimitPri)/100)
+			return nil, nil
+		}
+		_SecuritySplit = append(_SecuritySplit[:i], _SecuritySplit[i+1:]...)			//remove it
+		//fmt.Println(_SecuritySplit[:i])
+		//fmt.Println(_SecuritySplit[i+1])
+		fmt.Println(_SecuritySplit)
+		for x:= range _SecuritySplit{											//debug prints...
+			fmt.Println(string(x) + " - " + _SecuritySplit[x])
 		}
 	}
-	fmt.Println("RQVEligibleValue after calculation:")
-	fmt.Printf("%#v",RQVEligibleValue)
 
-
-	//-----------------------------------------------------------------------------
-
-	// Fetch Pledger & Pledgee securities for longbox and segregated accounts
-	function = "getSecurities_byAccount"
-	
-	queryArgs = util.ToChaincodeArgs(function, PledgerLongboxAccount)
-	PledgerLongboxSecuritiesString, err := stub.QueryChaincode(AccountChainCode, queryArgs)
-
-	queryArgs = util.ToChaincodeArgs(function, PledgeeSegregatedAccount)
-	PledgeeSegregatedSecuritiesString, err := stub.QueryChaincode(AccountChainCode, queryArgs)
-
-	/**	Calculate the effective value and total value of each Security present in the Longbox account of the pledger
-		and the Segregated account of the pledgee
-	*/
-	var TotalValuePledgerLongbox, TotalValuePledgeeSegregated, AvailableEligibleCollateral  float64
-	var PledgerLongboxSecurities,PledgeeSegregatedSecurities, CombinedSecurities []Securities
-
-	// Make inteface to receive string. UnMarshal them extract them and make an array out of them.
-	var PledgerLongboxSecuritiesJSON, PledgeeSegregatedSecuritiesJSON SecurityArrayStruct
-	json.Unmarshal(PledgerLongboxSecuritiesString, &PledgerLongboxSecuritiesJSON)
-	json.Unmarshal(PledgeeSegregatedSecuritiesString, &PledgeeSegregatedSecuritiesJSON)
-
-	TotalValuePledgerLongboxSecurities := make(map[string]float64)
-	TotalValuePledgeeSegregatedSecurities := make(map[string]float64)
-
-	fmt.Println("PledgerLongboxSecuritiesJSON after calculation:")
-	fmt.Printf("%#v",PledgerLongboxSecuritiesJSON)
-	fmt.Println("PledgeeSegregatedSecuritiesJSON after calculation:")
-	fmt.Printf("%#v",PledgeeSegregatedSecuritiesJSON)
-
-	//Operations for Pledger Longbox Securities
-	for _,value := range PledgerLongboxSecuritiesJSON {
-		// Key = Security ID && value = Security Structure
-		tempSecurity := Securities{}
-		tempSecurity = value
-
-		// Check if Current Collateral Form type is acceptied in ruleset. If not skip it!
-		if len(rulesetFetched.Security[tempSecurity.CollateralForm]) > 0 {
-
-			url2 := fmt.Sprintf("http://"+ APIIP +"/MarketData/" + tempSecurity.SecurityId)
-
-			// Build the request
-			req2, err2 := http.NewRequest("GET", url2, nil)
-			if err2 != nil {
-				fmt.Println("Market rate fetch error: ", err2)
-				return nil, err2
-			}
-
-			// For control over HTTP client headers, redirect policy, and other settings, create a Client
-			// A Client is an HTTP cliPledgeeSegregatedSecuritiesent
-			client2 := &http.Client{}
-
-			// Send the request via a client 
-			// Do sends an HTTP request and returns an HTTP response
-			resp2, err2 := client2.Do(req2)
-			if err2 != nil {
-				fmt.Println("Do: ", err2)
-				errMsg := "{ \"message\" : \"Unable to fetch Market Rates from: "+ url2 +".\", \"code\" : \"503\"}"
-				err2 = stub.SetEvent("errEvent", []byte(errMsg))
-				if err2 != nil {
-					return nil, err2
-				}
-			}
-
-			fmt.Println("The MarketData response is::"+strconv.Itoa(resp2.StatusCode))
-
-			var stringArr []string
-
-			// Use json.Decode for reading streams of JSON data and store it
-			if err := json.NewDecoder(resp2.Body).Decode(&stringArr); 
-			err != nil {
-				fmt.Println(err)
-			}
-			// Callers should close resp.Body when done reading from it 
-			// Defer the closing of the body
-			defer resp2.Body.Close()
-
-			tempSecurity.MTM = stringArr[0]
-
-			// Storing the Value percentage in the security ruleset data itself
-			tempSecurity.EffectivePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'E', -1, 64)
-
-			// Effective Value = Currency conversion rate(to USD) * MTM(market Value)
-			temp, errBool := strconv.ParseFloat(tempSecurity.MTM,64)
-			if errBool != nil { fmt.Println(errBool) }
-
-			temp3 := ConversionRate.Rates[tempSecurity.Currency] * float64(temp)
-			tempSecurity.EffectiveValueinUSD = strconv.FormatFloat(temp3, 'E', -1, 64)
-
-			// Adding it to TotalValue
-			temp, errBool = strconv.ParseFloat(tempSecurity.EffectiveValueinUSD,64)
-			if errBool != nil { fmt.Println(errBool) }
-			temp2, errBool := strconv.ParseFloat(tempSecurity.SecuritiesQuantity,64)
-			if errBool != nil { fmt.Println(errBool) }
-
-			tempTotal := temp * temp2
-			tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'E', -1, 64)
-
-			// Calculate Total based on Security Type
-			TotalValuePledgerLongboxSecurities[tempSecurity.CollateralForm] += float64(tempTotal)
-			TotalValuePledgerLongbox += float64(tempTotal)
-			AvailableEligibleCollateral += float64(tempTotal)
-
-			/*	Warning :
-				Saving Priority for the Security in filed `ValuePercentage`
-				This is just for using the limited sorting application provided by GOlang
-				By no chance is this to be stored on Blockchain. 
-			*/
-			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'E', -1, 64)
-
-			// Append Securities to an array
-			PledgerLongboxSecurities = append(PledgerLongboxSecurities,tempSecurity)
-			CombinedSecurities = append(CombinedSecurities,tempSecurity)
-		}
+	res.Securities = strings.Join(_SecuritySplit,",");
+	fmt.Println(res.Securities)
+	fmt.Println(_SecuritySplit)
+	//build the Account json string manually
+	order := 	`{`+
+		`"accountId": "` + res.AccountID + `" ,`+
+		`"accountName": "` + res.AccountName + `" ,`+
+		`"accountNumber": "` + res.AccountNumber + `" ,`+
+		`"accountType": "` + res.AccountType + `" ,`+
+		`"totalValue": "` + res.TotalValue + `" ,`+
+		`"currency": "` + res.Currency + `" ,`+
+		`"pledger": "` + res.Pledger + `" ,`+
+		`"securities": "`+ res.Securities +`" `+
+		`}`
+	fmt.Println("order: " + order)
+	err = stub.PutState(_accountNumber, []byte(order))									//store Account with _accountNumber as key
+	if err != nil {
+		return nil, err
 	}
-	
-	// Operations for Pledgee Segregated Account(s)
-	for _,value := range PledgeeSegregatedSecuritiesJSON {
-		// Key = Security ID && value = Security Structure
-		tempSecurity := Securities{}
-		tempSecurity = value
-
-		// Check if Current Collateral Form type is acceptied in ruleset. If not skip it!
-		if len(rulesetFetched.Security[tempSecurity.CollateralForm]) > 0 {
-
-			// Storing the Value percentage in the security data itself
-			tempSecurity.EffectivePercentage = SecurityJSON[tempSecurity.SecurityId]["ValuePercentage"]
-
-			// Effective Value = Currency conversion rate(to USD) * MTM(market Value)
-
-			temp, errBool := strconv.ParseFloat(tempSecurity.MTM,64)
-			if errBool != nil { fmt.Println(errBool) }
-
-			temp3 := ConversionRate.Rates[tempSecurity.Currency] * float64(temp)
-			tempSecurity.EffectiveValueinUSD = strconv.FormatFloat(temp3, 'E', -1, 64)
-
-			// Adding it to TotalValue
-
-			temp, errBool = strconv.ParseFloat(tempSecurity.EffectiveValueinUSD,64)
-			if errBool != nil { fmt.Println(errBool) }
-			temp2, errBool := strconv.ParseFloat(tempSecurity.SecuritiesQuantity,64)
-			if errBool != nil { fmt.Println(errBool) }
-
-			tempTotal := temp * temp2
-			tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'E', -1, 64)
-
-			// Calculate Total based on Security Type
-			TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm] += float64(tempTotal)
-			TotalValuePledgeeSegregated += float64(tempTotal)
-			AvailableEligibleCollateral =+ float64(tempTotal)
-
-			/*	Warning :
-				Saving Priority for the Security in filed `ValuePercentage`
-				This is just for using the limited sorting application provided by GOlang
-				By no chance is this to be stored on Blockchain. 
-			*/
-			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'E', -1, 64)
-
-			// Append Securities to an array
-			PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, tempSecurity)
-			CombinedSecurities = append(CombinedSecurities, tempSecurity)
-		}
-
+	tosend := "{ \"AccountNumber\" : \""+_accountNumber+"\", \"message\" : \"All securities deleted succcesfully!\", \"code\" : \"200\"}"
+	err = stub.SetEvent("evtsender", []byte(tosend))
+	if err != nil {
+		return nil, err
 	}
-	
-	fmt.Println("AvailableEligibleCollateral after calculation:")
-	fmt.Printf("%#v",AvailableEligibleCollateral)
-	fmt.Println("PledgerLongboxSecurities after calculation:")
-	fmt.Printf("%#v",PledgerLongboxSecurities)
-	fmt.Println("PledgeeSegregatedSecurities after calculation:")
-	fmt.Printf("%#v",PledgeeSegregatedSecurities)
-	//-----------------------------------------------------------------------------
-
-	if AvailableEligibleCollateral < float64(RQV) {
-		// Value of eligible collateral available in Pledger Long acc + Pledgee Seg acc < RQV 
-
-			// Update the margin call s Allocation Status as Pending due to insufficient collateral
-			/*function := "update_transaction_AllocationStatus"
-			invokeArgs := util.ToChaincodeArgs(function, TransactionID, "Pending due to insufficient collateral")
-			result, err := stub.InvokeChaincode(DealChaincode, invokeArgs)
-			if err != nil {
-				errStr := fmt.Sprintf("Failed to update Transaction status from 'Deal' chaincode. Got error: %s", err.Error())
-				fmt.Printf(errStr)
-				return nil, errors.New(errStr)
-			}*/
-
-		// Update transaction's allocation status to "Pending due to insufficient collateral" and transaction status to "Pending"
-		f := "update_transaction"
-		/*input:= 
-			`"` + TransactionData.TransactionId + `" , ` + 
-			`"` + TransactionData.TransactionDate + `" ,`+ 
-			`"` + TransactionData.DealID + `" , ` + 
-			`"` + TransactionData.Pledger + `" , ` + 
-			`"` + TransactionData.Pledgee + `" , ` + 
-			`"` + TransactionData.RQV + `" , ` +
-	        `"` + TransactionData.Currency + `" , ` + 
-	        `"" , ` +  
-	        `"` + MarginCallTimpestamp + `" , ` + 
-	        `"` + "Pending due to insufficient collateral" + `" , ` + 
-	        `"` + "Pending" + `" ` 
-	    fmt.Println(input);*/
-		invoke_args := util.ToChaincodeArgs(f, TransactionData.TransactionId,TransactionData.TransactionDate, TransactionData.DealID, TransactionData.Pledger,TransactionData.Pledgee, TransactionData.RQV, TransactionData.Currency,"\" \"", MarginCallTimpestamp, "Pending due to insufficient collateral","Pending")
-		fmt.Println(TransactionData);
-		result, err := stub.InvokeChaincode(DealChaincode, invoke_args)
+	fmt.Println("end remove_securitiesFromAccount")
+	return nil, nil
+}
+// ============================================================================================================================
+//  getSecurities_byAccount- get details of all Account from chaincode state
+// ============================================================================================================================
+func (t *ManageAccounts) getSecurities_byAccount(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var jsonResp, errResp string
+	fmt.Println("start getSecurities_byAccount")
+	var err error
+	if len(args) != 1 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting \"AccountNumber\" as an argument\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
-			errStr := fmt.Sprintf("Failed to invoke chaincode. Got error: %s", err.Error())
-			fmt.Printf(errStr)
-			return nil, errors.New(errStr)
-		} 	
-		fmt.Print("Update transaction returned : ")
-		fmt.Println(result)
-		fmt.Println("Successfully updated allocation status to 'Pending' due to insufficient collateral'")
-	    //Send a event to event handler
-	    tosend:= "{ \"transactionId\" : \"" + TransactionData.TransactionId + "\", \"message\" : \"Transaction Allocation updated succcessfully with status 'Pending' due to insufficient collateral.\", \"code\" : \"200\"}"
-	    err = stub.SetEvent("evtsender", [] byte(tosend))
-	    if err != nil {
-	        return nil, err
-	    }
-
-	    // Actual return of process end. 
-		//ret:= "{ \"message\" : \""+TransactionID+" pending due to insufficient collateral. Notification sent to user.\", \"code\" : \"200\"}"
+			return nil, err
+		} 
 		return nil, nil
-
-	} else {
-
-		// Value of eligible collateral available in Pledger Long acc + Pledgee Seg acc >= RQV 
-
-		//-----------------------------------------------------------------------------
-
-		// Sorting the Securities in PledgerLongboxSecurities & PledgeeSegregatedSecurities
-		// Using Code defination like https://play.golang.org/p/ciN45THQjM
-		// Reference from http://nerdyworm.com/blog/2013/05/15/sorting-a-slice-of-structs-in-go/
-		
-		sort.Sort(SecurityArrayStruct(PledgerLongboxSecurities))
-
-		sort.Sort(SecurityArrayStruct(PledgeeSegregatedSecurities))
-
-		sort.Sort(SecurityArrayStruct(CombinedSecurities))
-
-		//-----------------------------------------------------------------------------
-
-		// Start Allocatin & Rearrangment
-		// ReallocatedSecurities -> Structure where securites to reallocate will be stored
-		// CombinedSecurities will only be used to read securities in order. Actual Changes will be 
-		//	done in PledgerLongboxSecurities & PledgeeSegregatedSecurities
-
-		// RQVEligibleValue[CollateralType] contains the max eligible vaule for each type
-		RQVEligibleValueLeft := RQVEligibleValue
-		RQVLeft := RQV
-
-		SecuritiesChanged := make(map[string]float64)
-
-		var ReallocatedSecurities []Securities
-
-		// Iterating through all the securities 
-		// Label: CombinedSecuritiesIterator --> to be used for break statements
-		CombinedSecuritiesIterator: for _,valueSecurity := range CombinedSecurities {
-			fmt.Println("RQVLeft: ", RQVLeft)
-			if RQVLeft > 0 {
-				// More Security need to be taken out
-				temp1 := RQVEligibleValueLeft[valueSecurity.CollateralForm]
-				temp2,errBool:= strconv.ParseFloat(valueSecurity.MTM,64)
-				if errBool != nil { fmt.Println(errBool) }
-				if temp1 >= temp2 {
-					// At least one more this type of collateralForm to be taken out
-					temp3,errBool :=strconv.ParseFloat(valueSecurity.EffectiveValueinUSD,64)
-					if errBool != nil { fmt.Println(errBool) }
-					temp4 := RQVEligibleValueLeft[valueSecurity.CollateralForm]
-					if temp3 <= temp4 {
-						// All Security of this type will re allocated if RQV has balance
-
-						temp4,errBool :=strconv.ParseFloat(valueSecurity.EffectiveValueinUSD,64)
-						if errBool != nil { fmt.Println(errBool) }
-						if temp4 <= RQVLeft {
-							// All Security of this type will re allocated as RQV has balance
-							
-							RQVLeft -= temp4
-							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= temp4
-							ReallocatedSecurities = append(ReallocatedSecurities, valueSecurity)
-							
-							temp5,errBool :=strconv.ParseFloat(valueSecurity.SecuritiesQuantity,64)
-							if errBool != nil { fmt.Println(errBool) }
-							SecuritiesChanged[valueSecurity.SecurityId] = temp5
-
-
-						} else {
-							// RQV has insufficient balance to take all securities
-							temp5,errBool:= strconv.ParseFloat(valueSecurity.MTM,64)
-							if errBool != nil { fmt.Println(errBool) }
-
-							QuantityToTakeout := math.Ceil(RQVLeft / temp5)
-							EffectiveValueinUSDtoAllocate := QuantityToTakeout * temp5
-
-							RQVLeft -= EffectiveValueinUSDtoAllocate
-							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= EffectiveValueinUSDtoAllocate
-							tempSecurity2 := valueSecurity 
-							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'E', -1, 64)
-							tempSecurity2.EffectiveValueinUSD = strconv.FormatFloat(EffectiveValueinUSDtoAllocate, 'E', -1, 64)
-							ReallocatedSecurities = append(ReallocatedSecurities, valueSecurity)
-							SecuritiesChanged[valueSecurity.SecurityId] = QuantityToTakeout
-						}
-					} else {
-						// We can take out more of this type of CollateralForm but not all
-						
-						temp5,errBool:= strconv.ParseFloat(valueSecurity.MTM,64)
-							if errBool != nil { fmt.Println(errBool) }
-						QuantityToTakeout := math.Ceil(float64(RQVEligibleValueLeft[valueSecurity.CollateralForm] / float64(temp5)))
-						EffectiveValueinUSDtoAllocate := QuantityToTakeout * float64(temp5)
-
-						if EffectiveValueinUSDtoAllocate >= float64(RQVLeft) {
-							// Can takeout the Securites 
-
-							RQVLeft -= EffectiveValueinUSDtoAllocate
-							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= float64(EffectiveValueinUSDtoAllocate)
-							tempSecurity2 := valueSecurity 
-							tempSecurity2.SecuritiesQuantity= strconv.FormatFloat(QuantityToTakeout, 'E', -1, 64)
-							//strconv.ParseFloat(QuantityToTakeout)
-							tempSecurity2.EffectiveValueinUSD= strconv.FormatFloat(EffectiveValueinUSDtoAllocate, 'E', -1, 64)
-							//strconv.ParseFloat(EffectiveValueinUSDtoAllocate)
-							ReallocatedSecurities = append(ReallocatedSecurities, valueSecurity)
-							SecuritiesChanged[valueSecurity.SecurityId] = float64(QuantityToTakeout)
-
-						} else {
-							// Cannot takeout all possble Securities as RQV balance is low
-							temp6,errBool:= strconv.ParseFloat(valueSecurity.MTM,64)
-							if errBool != nil { fmt.Println(errBool) }
-
-							if QuantityToTakeout >math.Ceil(float64(RQVLeft / temp6)) {
-								QuantityToTakeout = math.Ceil(float64(RQVLeft / temp6))
-							}
-							EffectiveValueinUSDtoAllocate = QuantityToTakeout * float64(temp6)
-
-							RQVLeft -= EffectiveValueinUSDtoAllocate
-							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= float64(EffectiveValueinUSDtoAllocate)
-							tempSecurity2 := valueSecurity 
-							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'E', -1, 64)
-							tempSecurity2.EffectiveValueinUSD = strconv.FormatFloat(EffectiveValueinUSDtoAllocate, 'E', -1, 64)
-							ReallocatedSecurities = append(ReallocatedSecurities, valueSecurity)
-							SecuritiesChanged[valueSecurity.SecurityId] = float64(QuantityToTakeout)						
-						}
-					}
-
-				} else{
-					// We Cannot take out more of this type of Security so SKIP
-				}
-			} else {
-				// Security cutting done
-				// Break from the CombinedSecuritiesIterator as RQV is less than 0
-				break CombinedSecuritiesIterator
-			}
-		}
-		
-		fmt.Println("ReallocatedSecurities after calculation:")
-		fmt.Printf("%#v",ReallocatedSecurities)
-		fmt.Println("SecuritiesChanged after calculation:")
-		fmt.Printf("%#v",SecuritiesChanged)
-		fmt.Println("RQVEligibleValueLeft after calculation:")
-		fmt.Printf("%#v",RQVEligibleValueLeft)
-		//-----------------------------------------------------------------------------
-		
-		// Flushing securities from both Accounts
-		// remove_securitiesFromAccount
-		function = "remove_securitiesFromAccount"
-
-		invokeArgs := util.ToChaincodeArgs(function, PledgerLongboxAccount)
-		result, err := stub.InvokeChaincode(AccountChainCode, invokeArgs)
-		if err != nil {
-			errStr := fmt.Sprintf("Failed to flush " + PledgerLongboxAccount+" from 'Account' chaincode. Got error: %s", err.Error())
-			fmt.Printf(errStr)
-			return nil, errors.New(errStr)
-		}
-		fmt.Print("Transaction hash returned: ");
-		fmt.Println(result)
-		invokeArgs = util.ToChaincodeArgs(function, PledgeeSegregatedAccount)
-		result, err = stub.InvokeChaincode(AccountChainCode, invokeArgs)
-		if err != nil {
-			errStr := fmt.Sprintf("Failed to flush " + PledgeeSegregatedAccount+" from 'Account' chaincode. Got error: %s", err.Error())
-			fmt.Printf(errStr)
-			return nil, errors.New(errStr)
-		}
-		
-		//-----------------------------------------------------------------------------
-
-		// Committing the state to Blockchain
-
-		// Function from Account Chaincode for 
-		functionUpdateSecurity 	:= "update_security" 		// Securities Object
-		//functionDeleteSecurity	:= "delete_security"	// SecurityId, AccountNumber
-		functionAddSecurity 	:= "add_security"			// Security Object
-
-		// Update the existing Securities for Pledger Longbox A/c
-		for _,valueSecurity := range CombinedSecurities {
-				_SecurityQuantity, err := strconv.ParseFloat(valueSecurity.SecuritiesQuantity,64)
-				if err != nil {
-					errStr := fmt.Sprintf("Failed to convert SecurityQuantity(string) to SecurityQuantity(int). Got error: %s", err.Error())
-					fmt.Printf(errStr)
-				}
-				_tempQuantity := SecuritiesChanged[valueSecurity.SecurityId]
-				newQuantity := _SecurityQuantity - _tempQuantity
-
-				if _SecurityQuantity == _tempQuantity {
-					
-					invokeArgs := util.ToChaincodeArgs(functionUpdateSecurity, valueSecurity.SecurityId, 
-						PledgerLongboxAccount,
-						valueSecurity.SecuritiesName, 
-						valueSecurity.SecuritiesQuantity, 
-						valueSecurity.SecurityType ,
-						valueSecurity.CollateralForm ,
-						"",
-						valueSecurity.MTM ,
-						valueSecurity.EffectivePercentage ,
-						valueSecurity.EffectiveValueinUSD ,
-						valueSecurity.Currency)
-					result, err := stub.InvokeChaincode(AccountChainCode, invokeArgs)
-					if err != nil {
-						errStr := fmt.Sprintf("Failed to update Security from 'Account' chaincode. Got error: %s", err.Error())
-						fmt.Printf(errStr)
-						return nil, errors.New(errStr)
-					}
-					fmt.Print("Transaction hash returned: ");
-					fmt.Println(result)
-				} else if newQuantity < _SecurityQuantity && _tempQuantity > 0  {
-					invokeArgs := util.ToChaincodeArgs(functionUpdateSecurity, valueSecurity.SecurityId, 
-						PledgerLongboxAccount,
-						valueSecurity.SecuritiesName, 
-						strconv.FormatFloat(newQuantity, 'E', -1, 64), 
-						valueSecurity.SecurityType ,
-						valueSecurity.CollateralForm ,
-						"",
-						valueSecurity.MTM ,
-						valueSecurity.EffectivePercentage ,
-						valueSecurity.EffectiveValueinUSD ,
-						valueSecurity.Currency)
-					result, err := stub.InvokeChaincode(AccountChainCode, invokeArgs)
-					if err != nil {
-						errStr := fmt.Sprintf("Failed to update Security from 'Account' chaincode. Got error: %s", err.Error())
-						fmt.Printf(errStr)
-						return nil, errors.New(errStr)
-					}
-					fmt.Print("Transaction hash returned: ");
-					fmt.Println(result)
-				}
-			
-		}
-
-		// Update the new Securities to Pledgee Segregated A/c
-		for _, valueSecurity := range ReallocatedSecurities {
-			
-
-
-			invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId,
-				PledgeeSegregatedAccount ,												
-				valueSecurity.SecuritiesName,
-				valueSecurity.SecuritiesQuantity,
-				valueSecurity.SecurityType,
-				valueSecurity.CollateralForm,
-				"",
-				valueSecurity.MTM,
-				valueSecurity.EffectivePercentage,
-				valueSecurity.EffectiveValueinUSD,
-				valueSecurity.Currency)
-			result, err := stub.InvokeChaincode(AccountChainCode, invokeArgs)
-			if err != nil {
-				errStr := fmt.Sprintf("Failed to update Security from 'Account' chaincode. Got error: %s", err.Error())
-				fmt.Printf(errStr)
-				return nil, errors.New(errStr)
-			}
-			fmt.Print("Transaction hash returned: ");
-			fmt.Println(result)
-		}
-
-
-		//-----------------------------------------------------------------------------
-
-		// Update Transaction data finally
-
-		ConversionRateAsBytes, _ := json.Marshal(ConversionRate)								//marshal an emtpy array of strings to clear the index
-	    ConversionRateAsString := string(ConversionRateAsBytes[: ])
-	    f := "update_transaction"
-		invoke_args := util.ToChaincodeArgs(f, 
-			TransactionData.TransactionId ,
-			TransactionData.TransactionDate ,
-			TransactionData.DealID ,
-			TransactionData.Pledger ,
-			TransactionData.Pledgee ,
-			TransactionData.RQV,
-	        TransactionData.Currency ,
-	        ConversionRateAsString,
-	        MarginCallTimpestamp ,
-	        "Allocation Successful" ,
-	       	"Completed")
-		fmt.Println(TransactionData);
-		res, err := stub.InvokeChaincode(DealChaincode, invoke_args)
-		if err != nil {
-			errStr := fmt.Sprintf("Failed to invoke chaincode. Got error: %s", err.Error())
-			fmt.Printf(errStr)
-			return nil, errors.New(errStr)
-		} 	
-		fmt.Print("Update transaction returned hash: ");
-	    fmt.Println(res);
-		fmt.Println("Successfully updated allocation status to 'Allocation Successful'")
-	    // Actual return of process end. 
-		tosend:= "{ \"Transaction ID\" : \"" + TransactionData.TransactionId + "\", \"message\" : \"Transaction allocation completed successfully.\", \"code\" : \"200\"}"
-	    	err = stub.SetEvent("evtsender", [] byte(tosend))
-	    		if err != nil {
-		        return nil, err
-		}
-		//ret:= "{ \"message\" : \" + TransactionDataTransactionID + \" Completed allocation succcessfully.\", \"code\" : \"200\" }"
-		return nil, nil
-
 	}
 
-	fmt.Println("end start_allocation")
+	_AccountNumber := args[0]
+	_tempJson :=Securities{}
+
+	var res = Accounts{}
+	AccountAsBytes, err := stub.GetState(_AccountNumber)
+	if err != nil {
+		return nil, errors.New("Failed to get Account index")
+	}
+	json.Unmarshal(AccountAsBytes, &res)
+	fmt.Print("account details: ");
+	fmt.Println(res)
+	_SecuritySplit := strings.Split(res.Securities, ",")
+	fmt.Print("_SecuritySplit: " )
+	fmt.Println(_SecuritySplit)
+	jsonResp = "["
+	for i := range _SecuritySplit{
+		fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
+		valueAsBytes, err := stub.GetState(_SecuritySplit[i])
+		if err != nil {
+			errResp = "{\"Error\":\"Failed to get state for " + _SecuritySplit[i] + "\"}"
+			return nil, errors.New(errResp)
+		}
+		json.Unmarshal(valueAsBytes, &_tempJson)
+		fmt.Print("_tempJson : ")
+		fmt.Println(_tempJson)
+		jsonResp = jsonResp + string(valueAsBytes[:])
+		if i < len(_SecuritySplit)-1 {
+			jsonResp = jsonResp + ","
+		}
+	}
+	jsonResp = jsonResp + "]"
+	fmt.Print("jsonResp: ")
+	fmt.Println(jsonResp)
+	if jsonResp == "[\"\":]" || jsonResp == "[\" \":]" {
+		jsonResp = "{ \"AccountNumber\" : \"" + _AccountNumber + "\", \"message\" : \"No securities found.\", \"code\" : \"503\"}"
+	}
+	fmt.Println("end getSecurities_byAccount")
+	return []byte(jsonResp), nil
+}
+// ============================================================================================================================
+// update_security - update Security into chaincode state
+// ============================================================================================================================
+func (t *ManageAccounts) update_security(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var err error
+	fmt.Println("Updating Security")
+	if len(args) != 12 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 12\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+	// set accountNumber
+	securityId := args[0]
+	accountNumber := args[1]
+	securityAsBytes, err := stub.GetState(accountNumber + "-" + securityId)									//get the Security for the specified accountNumber-securityId from chaincode state
+	if err != nil {
+		errMsg := "{ \"message\" : \"Failed to get state for " + accountNumber + "-" + securityId + "\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+	fmt.Print("securityAsBytes in update Security")
+	fmt.Println(securityAsBytes);
+	res := Securities{}
+	json.Unmarshal(securityAsBytes, &res)
+	if res.SecurityId == securityId{
+		fmt.Println("Security found with SecurityId : " + securityId)
+		fmt.Println(res);
+		//build the Account json string manually
+		order := 	`{`+
+			`"securityId": "` + res.SecurityId + `" ,`+
+			`"accountNumber": "` + res.AccountNumber + `" ,`+
+			`"securityName": "` + args[2] + `" ,`+
+			`"securityQuantity": "` + args[3] + `" ,`+
+			`"securityType": "` + args[4] + `" ,`+
+			`"collateralForm": "` + args[5] + `" ,`+
+			`"totalvalue": "` + args[6]+ `" ,`+
+			`"valuePercentage": "` + args[7]+ `" ,`+
+			`"mtm": "` + args[8]+ `" ,`+
+			`"effectivePercentage": "` + args[9]+ `" ,`+
+			`"effectiveValueinUSD": "` + args[10]+ `" ,`+
+			`"currency": "` + args[11] + `"`+
+			`}`
+		fmt.Println(order);
+		err = stub.PutState(accountNumber + "-" + securityId, []byte(order))									//store security with id as key
+		if err != nil {
+			return nil, err
+		}
+		fmt.Println("Security updated succcessfully")
+	}else{
+		errMsg := "{ \"message\" : \""+ securityId+ " Not Found.\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+	
+	tosend := "{ \"Security\" : \"" + accountNumber + "-" + securityId + "\", \"message\" : \"Security updated succcessfully\", \"code\" : \"200\"}"
+	err = stub.SetEvent("evtsender", []byte(tosend))
+	if err != nil {
+		return nil, err
+	} 
+
+	return nil, nil
+}
+// ============================================================================================================================
+// Delete - remove a Security from state and then remove from account
+// ============================================================================================================================
+func (t *ManageAccounts) delete_security(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	if len(args) != 2 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting \"accountNumber,securityId\" arguments.\", \"code\" : \"503\"}"
+		err := stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+	// set security
+	_securityId := args[0];
+	_accountNumber := args[1];
+	security := _accountNumber + "-" + _securityId;
+	fmt.Println(security);
+	err := stub.DelState(security)													//remove the key from chaincode state
+	if err != nil {
+		errMsg := "{ \"security\" : \"" + security + "\", \"message\" : \"Failed to delete state\", \"code\" : \"503\"}"
+		err = stub.SetEvent("errEvent", []byte(errMsg))
+		if err != nil {
+			return nil, err
+		} 
+		return nil, nil
+	}
+
+	//get the account Number details
+	accountAsBytes, err := stub.GetState(_accountNumber)
+	if err != nil {
+		return nil, errors.New("Failed to get Account number")
+	}
+	valIndex := Accounts{}
+	json.Unmarshal(accountAsBytes, &valIndex)	
+	_SecuritySplit := strings.Split(valIndex.Securities, ",")
+	fmt.Print("_SecuritySplit: " )
+	fmt.Println(_SecuritySplit)
+	for i := range _SecuritySplit{
+		fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
+		fmt.Println(_SecuritySplit[i] == (_accountNumber+"-"+_securityId))
+		if _SecuritySplit[i] == (_accountNumber+"-"+_securityId) {
+			fmt.Println("Security Found.");
+			_SecuritySplit = append(_SecuritySplit[:i], _SecuritySplit[i+1:]...)			//remove it
+			fmt.Println(_SecuritySplit[:i])
+			fmt.Println(_SecuritySplit)
+			for x:= range _SecuritySplit{											//debug prints...
+				fmt.Println(string(x) + " - " + _SecuritySplit[x])
+			}
+			break
+		}
+	}
+	fmt.Println(_SecuritySplit);
+	valIndex.Securities = strings.Join(_SecuritySplit,",");
+	fmt.Println(_SecuritySplit);
+	//build the Account json string manually
+	order := 	`{`+
+		`"accountId": "` + valIndex.AccountID + `" ,`+
+		`"accountName": "` + valIndex.AccountName + `" ,`+
+		`"accountNumber": "` + valIndex.AccountNumber + `" ,`+
+		`"accountType": "` + valIndex.AccountType + `" ,`+
+		`"totalValue": "` + valIndex.TotalValue + `" ,`+
+		`"currency": "` + valIndex.Currency + `" ,`+
+		`"pledger": "` + valIndex.Pledger + `" ,`+
+		`"securities": "`+ valIndex.Securities +`" `+
+		`}`
+		
+	fmt.Println("order: " + order)
+	err = stub.PutState(_accountNumber, []byte(order))									//store Account with _accountNumber as key
+	if err != nil {
+		return nil, err
+	}
+	tosend := "{ \"security\" : \""+security+"\", \"message\" : \"Security deleted succcessfully\", \"code\" : \"200\"}"
+	err = stub.SetEvent("evtsender", []byte(tosend))
+	if err != nil {
+		return nil, err
+	} 
 	return nil, nil
 }
