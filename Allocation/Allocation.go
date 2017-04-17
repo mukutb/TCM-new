@@ -1232,9 +1232,13 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		reportInJson += `"allocationStatus" : "Allocation Successful",`
 		reportInJson += `}`
 
+		fmt.Println(pledgerLongboxSecuritiesJson);
+		fmt.Println(reallocatedSecuritiesJson);
+		fmt.Println(reportInJson);
+
 		//Sending Report
 	    err = stub.SetEvent("reportInJson", [] byte(reportInJson))
-	    		if err != nil {
+	    if err != nil {
 		        return nil, err
 		}
 
