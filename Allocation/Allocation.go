@@ -924,12 +924,12 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				var _temp2, _temp3,_temp4, _temp5, _temp6 float32;
 				// More Security need to be taken out
 				temp1 := RQVEligibleValueLeft[valueSecurity.CollateralForm]
-				temp2,errBool:= strconv.ParseFloat(valueSecurity.MTM,32)
+				temp2,errBool:= strconv.ParseFloat(valueSecurity.EffectiveValueinUSD,32)
 				if errBool != nil { fmt.Println(errBool) }
 				_temp2 = float32(temp2);
 				if temp1 >= _temp2 {
 					// At least one more this type of collateralForm to be taken out
-					temp3,errBool :=strconv.ParseFloat(valueSecurity.EffectiveValueinUSD,32)
+					temp3,errBool :=strconv.ParseFloat(valueSecurity.TotalValue,32)
 					if errBool != nil { fmt.Println(errBool) }
 					_temp3 = float32(temp3);
 
@@ -937,7 +937,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					if _temp3 <= temp4 {
 						// All Security of this type will re allocated if RQV has balance
 
-						temp4,errBool :=strconv.ParseFloat(valueSecurity.EffectiveValueinUSD,32)
+						temp4,errBool :=strconv.ParseFloat(valueSecurity.TotalValue,32)
 						if errBool != nil { fmt.Println(errBool) }
 						_temp4 = float32(temp4);
 
@@ -956,7 +956,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 						} else {
 							// RQV has insufficient balance to take all securities
-							temp5,errBool:= strconv.ParseFloat(valueSecurity.MTM,32)
+							temp5,errBool:= strconv.ParseFloat(valueSecurity.EffectiveValueinUSD,32)
 							if errBool != nil { fmt.Println(errBool) }
 							_temp5 = float32(temp5);
 							QuantityToTakeout := float32(math.Ceil(float64(RQVLeft) / temp5))
@@ -966,20 +966,20 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= EffectiveValueinUSDtoAllocate
 							tempSecurity2 := valueSecurity 
 							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(float64(QuantityToTakeout), 'f', -1, 32)
-							tempSecurity2.EffectiveValueinUSD = strconv.FormatFloat(float64(EffectiveValueinUSDtoAllocate), 'f', -1, 32)
-							ReallocatedSecurities = append(ReallocatedSecurities, valueSecurity)
+							tempSecurity2.TotalValue = strconv.FormatFloat(float64(EffectiveValueinUSDtoAllocate), 'f', -1, 32)
+							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
 							SecuritiesChanged[valueSecurity.SecurityId] = QuantityToTakeout
 						}
 					} else {
 						// We can take out more of this type of CollateralForm but not all
 						
-						temp5,errBool:= strconv.ParseFloat(valueSecurity.MTM,32)
+						temp5,errBool:= strconv.ParseFloat(valueSecurity.EffectiveValueinUSD,32)
 							if errBool != nil { fmt.Println(errBool) }
 							_temp5 = float32(temp5);
 						QuantityToTakeout := float32(math.Ceil(float64(RQVEligibleValueLeft[valueSecurity.CollateralForm]) / temp5))
 						EffectiveValueinUSDtoAllocate := QuantityToTakeout * _temp5
 
-						if EffectiveValueinUSDtoAllocate >= float32(RQVLeft) {
+						if EffectiveValueinUSDtoAllocate <= float32(RQVLeft) {
 							// Can takeout the Securites 
 
 							RQVLeft -= EffectiveValueinUSDtoAllocate
@@ -989,12 +989,12 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							//strconv.ParseFloat(QuantityToTakeout)
 							tempSecurity2.EffectiveValueinUSD= strconv.FormatFloat(float64(EffectiveValueinUSDtoAllocate), 'f', -1, 32)
 							//strconv.ParseFloat(EffectiveValueinUSDtoAllocate)
-							ReallocatedSecurities = append(ReallocatedSecurities, valueSecurity)
+							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
 							SecuritiesChanged[valueSecurity.SecurityId] = float32(QuantityToTakeout)
 
 						} else {
 							// Cannot takeout all possble Securities as RQV balance is low
-							temp6,errBool:= strconv.ParseFloat(valueSecurity.MTM,32)
+							temp6,errBool:= strconv.ParseFloat(valueSecurity.EffectiveValueinUSD,32)
 							if errBool != nil { fmt.Println(errBool) }
 							_temp6 = float32(temp6);
 							if QuantityToTakeout > float32(math.Ceil(float64(RQVLeft / _temp6))){
@@ -1007,7 +1007,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							tempSecurity2 := valueSecurity 
 							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(float64(QuantityToTakeout), 'f', -1, 32)
 							tempSecurity2.EffectiveValueinUSD = strconv.FormatFloat(float64(EffectiveValueinUSDtoAllocate), 'f', -1, 32)
-							ReallocatedSecurities = append(ReallocatedSecurities, valueSecurity)
+							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
 							SecuritiesChanged[valueSecurity.SecurityId] = float32(QuantityToTakeout)						
 						}
 					}
