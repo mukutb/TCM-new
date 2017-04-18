@@ -1050,10 +1050,10 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		//functionDeleteSecurity	:= "delete_security"	// SecurityId, AccountNumber
 		functionAddSecurity 	:= "add_security"			// Security Object
 
-		pledgerLongboxSecuritiesJson := `[{`
+		pledgerLongboxSecuritiesJson := `[`
 
 		// Update the existing Securities for Pledger Longbox A/c
-		for _,valueSecurity := range CombinedSecurities {
+		for i,valueSecurity := range CombinedSecurities {
 
 				_SecurityQuantity, err := strconv.ParseFloat(valueSecurity.SecuritiesQuantity,64)
 				if err != nil {
@@ -1106,7 +1106,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					if err != nil {
 				        fmt.Println("Error while converting CombinedSecurities struct to string")
 				    }
-					pledgerLongboxSecuritiesJson += string(sec) + `, `
+				    if i < len(CombinedSecurities)-1 {
+						pledgerLongboxSecuritiesJson += string(sec) + `, `
+					}
 					
 				} else if newQuantity < _SecurityQuantity && _tempQuantity > 0  {
 					invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId, 
@@ -1137,14 +1139,16 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					if err != nil {
 				        fmt.Println("Error while converting CombinedSecurities struct to string")
 				    }
-					pledgerLongboxSecuritiesJson += string(sec) + `, `
+				    if i < len(CombinedSecurities)-1 {
+						pledgerLongboxSecuritiesJson += string(sec) + `, `
+					}
 				}
 			
 		}
-		pledgerLongboxSecuritiesJson += `}]`
-		reallocatedSecuritiesJson := `[{`
+		pledgerLongboxSecuritiesJson += `]`
+		reallocatedSecuritiesJson := `[`
 		// Update the new Securities to Pledgee Segregated A/c
-		for _, valueSecurity := range ReallocatedSecurities {
+		for i, valueSecurity := range ReallocatedSecurities {
 
 			_mtm, err := strconv.ParseFloat(valueSecurity.MTM,64)
 			if err != nil {
@@ -1190,10 +1194,12 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			if err != nil {
 		        fmt.Println("Error while converting CombinedSecurities struct to string")
 		    }
-			reallocatedSecuritiesJson += string(sec) + `, `
+		    if i < len(ReallocatedSecurities)-1 {
+				reallocatedSecuritiesJson += string(sec) + `, `
+			}
 		}
 
-		reallocatedSecuritiesJson += `}]`
+		reallocatedSecuritiesJson += `]`
 
 		//-----------------------------------------------------------------------------
 
