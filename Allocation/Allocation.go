@@ -1106,8 +1106,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					if err != nil {
 				        fmt.Println("Error while converting CombinedSecurities struct to string")
 				    }
+				    pledgerLongboxSecuritiesJson += string(sec) 
 				    if i < len(CombinedSecurities)-1 {
-						pledgerLongboxSecuritiesJson += string(sec) + `, `
+						pledgerLongboxSecuritiesJson +=  `,`
 					}
 					
 				} else if newQuantity < _SecurityQuantity && _tempQuantity > 0  {
@@ -1139,8 +1140,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					if err != nil {
 				        fmt.Println("Error while converting CombinedSecurities struct to string")
 				    }
+				    pledgerLongboxSecuritiesJson += string(sec)
 				    if i < len(CombinedSecurities)-1 {
-						pledgerLongboxSecuritiesJson += string(sec) + `, `
+						pledgerLongboxSecuritiesJson += `,`
 					}
 				}
 			
@@ -1194,8 +1196,10 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			if err != nil {
 		        fmt.Println("Error while converting CombinedSecurities struct to string")
 		    }
+		    
+		    reallocatedSecuritiesJson += string(sec)
 		    if i < len(ReallocatedSecurities)-1 {
-				reallocatedSecuritiesJson += string(sec) + `, `
+				reallocatedSecuritiesJson += `,`
 			}
 		}
 
@@ -1238,8 +1242,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		reportInJson += `"allocationStatus" : "Allocation Successful"`
 		reportInJson += `}`
 
-		fmt.Println(pledgerLongboxSecuritiesJson);
-		fmt.Println(reallocatedSecuritiesJson);
+		//fmt.Println(pledgerLongboxSecuritiesJson);
+		//fmt.Println(reallocatedSecuritiesJson);
 		fmt.Println(reportInJson);
 
 		//Sending Report
