@@ -492,7 +492,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		fmt.Println(err)
 	}
 
-	resbody, err := json.Marshal(resp.Body); 
+	resbody, err := json.Marshal(rulesetFetched); 
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -583,7 +583,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		fmt.Println(err)
 	}
 
-	respbody, err := json.Marshal(resp.Body); 
+	respbody, err := json.Marshal(ConversionRate); 
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -1106,7 +1106,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					if err != nil {
 				        fmt.Println("Error while converting CombinedSecurities struct to string")
 				    }
-					pledgerLongboxSecuritiesJson += string(sec) + `}, {`
+					pledgerLongboxSecuritiesJson += string(sec) + `, `
 					
 				} else if newQuantity < _SecurityQuantity && _tempQuantity > 0  {
 					invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId, 
@@ -1137,7 +1137,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					if err != nil {
 				        fmt.Println("Error while converting CombinedSecurities struct to string")
 				    }
-					pledgerLongboxSecuritiesJson += string(sec) + `}, {`
+					pledgerLongboxSecuritiesJson += string(sec) + `, `
 				}
 			
 		}
@@ -1190,7 +1190,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			if err != nil {
 		        fmt.Println("Error while converting CombinedSecurities struct to string")
 		    }
-			reallocatedSecuritiesJson += string(sec) + `}, {`
+			reallocatedSecuritiesJson += string(sec) + `, `
 		}
 
 		reallocatedSecuritiesJson += `}]`
@@ -1229,7 +1229,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		reportInJson += `"pledgerLongboxSecurities" : `+ pledgerLongboxSecuritiesJson + `,`
 		reportInJson += `"pledgeeSegregatedSecurities" : `+ reallocatedSecuritiesJson + `,`
 		reportInJson += `"allocationDate" : ` + MarginCallTimpestamp + `,`
-		reportInJson += `"allocationStatus" : "Allocation Successful",`
+		reportInJson += `"allocationStatus" : "Allocation Successful"`
 		reportInJson += `}`
 
 		fmt.Println(pledgerLongboxSecuritiesJson);
