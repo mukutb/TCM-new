@@ -1124,9 +1124,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	                        fmt.Println("Error while converting CombinedSecurities struct to string")
 	                    }
 	                    pledgerLongboxSecuritiesJson += string(sec) 
-	                    if i < len(CombinedSecurities)-1{
-	                        pledgerLongboxSecuritiesJson +=  `,`
-	                    }
+	                    
 					} else if newQuantity < securityQuantity && _tempQuantity > 0  {
 						invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId, 
 							PledgerLongboxAccount,
@@ -1156,10 +1154,10 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	                        fmt.Println("Error while converting CombinedSecurities struct to string")
 	                    }
 	                    pledgerLongboxSecuritiesJson += string(sec) 
-	                    if i < len(CombinedSecurities)-1 {
-	                        pledgerLongboxSecuritiesJson +=  `,`
-	                    }
 					}
+                    if i < len(CombinedSecurities)-1 {
+                        pledgerLongboxSecuritiesJson +=  `,`
+                    }
 				
 			}
 
