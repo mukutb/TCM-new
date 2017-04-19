@@ -1125,7 +1125,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	                    }
 	                    pledgerLongboxSecuritiesJson += string(sec) 
 	                    
-					} else if newQuantity < securityQuantity && _tempQuantity > 0  {
+					} else if newQuantity <= securityQuantity && _tempQuantity >= 0  {
 						invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId, 
 							PledgerLongboxAccount,
 							valueSecurity.SecuritiesName, 
