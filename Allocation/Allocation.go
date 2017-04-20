@@ -830,7 +830,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			// Calculate Total based on Security Type
 			TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm] += float32(tempTotal)
 			TotalValuePledgeeSegregated += float32(tempTotal)
-			AvailableEligibleCollateral = +float32(tempTotal)
+			AvailableEligibleCollateral += float32(tempTotal)
 
 			/*	Warning :
 				Saving Priority for the Security in filed `ValuePercentage`
