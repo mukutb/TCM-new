@@ -997,7 +997,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= EffectiveValueinUSDtoAllocate
 							tempSecurity2 := valueSecurity
 							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(float64(QuantityToTakeout), 'f', -1, 32)
-							tempSecurity2.TotalValue = strconv.FormatFloat(float64(EffectiveValueinUSDtoAllocate), 'f', -1, 32)
+							tempSecurity2.TotalValue = strconv.FormatFloat(float64(_temp5), 'f', -1, 32)
 							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
 							SecuritiesChanged[valueSecurity.SecurityId] = QuantityToTakeout
 						}
@@ -1020,7 +1020,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							tempSecurity2 := valueSecurity
 							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(float64(QuantityToTakeout), 'f', -1, 32)
 							//strconv.ParseFloat(QuantityToTakeout)
-							tempSecurity2.EffectiveValueinUSD = strconv.FormatFloat(float64(EffectiveValueinUSDtoAllocate), 'f', -1, 32)
+							tempSecurity2.EffectiveValueinUSD = strconv.FormatFloat(float64(_temp5), 'f', -1, 32)
 							//strconv.ParseFloat(EffectiveValueinUSDtoAllocate)
 							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
 							SecuritiesChanged[valueSecurity.SecurityId] = float32(QuantityToTakeout)
@@ -1041,7 +1041,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= float32(EffectiveValueinUSDtoAllocate)
 							tempSecurity2 := valueSecurity
 							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(float64(QuantityToTakeout), 'f', -1, 32)
-							tempSecurity2.EffectiveValueinUSD = strconv.FormatFloat(float64(EffectiveValueinUSDtoAllocate), 'f', -1, 32)
+							tempSecurity2.EffectiveValueinUSD = strconv.FormatFloat(float64(_temp6), 'f', -1, 32)
 							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
 							SecuritiesChanged[valueSecurity.SecurityId] = float32(QuantityToTakeout)
 						}
@@ -1103,7 +1103,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			pledgerLongboxSecuritiesJson := `[`
 			// Update the existing Securities for Pledger Longbox A/c
 			for i, valueSecurity := range CombinedSecurities {
-				var securityQuantity, securitiesQuantity, mtm float32
+				var securityQuantity, securitiesQuantity, effectiveValueinUSD float32
 				_SecurityQuantity, err := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 32)
 				if err != nil {
 					errStr := fmt.Sprintf("Failed to convert SecurityQuantity(string) to SecurityQuantity(int). Got error: %s", err.Error())
@@ -1113,13 +1113,13 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				_tempQuantity := SecuritiesChanged[valueSecurity.SecurityId]
 				newQuantity := securityQuantity - _tempQuantity
 
-				_mtm, err := strconv.ParseFloat(valueSecurity.MTM, 32)
+				_effectiveValueinUSD, err := strconv.ParseFloat(valueSecurity.EffectiveValueinUSD, 32)
 				if err != nil {
-					errStr := fmt.Sprintf("Failed to convert mtm(string) to mtm(float32). Got error: %s", err.Error())
+					errStr := fmt.Sprintf("Failed to convert effectiveValueinUSD(string) to effectiveValueinUSD(float32). Got error: %s", err.Error())
 					fmt.Printf(errStr)
 					return nil, errors.New(errStr)
 				}
-				mtm = float32(_mtm)
+				effectiveValueinUSD = float32(_effectiveValueinUSD)
 				_SecuritiesQuantity, err := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 32)
 				if err != nil {
 					errStr := fmt.Sprintf("Failed to convert _SecurityQuantity(string) to _SecurityQuantity(float32). Got error: %s", err.Error())
@@ -1127,7 +1127,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					return nil, errors.New(errStr)
 				}
 				securitiesQuantity = float32(_SecuritiesQuantity)
-				_totalValue := mtm * securitiesQuantity
+				_totalValue := effectiveValueinUSD * securitiesQuantity
 
 				if securityQuantity == _tempQuantity {
 
@@ -1201,7 +1201,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			reallocatedSecuritiesJson := `[`
 			// Update the new Securities to Pledgee Segregated A/c
 			for i, valueSecurity := range ReallocatedSecurities {
-				_mtm, err := strconv.ParseFloat(valueSecurity.MTM, 32)
+				_effectiveValueinUSD, err := strconv.ParseFloat(valueSecurity.EffectiveValueinUSD, 32)
 				if err != nil {
 					errStr := fmt.Sprintf("Failed to convert mtm(string) to mtm(float32). Got error: %s", err.Error())
 					fmt.Printf(errStr)
@@ -1213,7 +1213,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					fmt.Printf(errStr)
 					return nil, errors.New(errStr)
 				}
-				_totalValue := _mtm * _SecurityQuantity
+				_totalValue := _effectiveValueinUSD * _SecurityQuantity
 
 				invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId,
 					PledgeeSegregatedAccount,
