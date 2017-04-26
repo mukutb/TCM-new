@@ -658,27 +658,10 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		} 
 		return nil, nil
 	}
-	totalValue1, errBool := strconv.ParseFloat(res2.TotalValue, 32)
-	if errBool != nil {
-		fmt.Println(errBool)
-	}
-	fmt.Println(totalValue1)
-	totalValue2, errBool := strconv.ParseFloat(_totalValue, 32)
-	if errBool != nil {
-		fmt.Println(errBool)
-	}
-	fmt.Println(totalValue2)
 	if res2.Securities == " " || res2.Securities == "" {
-		
 		res2.Securities = _accountNumber+"-"+_securityId;
-		fmt.Println(res2.Securities)
-		res2.TotalValue = strconv.FormatFloat(totalValue1 + totalValue2, 'f', -1, 32)
-		fmt.Println(res2.TotalValue)
 	}else {
 		res2.Securities = res2.Securities+ "," + _accountNumber+"-"+_securityId;
-		fmt.Println(res2.Securities)
-		res2.TotalValue = strconv.FormatFloat(totalValue1 + totalValue2, 'f', -1, 32)
-		fmt.Println(res2.TotalValue)
 	}
 	order2 := 	`{`+
 		`"accountId": "` + res2.AccountID + `" ,`+
@@ -759,7 +742,7 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 		`"accountName": "` + res.AccountName + `" ,`+
 		`"accountNumber": "` + res.AccountNumber + `" ,`+
 		`"accountType": "` + res.AccountType + `" ,`+
-		`"totalValue": "` + "0" + `" ,`+
+		`"totalValue": "` + res.TotalValue + `" ,`+
 		`"currency": "` + res.Currency + `" ,`+
 		`"pledger": "` + res.Pledger + `" ,`+
 		`"securities": "`+ res.Securities +`" `+
