@@ -1064,7 +1064,7 @@ func(t * ManageDeals) create_transaction(stub shim.ChaincodeStubInterface, args[
         return nil,nil //all stop a Deal by this name exists
     }else{
         if _transactionStatus == "Matched" {
-            _allocationStatus = "Ready for allocation"
+            _allocationStatus = "Ready for Allocation"
         } else if _transactionStatus == "Unmatched" {
             _allocationStatus = "Deal Unmatched. Can't be allocated"
         }
