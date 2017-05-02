@@ -643,7 +643,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			}
 		} else {
 			RQVEligibleValue[key] = (RQV * ConcentrationLimitPri) / 100
-			fmt.Printf("inside checking privateRuleset is subset of publicRuleSet..")
+			//fmt.Printf("inside checking privateRuleset is subset of publicRuleSet..")
 			fmt.Printf("%#v", RQVEligibleValue[key])		
 		}
 	}
