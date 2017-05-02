@@ -658,10 +658,22 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		} 
 		return nil, nil
 	}
+	// Convert account's totalValue(String) to float
+	tempTotalValue, errBool := strconv.ParseFloat(res2.TotalValue, 32)
+	if errBool != nil {
+		fmt.Println(errBool)
+	}
+	// Convert security's totalvalue(String) to float
+	tempTotalvalue, errBool := strconv.ParseFloat(_totalValue, 32)
+	if errBool != nil {
+		fmt.Println(errBool)
+	}
 	if res2.Securities == " " || res2.Securities == "" {
 		res2.Securities = _accountNumber+"-"+_securityId;
+		res2.TotalValue = strconv.FormatFloat(tempTotalValue + tempTotalvalue, 'f', -1, 64)
 	}else {
 		res2.Securities = res2.Securities+ "," + _accountNumber+"-"+_securityId;
+		res2.TotalValue = strconv.FormatFloat(tempTotalValue + tempTotalvalue, 'f', -1, 64)
 	}
 	order2 := 	`{`+
 		`"accountId": "` + res2.AccountID + `" ,`+
