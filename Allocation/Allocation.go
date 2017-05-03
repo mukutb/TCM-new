@@ -116,21 +116,21 @@ type CurrencyConversion struct {
 
 // To be used as SecurityJSON["CommonStocks"]["Priority"] ==> 1
 var SecurityJSON = map[string]map[string]string{
-	"Common Stocks":         map[string]string{"ConcentrationLimit": "40", "Priority": "1", "ValuationPercentage": "97"},
-	"Corporate Bonds":       map[string]string{"ConcentrationLimit": "30", "Priority": "2", "ValuationPercentage": "97"},
-	"Sovereign Bonds":       map[string]string{"ConcentrationLimit": "25", "Priority": "3", "ValuationPercentage": "95"},
-	"US Treasury Bills":      map[string]string{"ConcentrationLimit": "25", "Priority": "4", "ValuationPercentage": "95"},
-	"US Treasury Bonds":      map[string]string{"ConcentrationLimit": "25", "Priority": "5", "ValuationPercentage": "95"},
-	"US Treasury Notes":      map[string]string{"ConcentrationLimit": "25", "Priority": "6", "ValuationPercentage": "95"},
-	"Gilt":                 map[string]string{"ConcentrationLimit": "25", "Priority": "7", "ValuationPercentage": "94"},
-	"Federal Agency Bonds":   map[string]string{"ConcentrationLimit": "20", "Priority": "8", "ValuationPercentage": "93"},
-	"Global Bonds":          map[string]string{"ConcentrationLimit": "20", "Priority": "9", "ValuationPercentage": "92"},
-	"Preferrred Shares":     map[string]string{"ConcentrationLimit": "20", "Priority": "10", "ValuationPercentage": "91"},
-	"Convertible Bonds":     map[string]string{"ConcentrationLimit": "20", "Priority": "11", "ValuationPercentage": "90"},
-	"Revenue Bonds":         map[string]string{"ConcentrationLimit": "15", "Priority": "12", "ValuationPercentage": "90"},
-	"Medium Term Note":       map[string]string{"ConcentrationLimit": "15", "Priority": "13", "ValuationPercentage": "89"},
-	"Short Term Investments": map[string]string{"ConcentrationLimit": "15", "Priority": "14", "ValuationPercentage": "87"},
-	"Builder Bonds":         map[string]string{"ConcentrationLimit": "15", "Priority": "15", "ValuationPercentage": "85"}}
+	"Common Stocks":         map[string]string{"Concentration Limit": "40", "Priority": "1", "Valuation Percentage": "97"},
+	"Corporate Bonds":       map[string]string{"Concentration Limit": "30", "Priority": "2", "Valuation Percentage": "97"},
+	"Sovereign Bonds":       map[string]string{"Concentration Limit": "25", "Priority": "3", "Valuation Percentage": "95"},
+	"US Treasury Bills":      map[string]string{"Concentration Limit": "25", "Priority": "4", "Valuation Percentage": "95"},
+	"US Treasury Bonds":      map[string]string{"Concentration Limit": "25", "Priority": "5", "Valuation Percentage": "95"},
+	"US Treasury Notes":      map[string]string{"Concentration Limit": "25", "Priority": "6", "Valuation Percentage": "95"},
+	"Gilt":                 map[string]string{"Concentration Limit": "25", "Priority": "7", "Valuation Percentage": "94"},
+	"Federal Agency Bonds":   map[string]string{"Concentration Limit": "20", "Priority": "8", "Valuation Percentage": "93"},
+	"Global Bonds":          map[string]string{"Concentration Limit": "20", "Priority": "9", "Valuation Percentage": "92"},
+	"Preferrred Shares":     map[string]string{"Concentration Limit": "20", "Priority": "10", "Valuation Percentage": "91"},
+	"Convertible Bonds":     map[string]string{"Concentration Limit": "20", "Priority": "11", "Valuation Percentage": "90"},
+	"Revenue Bonds":         map[string]string{"Concentration Limit": "15", "Priority": "12", "Valuation Percentage": "90"},
+	"Medium Term Note":       map[string]string{"Concentration Limit": "15", "Priority": "13", "Valuation Percentage": "89"},
+	"Short Term Investments": map[string]string{"Concentration Limit": "15", "Priority": "14", "Valuation Percentage": "87"},
+	"Builder Bonds":         map[string]string{"Concentration Limit": "15", "Priority": "15", "Valuation Percentage": "85"}}
 
 // ============================================================================================================================
 // Main - start the chaincode for Allocation management
@@ -441,7 +441,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	reportInJson += `"Currency" : "` + TransactionData.Currency + `",`
 
 	// SecurityJSON to String https://play.golang.org/p/_C21BONfZk
-	reportInJson += `"publicRuleSet" : {"US Treasury Bills":{"ValuationPercentage":"95","ConcentrationLimit":"25","Priority":"4"},"US Treasury Notes":{"ConcentrationLimit":"25","Priority":"6","ValuationPercentage":"95"},"Gilt":{"Priority":"7","ValuationPercentage":"94","ConcentrationLimit":"25"},"Common Stocks":{"ValuationPercentage":"97","ConcentrationLimit":"40","Priority":"1"},"Federal Agency Bonds":{"ConcentrationLimit":"20","Priority":"8","ValuationPercentage":"93"},"Convertible Bonds":{"ConcentrationLimit":"20","Priority":"11","ValuationPercentage":"90"},"Revenue Bonds":{"ConcentrationLimit":"15","Priority":"12","ValuationPercentage":"90"},"Medium Term Note":{"Priority":"13","ValuationPercentage":"89","ConcentrationLimit":"15"},"Corporate Bonds":{"ValuationPercentage":"97","ConcentrationLimit":"30","Priority":"2"},"Global Bonds":{"ConcentrationLimit":"20","Priority":"9","ValuationPercentage":"92"},"Builder Bonds":{"ConcentrationLimit":"15","Priority":"15","ValuationPercentage":"85"},"Sovereign Bonds":{"ConcentrationLimit":"25","Priority":"3","ValuationPercentage":"95"},"US Treasury Bonds":{"Priority":"5","ValuationPercentage":"95","ConcentrationLimit":"25"},"Preferrred Shares":{"ConcentrationLimit":"20","Priority":"10","ValuationPercentage":"91"},"Short Term Investments":{"ValuationPercentage":"87","ConcentrationLimit":"15","Priority":"14"}} ,`
+	reportInJson += `"publicRuleSet" : {"US Treasury Bills":{"Valuation Percentage":"95","Concentration Limit":"25","Priority":"4"},"US Treasury Notes":{"Concentration Limit":"25","Priority":"6","Valuation Percentage":"95"},"Gilt":{"Priority":"7","Valuation Percentage":"94","Concentration Limit":"25"},"Common Stocks":{"Valuation Percentage":"97","Concentration Limit":"40","Priority":"1"},"Federal Agency Bonds":{"Concentration Limit":"20","Priority":"8","Valuation Percentage":"93"},"Convertible Bonds":{"Concentration Limit":"20","Priority":"11","Valuation Percentage":"90"},"Revenue Bonds":{"Concentration Limit":"15","Priority":"12","Valuation Percentage":"90"},"Medium Term Note":{"Priority":"13","Valuation Percentage":"89","Concentration Limit":"15"},"Corporate Bonds":{"Valuation Percentage":"97","Concentration Limit":"30","Priority":"2"},"Global Bonds":{"Concentration Limit":"20","Priority":"9","Valuation Percentage":"92"},"Builder Bonds":{"Concentration Limit":"15","Priority":"15","Valuation Percentage":"85"},"Sovereign Bonds":{"Concentration Limit":"25","Priority":"3","Valuation Percentage":"95"},"US Treasury Bonds":{"Priority":"5","Valuation Percentage":"95","Concentration Limit":"25"},"Preferrred Shares":{"Concentration Limit":"20","Priority":"10","Valuation Percentage":"91"},"Short Term Investments":{"Valuation Percentage":"87","Concentration Limit":"15","Priority":"14"}} ,`
 	//-----------------------------------------------------------------------------
 
 	// Update allocation status to "Allocation in progress"
@@ -623,13 +623,13 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		}
 
 		ConcentrationLimitPri := value[0]
-		ConcentrationLimit_Pub, errBool2 := strconv.ParseFloat(SecurityJSON[key]["ConcentrationLimit"], 32)
+		ConcentrationLimit_Pub, errBool2 := strconv.ParseFloat(SecurityJSON[key]["Concentration Limit"], 32)
 		if errBool2 != nil {
 			fmt.Println(errBool2)
 		}
 
 		ValuationPercentagePri := value[2]
-		ValuationPercentage_Pub, errBool3 := strconv.ParseFloat(SecurityJSON[key]["ValuationPercentage"], 32)
+		ValuationPercentage_Pub, errBool3 := strconv.ParseFloat(SecurityJSON[key]["Valuation Percentage"], 32)
 		if errBool3 != nil {
 			fmt.Println(errBool3)
 		}
@@ -803,7 +803,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		if len(rulesetFetched.Security[tempSecurity.CollateralForm]) > 0 {
 
 			// Storing the Value percentage in the security data itself
-			tempSecurity.ValuePercentage = SecurityJSON[tempSecurity.SecurityId]["ValuePercentage"]
+			tempSecurity.ValuePercentage = SecurityJSON[tempSecurity.SecurityId]["Valuation Percentage"]
 			
 			//convert valuePercentage(string) to float
 			tempValuePercentage, errBool := strconv.ParseFloat(tempSecurity.ValuePercentage, 32)
