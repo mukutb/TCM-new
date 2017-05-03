@@ -682,6 +682,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	fmt.Println("PledgeeSegregatedSecuritiesJSON after calculation:")
 	fmt.Printf("%#v", PledgeeSegregatedSecuritiesJSON)
 	fmt.Println()
+	var AvailableEligibleCollateral, AvailableEligible float64
 	//Operations for Pledger Longbox Securities
 	for _, value := range PledgerLongboxSecuritiesJSON {
 		// Key = Security ID && value = Security Structure
@@ -780,19 +781,36 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			TotalValuePledgerLongbox += tempTotal
 			AvailableCollateral += tempTotal
 
+			// Calculate Available Eligiblex = Minimum (Available, Eligible)
+			AvailableEligible := math.Min(AvailableCollateral,RQVEligibleValue[tempSecurity.CollateralForm])
+			
+			// Calculate Available Eligible Collateral = Sum (Available Eligible)
+			AvailableEligibleCollateral := AvailableEligibleCollateral + AvailableEligible
+			fmt.Println("AvailableCollateral")
+			fmt.Println(AvailableCollateral)
+			fmt.Println("AvailableEligible")
+			fmt.Println(AvailableEligible)
+			fmt.Println("AvailableEligibleCollateral")
+			fmt.Println(AvailableEligibleCollateral)
+
 			/*	Warning :
 				Saving Priority for the Security in filed `ValuePercentage`
 				This is just for using the limited sorting application provided by GOlang
 				By no chance is this to be stored on Blockchain.
 			*/
-			tempSecurity.ValuePercentage = strconv.FormatFloat(float64(rulesetFetched.Security[tempSecurity.CollateralForm][2]), 'f', 2, 32)
-
+			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'f', 2, 32)
+			fmt.Println("tempSecurity.ValuePercentage")
+			fmt.Println(tempSecurity.ValuePercentage)
 			// Append Securities to an array
 			PledgerLongboxSecurities = append(PledgerLongboxSecurities, tempSecurity)
 			CombinedSecurities = append(CombinedSecurities, tempSecurity)
+			fmt.Println("PledgerLongboxSecurities")
+			fmt.Println(PledgerLongboxSecurities)
+			fmt.Println("CombinedSecurities")
+			fmt.Println(CombinedSecurities)
 		}
 	}
-	var AvailableEligibleCollateral, AvailableEligible float64
+	
 	// Operations for Pledgee Segregated Account(s)
 	for _, value := range PledgeeSegregatedSecuritiesJSON {
 		// Key = Security ID && value = Security Structure
@@ -883,6 +901,10 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			// Append Securities to an array
 			PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, tempSecurity)
 			CombinedSecurities = append(CombinedSecurities, tempSecurity)
+			fmt.Println("PledgeeSegregatedSecurities")
+			fmt.Println(PledgeeSegregatedSecurities)
+			fmt.Println("CombinedSecurities")
+			fmt.Println(CombinedSecurities)
 		}
 
 	}
