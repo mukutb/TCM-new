@@ -461,10 +461,10 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 	// Fetching the Private Securtiy Ruleset based on Pledger & Pledgee
 	// Escaping the values to be put in URL
-	PledgerESC := url.QueryEscape(Pledger)
-	PledgeeESC := url.QueryEscape(Pledgee)
+	//PledgerESC := url.QueryEscape(Pledger)
+	//PledgeeESC := url.QueryEscape(Pledgee)
 
-	url := fmt.Sprintf("http://%s/securityRuleset/%s/%s", APIIP, PledgerESC, PledgeeESC)
+	url := fmt.Sprintf("http://%s/securityRuleset/%s/%s", APIIP, Pledger, Pledgee)
 	fmt.Println("URL for Ruleset : " + url)
 
 	// Build the request
