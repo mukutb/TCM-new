@@ -48,6 +48,7 @@ type Transactions struct {
 	MarginCAllDate         string `json:"marginCAllDate"`
 	AllocationStatus       string `json:"allocationStatus"`
 	TransactionStatus      string `json:"transactionStatus"`
+	LastAllocationDate      string `json:"lastAllocationDate"`
 }
 
 type Deals struct { // Attributes of a Allocation
@@ -88,16 +89,6 @@ type Securities struct {
 	Currency            string `json:"currency"`
 }
 
-// Used for Security Array Sort
-// Reference at https://play.golang.org/p/Rz9NCEVhGu
-type SecurityArrayStruct []Securities 
-
-func (slice SecurityArrayStruct) Len() int             { return len(slice) }
-func (slice SecurityArrayStruct) Less(i, j int) bool { // Sorting through the field 'ValuePercentage' for now as it contians the Priority
-	return slice[i].ValuePercentage < slice[j].ValuePercentage
-}
-func (slice SecurityArrayStruct) Swap(i, j int) { slice[i], slice[j] = slice[j], slice[i] }
-
 // Use as Object.Security["CommonStocks"][0]
 // Reference [Tested by Pranav] https://play.golang.org/p/JlQJF5Z14X
 type Ruleset struct {
@@ -105,6 +96,19 @@ type Ruleset struct {
 	BaseCurrency     string               `json:"BaseCurrency"`
 	EligibleCurrency []string             `json:"EligibleCurrency"`
 }
+// Varaible record to be filled with the data from the JSON
+var rulesetFetched Ruleset
+
+// Used for Security Array Sort
+// Reference at https://play.golang.org/p/Rz9NCEVhGu
+type SecurityArrayStruct []Securities 
+
+func (slice SecurityArrayStruct) Len() int             { return len(slice) }
+func (slice SecurityArrayStruct) Less(i, j int) bool { // Sorting through the field 'ValuePercentage' for now as it contians the Priority
+	return rulesetFetched.Security[slice[i].CollateralForm][1] < rulesetFetched.Security[slice[j].CollateralForm][1]
+}
+func (slice SecurityArrayStruct) Swap(i, j int) { slice[i], slice[j] = slice[j], slice[i] }
+
 
 // Use as Object.Rates["EUR"]
 // Reference [Tested by Pranav] https://play.golang.org/p/j5Act-jN5C
@@ -492,8 +496,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 	fmt.Println("The SecurityRuleset response is::" + strconv.Itoa(resp.StatusCode))
 
-	// Varaible record to be filled with the data from the JSON
-	var rulesetFetched Ruleset
+	
 
 	// Use json.Decode for reading streams of JSON data and store it
 	if err := json.NewDecoder(resp.Body).Decode(&rulesetFetched); err != nil {
@@ -988,7 +991,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		// ReallocatedSecurities -> Structure where securites to reallocate will be stored
 		// CombinedSecurities will only be used to read securities in order. Actual Changes will be
 		//	done in PledgerLongboxSecurities & PledgeeSegregatedSecurities
-
+		
 		// RQVEligibleValue[CollateralType] contains the max eligible value for each type
 		RQVEligibleValueLeft := RQVEligibleValue
 		RQVLeft := RQV
@@ -1002,7 +1005,10 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	CombinedSecuritiesIterator:
 		for _, valueSecurity := range CombinedSecurities {
 			fmt.Println("RQVLeft: ", RQVLeft)
+			fmt.Println("TotalValuePledgeeSegregated: ", TotalValuePledgeeSegregated)
+			fmt.Println("TotalValuePledgerLongbox: ", TotalValuePledgerLongbox)
 			if RQVLeft > 0 {
+				
 				// More Security need to be taken out
 				temp1 := RQVEligibleValueLeft[valueSecurity.CollateralForm]
 				temp2, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 32)
@@ -1358,7 +1364,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				TransactionData.RQV,
 				TransactionData.Currency,
 				ConversionRateAsString,
-				MarginCallTimpestamp,
+				TransactionData.MarginCAllDate,
 				"Allocation Successful",
 				"Completed")
 			fmt.Println(TransactionData)
