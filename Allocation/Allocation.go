@@ -275,7 +275,7 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 	var newTxStatus, newAllStatus string
 
 	for _, ValueTransaction := range TransactionsDataFetched {
-		if ValueTransaction.TransactionStatus == "Pending" {
+		if ValueTransaction.AllocationStatus == "Pending due to insufficient collateral" {
 
 			i, err := strconv.ParseInt(ValueTransaction.MarginCAllDate, 10, 32)
 			if err != nil {
@@ -665,7 +665,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	/**	Calculate the effective value and total value of each Security present in the Longbox account of the pledger
 	and the Segregated account of the pledgee
 	*/
-	var TotalValuePledgerLongbox, TotalValuePledgeeSegregated, AvailableCollateral float64
+	var TotalValuePledgerLongbox, TotalValuePledgeeSegregated, AvailableEligibleCollateral float64
 	var PledgerLongboxSecurities, PledgeeSegregatedSecurities, CombinedSecurities []Securities
 
 	// Make inteface to receive string. UnMarshal them extract them and make an array out of them.
@@ -675,6 +675,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 	TotalValuePledgerLongboxSecurities := make(map[string]float64)
 	TotalValuePledgeeSegregatedSecurities := make(map[string]float64)
+	AvailableCollateral := make(map[string]float64)
+	AvailableEligible := make(map[string]float64)
 
 	fmt.Println("PledgerLongboxSecuritiesJSON after calculation:")
 	fmt.Printf("%#v", PledgerLongboxSecuritiesJSON)
@@ -682,7 +684,6 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	fmt.Println("PledgeeSegregatedSecuritiesJSON after calculation:")
 	fmt.Printf("%#v", PledgeeSegregatedSecuritiesJSON)
 	fmt.Println()
-	var AvailableEligibleCollateral, AvailableEligible float64
 	//Operations for Pledger Longbox Securities
 	for _, value := range PledgerLongboxSecuritiesJSON {
 		// Key = Security ID && value = Security Structure
@@ -776,23 +777,19 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 32)
 			fmt.Println("tempSecurity.TotalValue")
 			fmt.Println(tempSecurity.TotalValue)
-			// Calculate Total based on Security Type
+			// Calculate Total value based on Collateral form
 			TotalValuePledgerLongboxSecurities[tempSecurity.CollateralForm] += tempTotal
+			// Calculate Total value of pledger's longbox account
 			TotalValuePledgerLongbox += tempTotal
-			AvailableCollateral += tempTotal
+			// Calculate the total value of all the securities based on Collateral form
+			AvailableCollateral[tempSecurity.CollateralForm] += tempTotal
 
-			// Calculate Available Eligiblex = Minimum (Available, Eligible)
-			AvailableEligible = math.Min(AvailableCollateral,RQVEligibleValue[tempSecurity.CollateralForm])
+			// Calculate Available Eligiblex = Minimum (Available[tempSecurity.CollateralForm], Eligible[tempSecurity.CollateralForm])
+			AvailableEligible[tempSecurity.CollateralForm] = math.Min(AvailableCollateral[tempSecurity.CollateralForm],RQVEligibleValue[tempSecurity.CollateralForm])
 			
 			// Calculate Available Eligible Collateral = Sum (Available Eligible)
-			AvailableEligibleCollateral = AvailableEligibleCollateral + AvailableEligible
-			fmt.Println("AvailableCollateral")
-			fmt.Println(AvailableCollateral)
-			fmt.Println("AvailableEligible")
-			fmt.Println(AvailableEligible)
-			fmt.Println("AvailableEligibleCollateral")
-			fmt.Println(AvailableEligibleCollateral)
-
+			AvailableEligibleCollateral = AvailableEligibleCollateral + AvailableEligible[tempSecurity.CollateralForm]
+			
 			/*	Warning :
 				Saving Priority for the Security in filed `ValuePercentage`
 				This is just for using the limited sorting application provided by GOlang
@@ -804,13 +801,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			// Append Securities to an array
 			PledgerLongboxSecurities = append(PledgerLongboxSecurities, tempSecurity)
 			CombinedSecurities = append(CombinedSecurities, tempSecurity)
-			fmt.Println("PledgerLongboxSecurities")
-			fmt.Println(PledgerLongboxSecurities)
-			fmt.Println("CombinedSecurities")
-			fmt.Println(CombinedSecurities)
 		}
 	}
-	
+
 	// Operations for Pledgee Segregated Account(s)
 	for _, value := range PledgeeSegregatedSecuritiesJSON {
 		// Key = Security ID && value = Security Structure
@@ -866,49 +859,41 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 32)
 			fmt.Println("tempSecurity.TotalValue")
 			fmt.Println(tempSecurity.TotalValue)
-			// Calculate Total based on Security Type
+			// Calculate Total value based on Collateral form
 			TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm] += tempTotal
 			
+			// Calculate Total value of pledgee's segregated account
 			TotalValuePledgeeSegregated += tempTotal
-			
-			// Calculate Available = Sum (Total Value) 
-			AvailableCollateral += tempTotal
-			
-			// Calculate Available Eligiblex = Minimum (Available, Eligible)
-			AvailableEligible = math.Min(AvailableCollateral,RQVEligibleValue[tempSecurity.CollateralForm])
+			// Calculate the total value of all the securities based on Collateral form
+			AvailableCollateral[tempSecurity.CollateralForm] += tempTotal
+
+			// Calculate Available Eligiblex = Minimum (Available[tempSecurity.CollateralForm], Eligible[tempSecurity.CollateralForm])
+			AvailableEligible[tempSecurity.CollateralForm] = math.Min(AvailableCollateral[tempSecurity.CollateralForm],RQVEligibleValue[tempSecurity.CollateralForm])
 			
 			// Calculate Available Eligible Collateral = Sum (Available Eligible)
-			AvailableEligibleCollateral = AvailableEligibleCollateral + AvailableEligible
+			AvailableEligibleCollateral = AvailableEligibleCollateral + AvailableEligible[tempSecurity.CollateralForm]
 
-			fmt.Println("TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm]")
-			fmt.Println(TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm])
-			fmt.Println("TotalValuePledgeeSegregated")
-			fmt.Println(TotalValuePledgeeSegregated)
-			fmt.Println("AvailableCollateral")
-			fmt.Println(AvailableCollateral)
-			fmt.Println("AvailableEligible")
-			fmt.Println(AvailableEligible)
-			fmt.Println("AvailableEligibleCollateral")
-			fmt.Println(AvailableEligibleCollateral)
+			
 			/*	Warning :
 				Saving Priority for the Security in filed `ValuePercentage`
 				This is just for using the limited sorting application provided by GOlang
 				By no chance is this to be stored on Blockchain.
 			*/
-			tempSecurity.ValuePercentage = strconv.FormatFloat(float64(rulesetFetched.Security[tempSecurity.CollateralForm][2]), 'f', 2, 32)
+			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'f', 2, 32)
 			fmt.Println("tempSecurity.ValuePercentage")
 			fmt.Println(tempSecurity.ValuePercentage)
 			// Append Securities to an array
 			PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, tempSecurity)
 			CombinedSecurities = append(CombinedSecurities, tempSecurity)
-			fmt.Println("PledgeeSegregatedSecurities")
-			fmt.Println(PledgeeSegregatedSecurities)
-			fmt.Println("CombinedSecurities")
-			fmt.Println(CombinedSecurities)
 		}
 
 	}
 
+	fmt.Println("TotalValuePledgeeSegregatedSecurities")
+	fmt.Println(TotalValuePledgeeSegregatedSecurities)
+	fmt.Println("TotalValuePledgeeSegregated")
+	fmt.Println(TotalValuePledgeeSegregated)
+	
 	fmt.Println("AvailableCollateral after calculation:")
 	fmt.Printf("%#v", AvailableCollateral)
 	fmt.Println()
@@ -957,7 +942,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		        `"` + "Pending due to insufficient collateral" + `" , ` +
 		        `"` + "Pending" + `" `
 		    fmt.Println(input);*/
-		invoke_args := util.ToChaincodeArgs(f, TransactionData.TransactionId, TransactionData.TransactionDate, TransactionData.DealID, TransactionData.Pledger, TransactionData.Pledgee, TransactionData.RQV, TransactionData.Currency, "\" \"", MarginCallTimpestamp, "Pending due to insufficient collateral", "Pending")
+		invoke_args := util.ToChaincodeArgs(f, TransactionData.TransactionId, TransactionData.TransactionDate, TransactionData.DealID, TransactionData.Pledger, TransactionData.Pledgee, TransactionData.RQV, TransactionData.Currency, "\" \"", TransactionData.MarginCAllDate, "Pending due to insufficient collateral", "Matched")
 		fmt.Println(TransactionData)
 		result, err := stub.InvokeChaincode(DealChaincode, invoke_args)
 		if err != nil {
@@ -993,7 +978,10 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		sort.Sort(SecurityArrayStruct(PledgeeSegregatedSecurities))
 
 		sort.Sort(SecurityArrayStruct(CombinedSecurities))
-
+		fmt.Println("after sort")
+		fmt.Println(PledgerLongboxSecurities)
+		fmt.Println(PledgeeSegregatedSecurities)
+		fmt.Println(CombinedSecurities)
 		//-----------------------------------------------------------------------------
 
 		// Start Allocatin & Rearrangment
@@ -1022,6 +1010,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					fmt.Println(errBool)
 				}
 				fmt.Println(temp1)
+				fmt.Println(temp2)
 				if temp1 >= temp2 {
 					// At least one more this type of collateralForm to be taken out
 					temp3, errBool := strconv.ParseFloat(valueSecurity.TotalValue, 32)
@@ -1044,8 +1033,11 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							// All Security of this type will re allocated as RQV has balance
 
 							RQVLeft -= temp4
+							fmt.Println(RQVLeft)
 							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= temp4
+							fmt.Println(RQVEligibleValueLeft[valueSecurity.CollateralForm])
 							ReallocatedSecurities = append(ReallocatedSecurities, valueSecurity)
+							fmt.Println(ReallocatedSecurities)
 
 							temp5, errBool := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 32)
 							if errBool != nil {
@@ -1053,6 +1045,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							}
 							fmt.Println(temp5)
 							SecuritiesChanged[valueSecurity.SecurityId] = temp5
+							fmt.Println(SecuritiesChanged[valueSecurity.SecurityId])
 
 						} else {
 							// RQV has insufficient balance to take all securities
@@ -1062,21 +1055,20 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							}
 							fmt.Println(temp5)
 							QuantityToTakeout := math.Ceil(float64(RQVLeft) / temp5)
+							fmt.Println(QuantityToTakeout)
 							EffectiveValueChangedtoAllocate := QuantityToTakeout * temp5
-
+							fmt.Println(EffectiveValueChangedtoAllocate)
 							RQVLeft -= EffectiveValueChangedtoAllocate
+							fmt.Println(RQVLeft)
 							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= EffectiveValueChangedtoAllocate
+							fmt.Println(RQVEligibleValueLeft)
 							tempSecurity2 := valueSecurity
 							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(float64(QuantityToTakeout), 'f', 2, 32)
 							tempSecurity2.TotalValue = strconv.FormatFloat(float64(temp5), 'f', 2, 32)
-							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
-							SecuritiesChanged[valueSecurity.SecurityId] = QuantityToTakeout
-							fmt.Println(QuantityToTakeout)
-							fmt.Println(EffectiveValueChangedtoAllocate)
-							fmt.Println(RQVLeft)
-							fmt.Println(RQVEligibleValueLeft)
-							fmt.Println(ReallocatedSecurities)
 							fmt.Println(tempSecurity2)
+							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
+							fmt.Println(ReallocatedSecurities)
+							SecuritiesChanged[valueSecurity.SecurityId] = QuantityToTakeout
 							fmt.Println(SecuritiesChanged[valueSecurity.SecurityId])
 						}
 					} else {
@@ -1086,26 +1078,30 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						if errBool != nil {
 							fmt.Println(errBool)
 						}
+						fmt.Println(_temp5)
 						QuantityToTakeout := math.Ceil(float64(RQVEligibleValueLeft[valueSecurity.CollateralForm]) / _temp5)
+						fmt.Println(QuantityToTakeout)
 						EffectiveValueChangedtoAllocate := QuantityToTakeout * _temp5
-
+						fmt.Println(EffectiveValueChangedtoAllocate)
+						fmt.Println(RQVLeft)
 						if EffectiveValueChangedtoAllocate <= RQVLeft {
 							// Can takeout the Securites
 
 							RQVLeft -= EffectiveValueChangedtoAllocate
+							fmt.Println(RQVLeft)
 							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= EffectiveValueChangedtoAllocate
+							fmt.Println(RQVEligibleValueLeft)
 							tempSecurity2 := valueSecurity
 							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(float64(QuantityToTakeout), 'f', 2, 32)
 							//strconv.ParseFloat(QuantityToTakeout)
 							tempSecurity2.EffectiveValueChanged = strconv.FormatFloat(float64(_temp5), 'f', 2, 32)
+							fmt.Println(tempSecurity2)
 							//strconv.ParseFloat(EffectiveValueChangedtoAllocate)
 							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
-							SecuritiesChanged[valueSecurity.SecurityId] = QuantityToTakeout
-
-							fmt.Println(RQVLeft)
-							fmt.Println(RQVEligibleValueLeft)
 							fmt.Println(ReallocatedSecurities)
+							SecuritiesChanged[valueSecurity.SecurityId] = QuantityToTakeout
 							fmt.Println(SecuritiesChanged[valueSecurity.SecurityId])
+
 
 						} else {
 							// Cannot takeout all possble Securities as RQV balance is low
@@ -1116,23 +1112,23 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							if QuantityToTakeout > math.Ceil(float64(RQVLeft/_temp6)) {
 								QuantityToTakeout = math.Ceil(float64(RQVLeft / _temp6))
 							}
+							fmt.Println(QuantityToTakeout)
 							EffectiveValueChangedtoAllocate = QuantityToTakeout * _temp6
+							fmt.Println(EffectiveValueChangedtoAllocate)
 
 							RQVLeft -= EffectiveValueChangedtoAllocate
+							fmt.Println(RQVLeft)
 							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= EffectiveValueChangedtoAllocate
+							fmt.Println(RQVEligibleValueLeft)
 							tempSecurity2 := valueSecurity
 							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(float64(QuantityToTakeout), 'f', 2, 32)
 							tempSecurity2.EffectiveValueChanged = strconv.FormatFloat(float64(_temp6), 'f', 2, 32)
-							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
-							SecuritiesChanged[valueSecurity.SecurityId] = QuantityToTakeout
-
-							fmt.Println(QuantityToTakeout)
-							fmt.Println(EffectiveValueChangedtoAllocate)
-							fmt.Println(RQVLeft)
-							fmt.Println(RQVEligibleValueLeft)
-							fmt.Println(ReallocatedSecurities)
 							fmt.Println(tempSecurity2)
+							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
+							fmt.Println(ReallocatedSecurities)
+							SecuritiesChanged[valueSecurity.SecurityId] = QuantityToTakeout
 							fmt.Println(SecuritiesChanged[valueSecurity.SecurityId])	
+
 						}
 					}
 
@@ -1198,7 +1194,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					fmt.Printf(errStr)
 				}
 				_tempQuantity := SecuritiesChanged[valueSecurity.SecurityId]
+				fmt.Println(_tempQuantity)
 				newQuantity := securityQuantity - _tempQuantity
+				fmt.Println(newQuantity)
 
 				effectiveValueChanged, err := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 32)
 				if err != nil {
@@ -1206,16 +1204,15 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					fmt.Printf(errStr)
 					return nil, errors.New(errStr)
 				}
+				fmt.Println(effectiveValueChanged)
 				SecuritiesQuantity, err := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 32)
 				if err != nil {
 					errStr := fmt.Sprintf("Failed to convert _SecurityQuantity(string) to _SecurityQuantity(float32). Got error: %s", err.Error())
 					fmt.Printf(errStr)
 					return nil, errors.New(errStr)
 				}
+				fmt.Println(SecuritiesQuantity)
 				_totalValue := effectiveValueChanged * SecuritiesQuantity
-				fmt.Println(_tempQuantity)
-				fmt.Println(newQuantity)
-				fmt.Println(effectiveValueChanged)
 				fmt.Println(_totalValue)
 
 				if securityQuantity == _tempQuantity {
@@ -1296,13 +1293,16 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					fmt.Printf(errStr)
 					return nil, errors.New(errStr)
 				}
+				fmt.Println(_effectiveValueChanged)
 				_SecurityQuantity, err := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 32)
 				if err != nil {
 					errStr := fmt.Sprintf("Failed to convert _SecurityQuantity(string) to _SecurityQuantity(float32). Got error: %s", err.Error())
 					fmt.Printf(errStr)
 					return nil, errors.New(errStr)
 				}
+				fmt.Println(_SecurityQuantity)
 				_totalValue := _effectiveValueChanged * _SecurityQuantity
+				fmt.Println(_totalValue)
 
 				invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId,
 					PledgeeSegregatedAccount,
@@ -1389,7 +1389,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			}
 		} else {
 			f := "update_transaction"
-			invoke_args := util.ToChaincodeArgs(f, TransactionData.TransactionId, TransactionData.TransactionDate, TransactionData.DealID, TransactionData.Pledger, TransactionData.Pledgee, TransactionData.RQV, TransactionData.Currency, "\" \"", MarginCallTimpestamp, "Pending due to insufficient collateral", "Pending")
+			invoke_args := util.ToChaincodeArgs(f, TransactionData.TransactionId, TransactionData.TransactionDate, TransactionData.DealID, TransactionData.Pledger, TransactionData.Pledgee, TransactionData.RQV, TransactionData.Currency, "\" \"", TransactionData.MarginCAllDate, "Pending due to insufficient collateral", "Matched")
 			fmt.Println(TransactionData)
 			result, err := stub.InvokeChaincode(DealChaincode, invoke_args)
 			if err != nil {
