@@ -1006,62 +1006,57 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			fmt.Println("RQVLeft: ", RQVLeft)
 			fmt.Println("TotalValuePledgeeSegregated: ", TotalValuePledgeeSegregated)
 			fmt.Println("TotalValuePledgerLongbox: ", TotalValuePledgerLongbox)
+			var tempTotalValuePledgeeSegregated float64
 			if RQVLeft > 0 {
 				
 				// More Security need to be taken out
-				temp1 := RQVEligibleValueLeft[valueSecurity.CollateralForm]
-				temp2, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
+				tempEligibleValueLeft := RQVEligibleValueLeft[valueSecurity.CollateralForm]
+				tempEffectiveValueChanged, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
 				if errBool != nil {
 					fmt.Println(errBool)
 				}
-				fmt.Println(temp1)
-				fmt.Println(temp2)
-				if temp1 >= temp2 {
+				fmt.Println(tempEligibleValueLeft)
+				fmt.Println(tempEffectiveValueChanged)
+				if tempEligibleValueLeft >= tempEffectiveValueChanged {
 					// At least one more this type of collateralForm to be taken out
-					temp3, errBool := strconv.ParseFloat(valueSecurity.TotalValue, 64)
+					tempTotalValue, errBool := strconv.ParseFloat(valueSecurity.TotalValue, 64)
 					if errBool != nil {
 						fmt.Println(errBool)
 					}
-					temp4 := RQVEligibleValueLeft[valueSecurity.CollateralForm]
-					fmt.Println(temp3)
-					fmt.Println(temp4)
-					if temp3 <= temp4 {
+					fmt.Println(tempTotalValue)
+					if tempTotalValue <= tempEligibleValueLeft {
 						// All Security of this type will re allocated if RQV has balance
 
-						temp4, errBool := strconv.ParseFloat(valueSecurity.TotalValue, 64)
-						if errBool != nil {
-							fmt.Println(errBool)
-						}
-						fmt.Println(temp4)
-						fmt.Println(RQVLeft)
-						if temp4 <= RQVLeft {
+						if tempTotalValue <= RQVLeft {
 							// All Security of this type will re allocated as RQV has balance
 
-							RQVLeft -= temp4
+							RQVLeft -= tempTotalValue
 							fmt.Println(RQVLeft)
-							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= temp4
+							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= tempTotalValue
 							fmt.Println(RQVEligibleValueLeft[valueSecurity.CollateralForm])
 							ReallocatedSecurities = append(ReallocatedSecurities, valueSecurity)
 							fmt.Println(ReallocatedSecurities)
 
-							temp5, errBool := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 64)
+							tempSecuritiesQuantity, errBool := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 64)
 							if errBool != nil {
 								fmt.Println(errBool)
 							}
-							fmt.Println(temp5)
-							SecuritiesChanged[valueSecurity.SecurityId] = temp5
+							fmt.Println(tempSecuritiesQuantity)
+							SecuritiesChanged[valueSecurity.SecurityId] = tempSecuritiesQuantity
 							fmt.Println(SecuritiesChanged[valueSecurity.SecurityId])
+							tempTotalValuePledgeeSegregated += tempTotalValue
+							fmt.Println(tempTotalValuePledgeeSegregated)
 
 						} else {
 							// RQV has insufficient balance to take all securities
-							temp5, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
+							/*temp5, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
 							if errBool != nil {
 								fmt.Println(errBool)
 							}
-							fmt.Println(temp5)
-							QuantityToTakeout := math.Ceil(float64(RQVLeft) / temp5)
+							fmt.Println(temp5)*/
+							QuantityToTakeout := math.Floor(RQVLeft / tempEffectiveValueChanged)
 							fmt.Println(QuantityToTakeout)
-							EffectiveValueChangedtoAllocate := QuantityToTakeout * temp5
+							EffectiveValueChangedtoAllocate := QuantityToTakeout * tempEffectiveValueChanged
 							fmt.Println(EffectiveValueChangedtoAllocate)
 							RQVLeft -= EffectiveValueChangedtoAllocate
 							fmt.Println(RQVLeft)
@@ -1069,24 +1064,26 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							fmt.Println(RQVEligibleValueLeft)
 							tempSecurity2 := valueSecurity
 							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'f', 2, 64)
-							tempSecurity2.TotalValue = strconv.FormatFloat(temp5, 'f', 2, 64)
+							tempSecurity2.TotalValue = strconv.FormatFloat(tempEffectiveValueChanged, 'f', 2, 64)
 							fmt.Println(tempSecurity2)
 							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
 							fmt.Println(ReallocatedSecurities)
 							SecuritiesChanged[valueSecurity.SecurityId] = QuantityToTakeout
 							fmt.Println(SecuritiesChanged[valueSecurity.SecurityId])
+							tempTotalValuePledgeeSegregated += tempTotalValue
+							fmt.Println(tempTotalValuePledgeeSegregated)
 						}
 					} else {
 						// We can take out more of this type of CollateralForm but not all
 
-						_temp5, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
+						/*_temp5, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
 						if errBool != nil {
 							fmt.Println(errBool)
 						}
-						fmt.Println(_temp5)
-						QuantityToTakeout := math.Ceil(RQVEligibleValueLeft[valueSecurity.CollateralForm] / _temp5)
+						fmt.Println(_temp5)*/
+						QuantityToTakeout := math.Floor(RQVEligibleValueLeft[valueSecurity.CollateralForm] / tempEffectiveValueChanged)
 						fmt.Println(QuantityToTakeout)
-						EffectiveValueChangedtoAllocate := QuantityToTakeout * _temp5
+						EffectiveValueChangedtoAllocate := QuantityToTakeout * tempEffectiveValueChanged
 						fmt.Println(EffectiveValueChangedtoAllocate)
 						fmt.Println(RQVLeft)
 						if EffectiveValueChangedtoAllocate <= RQVLeft {
@@ -1099,26 +1096,27 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							tempSecurity2 := valueSecurity
 							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'f', 2, 64)
 							//strconv.ParseFloat(QuantityToTakeout)
-							tempSecurity2.EffectiveValueChanged = strconv.FormatFloat(_temp5, 'f', 2, 64)
+							tempSecurity2.EffectiveValueChanged = strconv.FormatFloat(tempEffectiveValueChanged, 'f', 2, 64)
 							fmt.Println(tempSecurity2)
 							//strconv.ParseFloat(EffectiveValueChangedtoAllocate)
 							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
 							fmt.Println(ReallocatedSecurities)
 							SecuritiesChanged[valueSecurity.SecurityId] = QuantityToTakeout
 							fmt.Println(SecuritiesChanged[valueSecurity.SecurityId])
-
+							tempTotalValuePledgeeSegregated += tempTotalValue
+							fmt.Println(tempTotalValuePledgeeSegregated)
 
 						} else {
 							// Cannot takeout all possble Securities as RQV balance is low
-							_temp6, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
+							/*_temp6, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
 							if errBool != nil {
 								fmt.Println(errBool)
-							}
-							if QuantityToTakeout > math.Ceil(float64(RQVLeft/_temp6)) {
-								QuantityToTakeout = math.Ceil(float64(RQVLeft / _temp6))
+							}*/
+							if QuantityToTakeout > math.Floor(RQVLeft/tempEffectiveValueChanged) {
+								QuantityToTakeout = math.Floor(RQVLeft / tempEffectiveValueChanged)
 							}
 							fmt.Println(QuantityToTakeout)
-							EffectiveValueChangedtoAllocate = QuantityToTakeout * _temp6
+							EffectiveValueChangedtoAllocate = QuantityToTakeout * tempEffectiveValueChanged
 							fmt.Println(EffectiveValueChangedtoAllocate)
 
 							RQVLeft -= EffectiveValueChangedtoAllocate
@@ -1127,13 +1125,14 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							fmt.Println(RQVEligibleValueLeft)
 							tempSecurity2 := valueSecurity
 							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'f', 2, 64)
-							tempSecurity2.EffectiveValueChanged = strconv.FormatFloat(_temp6, 'f', 2, 64)
+							tempSecurity2.EffectiveValueChanged = strconv.FormatFloat(tempEffectiveValueChanged, 'f', 2, 64)
 							fmt.Println(tempSecurity2)
 							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
 							fmt.Println(ReallocatedSecurities)
 							SecuritiesChanged[valueSecurity.SecurityId] = QuantityToTakeout
 							fmt.Println(SecuritiesChanged[valueSecurity.SecurityId])	
-
+							tempTotalValuePledgeeSegregated += tempTotalValue
+							fmt.Println(tempTotalValuePledgeeSegregated)
 						}
 					}
 
