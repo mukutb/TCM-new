@@ -103,7 +103,7 @@ var rulesetFetched Ruleset
 type SecurityArrayStruct []Securities 
 
 func (slice SecurityArrayStruct) Len() int             { return len(slice) }
-func (slice SecurityArrayStruct) Less(i, j int) bool { // Sorting through the field 'ValuePercentage' for now as it contians the Priority
+func (slice SecurityArrayStruct) Less(i, j int) bool { // Sorting through the field 'Priority'
 	return rulesetFetched.Security[slice[i].CollateralForm][1] < rulesetFetched.Security[slice[j].CollateralForm][1]
 }
 func (slice SecurityArrayStruct) Swap(i, j int) { slice[i], slice[j] = slice[j], slice[i] }
@@ -269,7 +269,7 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 	// Timestamp to Date/Time Objest in Go and Logic behind cutoff time
 	// Ref: https://play.golang.org/p/KJRigmHzu9
 
-	i, err := strconv.ParseInt(_CurrentTimeStamp, 10, 32)
+	i, err := strconv.ParseInt(_CurrentTimeStamp, 10, 64)
 	if err != nil {
 		panic(err)
 	}
@@ -280,7 +280,7 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 	for _, ValueTransaction := range TransactionsDataFetched {
 		if ValueTransaction.AllocationStatus == "Pending due to insufficient collateral" {
 
-			i, err := strconv.ParseInt(ValueTransaction.MarginCAllDate, 10, 32)
+			i, err := strconv.ParseInt(ValueTransaction.MarginCAllDate, 10, 64)
 			if err != nil {
 				panic(err)
 			}
@@ -422,7 +422,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		return nil, nil
 	}
 	/*RQV,errBool := strconv.ParseFloat(TransactionData.RQV)*/
-	RQV, errBool := strconv.ParseFloat(TransactionData.RQV, 32)
+	RQV, errBool := strconv.ParseFloat(TransactionData.RQV, 64)
 	if errBool != nil {
 		fmt.Println(errBool)
 	}
@@ -619,19 +619,19 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		var Priority_Pub, ConcentrationLimit_Pub, ValuationPercentage_Pub float64
 
 		PriorityPri := value[1]
-		Priority_Pub, errBool1 := strconv.ParseFloat(SecurityJSON[key]["Priority"], 32)
+		Priority_Pub, errBool1 := strconv.ParseFloat(SecurityJSON[key]["Priority"], 64)
 		if errBool1 != nil {
 			fmt.Println(errBool1)
 		}
 
 		ConcentrationLimitPri := value[0]
-		ConcentrationLimit_Pub, errBool2 := strconv.ParseFloat(SecurityJSON[key]["Concentration Limit"], 32)
+		ConcentrationLimit_Pub, errBool2 := strconv.ParseFloat(SecurityJSON[key]["Concentration Limit"], 64)
 		if errBool2 != nil {
 			fmt.Println(errBool2)
 		}
 
 		ValuationPercentagePri := value[2]
-		ValuationPercentage_Pub, errBool3 := strconv.ParseFloat(SecurityJSON[key]["Valuation Percentage"], 32)
+		ValuationPercentage_Pub, errBool3 := strconv.ParseFloat(SecurityJSON[key]["Valuation Percentage"], 64)
 		if errBool3 != nil {
 			fmt.Println(errBool3)
 		}
@@ -734,14 +734,14 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 			tempSecurity.MTM = stringArr[0]
 			// Storing the Value percentage in the security ruleset data itself
-			tempSecurity.ValuePercentage = strconv.FormatFloat(float64(rulesetFetched.Security[tempSecurity.CollateralForm][2]), 'f', 2, 32)
+			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'f', 2, 64)
 			//convert valuePercentage(string) to float
-			tempValuePercentage, errBool := strconv.ParseFloat(tempSecurity.ValuePercentage, 32)
+			tempValuePercentage, errBool := strconv.ParseFloat(tempSecurity.ValuePercentage, 64)
 			if errBool != nil {
 				fmt.Println(errBool)
 			}
 
-			temp, errBool := strconv.ParseFloat(tempSecurity.MTM, 32)
+			temp, errBool := strconv.ParseFloat(tempSecurity.MTM, 64)
 			if errBool != nil {
 				fmt.Println(errBool)
 			}
@@ -762,21 +762,21 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			temp3 := (_changedMTM * tempValuePercentage)/100
 			fmt.Println("temp3")
 			fmt.Println(temp3)
-			tempSecurity.EffectiveValueChanged = strconv.FormatFloat(temp3, 'f', 2, 32)
+			tempSecurity.EffectiveValueChanged = strconv.FormatFloat(temp3, 'f', 2, 64)
 
-			/*temp, errBool = strconv.ParseFloat(tempSecurity.EffectiveValueChanged, 32)
+			/*temp, errBool = strconv.ParseFloat(tempSecurity.EffectiveValueChanged, 64)
 			if errBool != nil {
 				fmt.Println(errBool)
 			}*/
 			// Adding it to TotalValue
-			temp2, errBool := strconv.ParseFloat(tempSecurity.SecuritiesQuantity, 32)
+			temp2, errBool := strconv.ParseFloat(tempSecurity.SecuritiesQuantity, 64)
 			if errBool != nil {
 				fmt.Println(errBool)
 			}
 			// Calculate Total Value = Effective Value * Quantity
 			tempTotal := temp3 * temp2
 
-			tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 32)
+			tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 64)
 			fmt.Println("tempSecurity.TotalValue")
 			fmt.Println(tempSecurity.TotalValue)
 			// Calculate Total value based on Collateral form
@@ -797,7 +797,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				This is just for using the limited sorting application provided by GOlang
 				By no chance is this to be stored on Blockchain.
 			*/
-			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'f', 2, 32)
+			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'f', 2, 64)
 			fmt.Println("tempSecurity.ValuePercentage")
 			fmt.Println(tempSecurity.ValuePercentage)
 			// Append Securities to an array
@@ -819,12 +819,12 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			tempSecurity.ValuePercentage = SecurityJSON[tempSecurity.CollateralForm]["Valuation Percentage"]
 			
 			//convert valuePercentage(string) to float
-			tempValuePercentage, errBool := strconv.ParseFloat(tempSecurity.ValuePercentage, 32)
+			tempValuePercentage, errBool := strconv.ParseFloat(tempSecurity.ValuePercentage, 64)
 			if errBool != nil {
 				fmt.Println(errBool)
 			}
 
-			temp, errBool := strconv.ParseFloat(tempSecurity.MTM, 32)
+			temp, errBool := strconv.ParseFloat(tempSecurity.MTM, 64)
 			if errBool != nil {
 				fmt.Println(errBool)
 			}
@@ -844,21 +844,21 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			temp3 := (_changedMTM * tempValuePercentage)/100
 			fmt.Println("temp3")
 			fmt.Println(temp3)
-			tempSecurity.EffectiveValueChanged = strconv.FormatFloat(temp3, 'f', 2, 32)
+			tempSecurity.EffectiveValueChanged = strconv.FormatFloat(temp3, 'f', 2, 64)
 			// Adding it to TotalValue
 
-			/*temp, errBool = strconv.ParseFloat(tempSecurity.EffectiveValueChanged, 32)
+			/*temp, errBool = strconv.ParseFloat(tempSecurity.EffectiveValueChanged, 64)
 			if errBool != nil {
 				fmt.Println(errBool)
 			}*/
-			temp2, errBool := strconv.ParseFloat(tempSecurity.SecuritiesQuantity, 32)
+			temp2, errBool := strconv.ParseFloat(tempSecurity.SecuritiesQuantity, 64)
 			if errBool != nil {
 				fmt.Println(errBool)
 			}
 			// Calculate Total Value = Effective Value * Quantity
 			tempTotal := temp3 * temp2
 
-			tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 32)
+			tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 64)
 			fmt.Println("tempSecurity.TotalValue")
 			fmt.Println(tempSecurity.TotalValue)
 			// Calculate Total value based on Collateral form
@@ -881,7 +881,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				This is just for using the limited sorting application provided by GOlang
 				By no chance is this to be stored on Blockchain.
 			*/
-			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'f', 2, 32)
+			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'f', 2, 64)
 			fmt.Println("tempSecurity.ValuePercentage")
 			fmt.Println(tempSecurity.ValuePercentage)
 			// Append Securities to an array
@@ -1010,7 +1010,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				
 				// More Security need to be taken out
 				temp1 := RQVEligibleValueLeft[valueSecurity.CollateralForm]
-				temp2, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 32)
+				temp2, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
 				if errBool != nil {
 					fmt.Println(errBool)
 				}
@@ -1018,7 +1018,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				fmt.Println(temp2)
 				if temp1 >= temp2 {
 					// At least one more this type of collateralForm to be taken out
-					temp3, errBool := strconv.ParseFloat(valueSecurity.TotalValue, 32)
+					temp3, errBool := strconv.ParseFloat(valueSecurity.TotalValue, 64)
 					if errBool != nil {
 						fmt.Println(errBool)
 					}
@@ -1028,7 +1028,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					if temp3 <= temp4 {
 						// All Security of this type will re allocated if RQV has balance
 
-						temp4, errBool := strconv.ParseFloat(valueSecurity.TotalValue, 32)
+						temp4, errBool := strconv.ParseFloat(valueSecurity.TotalValue, 64)
 						if errBool != nil {
 							fmt.Println(errBool)
 						}
@@ -1044,7 +1044,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							ReallocatedSecurities = append(ReallocatedSecurities, valueSecurity)
 							fmt.Println(ReallocatedSecurities)
 
-							temp5, errBool := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 32)
+							temp5, errBool := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 64)
 							if errBool != nil {
 								fmt.Println(errBool)
 							}
@@ -1054,7 +1054,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 						} else {
 							// RQV has insufficient balance to take all securities
-							temp5, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 32)
+							temp5, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
 							if errBool != nil {
 								fmt.Println(errBool)
 							}
@@ -1068,8 +1068,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= EffectiveValueChangedtoAllocate
 							fmt.Println(RQVEligibleValueLeft)
 							tempSecurity2 := valueSecurity
-							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(float64(QuantityToTakeout), 'f', 2, 32)
-							tempSecurity2.TotalValue = strconv.FormatFloat(float64(temp5), 'f', 2, 32)
+							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'f', 2, 64)
+							tempSecurity2.TotalValue = strconv.FormatFloat(temp5, 'f', 2, 64)
 							fmt.Println(tempSecurity2)
 							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
 							fmt.Println(ReallocatedSecurities)
@@ -1079,12 +1079,12 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					} else {
 						// We can take out more of this type of CollateralForm but not all
 
-						_temp5, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 32)
+						_temp5, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
 						if errBool != nil {
 							fmt.Println(errBool)
 						}
 						fmt.Println(_temp5)
-						QuantityToTakeout := math.Ceil(float64(RQVEligibleValueLeft[valueSecurity.CollateralForm]) / _temp5)
+						QuantityToTakeout := math.Ceil(RQVEligibleValueLeft[valueSecurity.CollateralForm] / _temp5)
 						fmt.Println(QuantityToTakeout)
 						EffectiveValueChangedtoAllocate := QuantityToTakeout * _temp5
 						fmt.Println(EffectiveValueChangedtoAllocate)
@@ -1097,9 +1097,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= EffectiveValueChangedtoAllocate
 							fmt.Println(RQVEligibleValueLeft)
 							tempSecurity2 := valueSecurity
-							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(float64(QuantityToTakeout), 'f', 2, 32)
+							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'f', 2, 64)
 							//strconv.ParseFloat(QuantityToTakeout)
-							tempSecurity2.EffectiveValueChanged = strconv.FormatFloat(float64(_temp5), 'f', 2, 32)
+							tempSecurity2.EffectiveValueChanged = strconv.FormatFloat(_temp5, 'f', 2, 64)
 							fmt.Println(tempSecurity2)
 							//strconv.ParseFloat(EffectiveValueChangedtoAllocate)
 							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
@@ -1110,7 +1110,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 						} else {
 							// Cannot takeout all possble Securities as RQV balance is low
-							_temp6, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 32)
+							_temp6, errBool := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
 							if errBool != nil {
 								fmt.Println(errBool)
 							}
@@ -1126,8 +1126,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= EffectiveValueChangedtoAllocate
 							fmt.Println(RQVEligibleValueLeft)
 							tempSecurity2 := valueSecurity
-							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(float64(QuantityToTakeout), 'f', 2, 32)
-							tempSecurity2.EffectiveValueChanged = strconv.FormatFloat(float64(_temp6), 'f', 2, 32)
+							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'f', 2, 64)
+							tempSecurity2.EffectiveValueChanged = strconv.FormatFloat(_temp6, 'f', 2, 64)
 							fmt.Println(tempSecurity2)
 							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
 							fmt.Println(ReallocatedSecurities)
@@ -1193,7 +1193,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			pledgerLongboxSecuritiesJson := `[`
 			// Update the existing Securities for Pledger Longbox A/c
 			for i, valueSecurity := range CombinedSecurities {
-				securityQuantity, err := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 32)
+				securityQuantity, err := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 64)
 				if err != nil {
 					errStr := fmt.Sprintf("Failed to convert SecurityQuantity(string) to SecurityQuantity(int). Got error: %s", err.Error())
 					fmt.Printf(errStr)
@@ -1203,16 +1203,16 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				newQuantity := securityQuantity - _tempQuantity
 				fmt.Println(newQuantity)
 
-				effectiveValueChanged, err := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 32)
+				effectiveValueChanged, err := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
 				if err != nil {
-					errStr := fmt.Sprintf("Failed to convert effectiveValueChanged(string) to effectiveValueChanged(float32). Got error: %s", err.Error())
+					errStr := fmt.Sprintf("Failed to convert effectiveValueChanged(string) to effectiveValueChanged(float64). Got error: %s", err.Error())
 					fmt.Printf(errStr)
 					return nil, errors.New(errStr)
 				}
 				fmt.Println(effectiveValueChanged)
-				SecuritiesQuantity, err := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 32)
+				SecuritiesQuantity, err := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 64)
 				if err != nil {
-					errStr := fmt.Sprintf("Failed to convert _SecurityQuantity(string) to _SecurityQuantity(float32). Got error: %s", err.Error())
+					errStr := fmt.Sprintf("Failed to convert _SecurityQuantity(string) to _SecurityQuantity(float64). Got error: %s", err.Error())
 					fmt.Printf(errStr)
 					return nil, errors.New(errStr)
 				}
@@ -1228,7 +1228,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						valueSecurity.SecuritiesQuantity,
 						valueSecurity.SecurityType,
 						valueSecurity.CollateralForm,
-						strconv.FormatFloat(float64(_totalValue), 'f', 2, 32),
+						strconv.FormatFloat(_totalValue, 'f', 2, 64),
 						valueSecurity.ValuePercentage,
 						valueSecurity.MTM,
 						valueSecurity.EffectivePercentage,
@@ -1244,7 +1244,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					}
 					fmt.Println(result)
 
-					valueSecurity.TotalValue = strconv.FormatFloat(float64(_totalValue), 'f', 2, 64)
+					valueSecurity.TotalValue = strconv.FormatFloat(_totalValue, 'f', 2, 64)
 					//valueSecurity.ValuePercentage = ""
 					sec, err := json.Marshal(valueSecurity)
 					if err != nil {
@@ -1256,10 +1256,10 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId,
 						PledgerLongboxAccount,
 						valueSecurity.SecuritiesName,
-						strconv.FormatFloat(float64(newQuantity), 'f', 2, 32),
+						strconv.FormatFloat(newQuantity, 'f', 2, 64),
 						valueSecurity.SecurityType,
 						valueSecurity.CollateralForm,
-						strconv.FormatFloat(float64(_totalValue), 'f', 2, 32),
+						strconv.FormatFloat(_totalValue, 'f', 2, 64),
 						valueSecurity.ValuePercentage,
 						valueSecurity.MTM,
 						valueSecurity.EffectivePercentage,
@@ -1274,7 +1274,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						return nil, errors.New(errStr)
 					}
 					fmt.Println(result)
-					valueSecurity.TotalValue = strconv.FormatFloat(float64(_totalValue), 'f', 2, 64)
+					valueSecurity.TotalValue = strconv.FormatFloat(_totalValue, 'f', 2, 64)
 					//valueSecurity.ValuePercentage = ""
 					sec, err := json.Marshal(valueSecurity)
 					if err != nil {
@@ -1292,16 +1292,16 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			reallocatedSecuritiesJson := `[`
 			// Update the new Securities to Pledgee Segregated A/c
 			for i, valueSecurity := range ReallocatedSecurities {
-				_effectiveValueChanged, err := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 32)
+				_effectiveValueChanged, err := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
 				if err != nil {
-					errStr := fmt.Sprintf("Failed to convert mtm(string) to mtm(float32). Got error: %s", err.Error())
+					errStr := fmt.Sprintf("Failed to convert mtm(string) to mtm(float64). Got error: %s", err.Error())
 					fmt.Printf(errStr)
 					return nil, errors.New(errStr)
 				}
 				fmt.Println(_effectiveValueChanged)
-				_SecurityQuantity, err := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 32)
+				_SecurityQuantity, err := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 64)
 				if err != nil {
-					errStr := fmt.Sprintf("Failed to convert _SecurityQuantity(string) to _SecurityQuantity(float32). Got error: %s", err.Error())
+					errStr := fmt.Sprintf("Failed to convert _SecurityQuantity(string) to _SecurityQuantity(float64). Got error: %s", err.Error())
 					fmt.Printf(errStr)
 					return nil, errors.New(errStr)
 				}
@@ -1315,7 +1315,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					valueSecurity.SecuritiesQuantity,
 					valueSecurity.SecurityType,
 					valueSecurity.CollateralForm,
-					strconv.FormatFloat(float64(_totalValue), 'f', 2, 32),
+					strconv.FormatFloat(_totalValue, 'f', 2, 64),
 					valueSecurity.ValuePercentage,
 					valueSecurity.MTM,
 					valueSecurity.EffectivePercentage,
@@ -1333,7 +1333,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				}
 				fmt.Println(result)
 
-				valueSecurity.TotalValue = strconv.FormatFloat(float64(_totalValue), 'f', 2, 64)
+				valueSecurity.TotalValue = strconv.FormatFloat(_totalValue, 'f', 2, 64)
 				//valueSecurity.ValuePercentage = ""
 				sec, err := json.Marshal(valueSecurity)
 				if err != nil {
