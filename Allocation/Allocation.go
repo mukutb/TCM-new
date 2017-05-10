@@ -981,6 +981,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			fmt.Println("RQVLeft: ", RQVLeft)
 			fmt.Println("TotalValuePledgeeSegregated: ", TotalValuePledgeeSegregated)
 			fmt.Println("TotalValuePledgerLongbox: ", TotalValuePledgerLongbox)
+			var TotalValuePledgee float64
 			if RQVLeft > 0{
 				// More Security need to be taken out
 				rqvEligibleValueLeft := RQVEligibleValueLeft[valueSecurity.CollateralForm]
@@ -1005,8 +1006,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						}
 						fmt.Println(securityQuantity)
 						SecuritiesAllocated[valueSecurity.SecurityId] = securityQuantity
-						TotalValuePledgeeSegregated += totalValue
-						fmt.Println(TotalValuePledgeeSegregated)
+						TotalValuePledgee += totalValue
+						fmt.Println(TotalValuePledgee)
 					}else {
 						// RQV has insufficient balance to take all securities
 						securityQuantity, errBool := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 64)
@@ -1023,7 +1024,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						fmt.Println(QuantityToTakeout)
 						totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
 						fmt.Println(totalValueToAllocate)
-
+						if totalValueToAllocate > rqvEligibleValueLeft {
+							totalValueToAllocate = rqvEligibleValueLeft
+						}
 						RQVLeft -= totalValueToAllocate
 						fmt.Println(RQVLeft)
 						RQVEligibleValueLeft[valueSecurity.CollateralForm] -= totalValueToAllocate
@@ -1035,8 +1038,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						fmt.Println(ReallocatedSecurities)
 						SecuritiesAllocated[valueSecurity.SecurityId] = QuantityToTakeout
 						fmt.Println(SecuritiesAllocated[valueSecurity.SecurityId])
-						TotalValuePledgeeSegregated += totalValueToAllocate
-						fmt.Println(TotalValuePledgeeSegregated)
+						TotalValuePledgee += totalValueToAllocate
+						fmt.Println(TotalValuePledgee)
 					}
 				}else{
 						// rqvEligibleValueLeft is less than total Value
@@ -1054,7 +1057,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						fmt.Println(QuantityToTakeout)
 						totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
 						fmt.Println(totalValueToAllocate)
-
+						if totalValueToAllocate > rqvEligibleValueLeft {
+							totalValueToAllocate = rqvEligibleValueLeft
+						}
 						/*QuantityLeft := securityQuantity - QuantityToTakeout
 						totalValueLeft := QuantityLeft * effectiveValueChanged*/
 						RQVLeft -= totalValueToAllocate
@@ -1075,8 +1080,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						SecuritiesAllocated[valueSecurity.SecurityId] = QuantityToTakeout
 						//fmt.Println(PledgerSecurities)
 						fmt.Println(SecuritiesAllocated[valueSecurity.SecurityId])
-						TotalValuePledgeeSegregated += totalValueToAllocate
-						fmt.Println(TotalValuePledgeeSegregated)
+						TotalValuePledgee += totalValueToAllocate
+						fmt.Println(TotalValuePledgee)
 					}
 			} else {
 				// Security cutting done
