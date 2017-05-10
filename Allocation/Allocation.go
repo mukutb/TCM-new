@@ -1003,7 +1003,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							fmt.Println(errBool)
 						}
 						fmt.Println(effectiveValueChanged)
-						QuantityToTakeout := math.Ceil(RQVLeft * securityQuantity)/ totalValue
+						QuantityToTakeout := math.Ceil((RQVLeft * securityQuantity)/ totalValue)
 						fmt.Println(QuantityToTakeout)
 						totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
 						fmt.Println(totalValueToAllocate)
@@ -1034,7 +1034,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							fmt.Println(errBool)
 						}
 						fmt.Println(effectiveValueChanged)
-						QuantityToTakeout := math.Ceil(rqvEligibleValueLeft * securityQuantity)/ totalValue
+					QuantityToTakeout := math.Ceil((rqvEligibleValueLeft * securityQuantity)/ totalValue)
 						fmt.Println(QuantityToTakeout)
 						totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
 						fmt.Println(totalValueToAllocate)
