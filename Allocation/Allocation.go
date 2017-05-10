@@ -779,13 +779,10 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			// Calculate Total value of pledger's longbox account
 			TotalValuePledgerLongbox += tempTotal
 			// Calculate the total value of all the securities based on Collateral form
-			AvailableCollateral[tempSecurity.CollateralForm] += tempTotal
+			//AvailableCollateral[tempSecurity.CollateralForm] += tempTotal
 
 			// Calculate Available Eligiblex = Minimum (Available[tempSecurity.CollateralForm], Eligible[tempSecurity.CollateralForm])
-			AvailableEligible[tempSecurity.CollateralForm] = math.Min(AvailableCollateral[tempSecurity.CollateralForm],RQVEligibleValue[tempSecurity.CollateralForm])
-			
-			// Calculate Available Eligible Collateral = Sum (Available Eligible)
-			AvailableEligibleCollateral = AvailableEligibleCollateral + AvailableEligible[tempSecurity.CollateralForm]
+			//AvailableEligible[tempSecurity.CollateralForm] = math.Min(AvailableCollateral[tempSecurity.CollateralForm],RQVEligibleValue[tempSecurity.CollateralForm])
 			
 			/*	Warning :
 				Saving Priority for the Security in filed `ValuePercentage`
@@ -800,6 +797,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			CombinedSecurities = append(CombinedSecurities, tempSecurity)
 		}
 	}
+	
 
 	// Operations for Pledgee Segregated Account(s)
 	for _, value := range PledgeeSegregatedSecuritiesJSON {
@@ -858,13 +856,13 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			// Calculate Total value of pledgee's segregated account
 			TotalValuePledgeeSegregated += tempTotal
 			// Calculate the total value of all the securities based on Collateral form
-			AvailableCollateral[tempSecurity.CollateralForm] += tempTotal
+			//AvailableCollateral[tempSecurity.CollateralForm] += tempTotal
 
 			// Calculate Available Eligiblex = Minimum (Available[tempSecurity.CollateralForm], Eligible[tempSecurity.CollateralForm])
-			AvailableEligible[tempSecurity.CollateralForm] = math.Min(AvailableCollateral[tempSecurity.CollateralForm],RQVEligibleValue[tempSecurity.CollateralForm])
+			//AvailableEligible[tempSecurity.CollateralForm] = math.Min(AvailableCollateral[tempSecurity.CollateralForm],RQVEligibleValue[tempSecurity.CollateralForm])
 			
 			// Calculate Available Eligible Collateral = Sum (Available Eligible)
-			AvailableEligibleCollateral = AvailableEligibleCollateral + AvailableEligible[tempSecurity.CollateralForm]
+			//AvailableEligibleCollateral = AvailableEligibleCollateral + AvailableEligible[tempSecurity.CollateralForm]
 
 			
 			/*	Warning :
@@ -887,8 +885,6 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	fmt.Println("TotalValuePledgeeSegregated")
 	fmt.Println(TotalValuePledgeeSegregated)
 	
-	fmt.Println("AvailableCollateral after calculation:")
-	fmt.Printf("%#v", AvailableCollateral)
 	fmt.Println()
 	fmt.Println("PledgerLongboxSecurities after calculation:")
 	fmt.Printf("%#v", PledgerLongboxSecurities)
@@ -898,6 +894,26 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	fmt.Println()
 	fmt.Println("CombinedSecurities after calculation:")
 	fmt.Printf("%#v", CombinedSecurities)
+	fmt.Println()
+
+	for _, valueSecurity := range CombinedSecurities {
+			tempTotal, errBool := strconv.ParseFloat(valueSecurity.TotalValue, 64)
+			if errBool != nil {
+				fmt.Println(errBool)
+			}
+			// Calculate the total value of all the securities based on Collateral form
+			AvailableCollateral[valueSecurity.CollateralForm] += tempTotal
+	}
+	
+	for key := range AvailableCollateral {
+		// Calculate Available Eligiblex = Minimum (Available[tempSecurity.CollateralForm], Eligible[tempSecurity.CollateralForm])
+		AvailableEligible[key] = math.Min(AvailableCollateral[key],RQVEligibleValue[key])
+
+		// Calculate Available Eligible Collateral = Sum (Available Eligible)
+		AvailableEligibleCollateral = AvailableEligibleCollateral + AvailableEligible[key]
+	}
+	fmt.Println("AvailableCollateral after calculation:")
+	fmt.Printf("%#v", AvailableCollateral)
 	fmt.Println()
 	fmt.Println("AvailableEligible")
 	fmt.Println(AvailableEligible)
@@ -1003,7 +1019,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							fmt.Println(errBool)
 						}
 						fmt.Println(effectiveValueChanged)
-						QuantityToTakeout := math.Ceil((RQVLeft * securityQuantity)/ totalValue)
+						QuantityToTakeout := math.Ceil(RQVLeft * securityQuantity)/ totalValue
 						fmt.Println(QuantityToTakeout)
 						totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
 						fmt.Println(totalValueToAllocate)
@@ -1034,7 +1050,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							fmt.Println(errBool)
 						}
 						fmt.Println(effectiveValueChanged)
-					QuantityToTakeout := math.Ceil((rqvEligibleValueLeft * securityQuantity)/ totalValue)
+						QuantityToTakeout := math.Ceil(rqvEligibleValueLeft * securityQuantity)/ totalValue
 						fmt.Println(QuantityToTakeout)
 						totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
 						fmt.Println(totalValueToAllocate)
