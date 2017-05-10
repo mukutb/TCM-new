@@ -904,7 +904,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			// Calculate the total value of all the securities based on Collateral form
 			AvailableCollateral[valueSecurity.CollateralForm] += tempTotal
 	}
-	
+
 	for key := range AvailableCollateral {
 		// Calculate Available Eligiblex = Minimum (Available[tempSecurity.CollateralForm], Eligible[tempSecurity.CollateralForm])
 		AvailableEligible[key] = math.Min(AvailableCollateral[key],RQVEligibleValue[key])
@@ -1019,7 +1019,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							fmt.Println(errBool)
 						}
 						fmt.Println(effectiveValueChanged)
-						QuantityToTakeout := math.Ceil(RQVLeft * securityQuantity)/ totalValue
+						QuantityToTakeout := math.Ceil((RQVLeft * securityQuantity)/ totalValue)
 						fmt.Println(QuantityToTakeout)
 						totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
 						fmt.Println(totalValueToAllocate)
@@ -1050,7 +1050,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							fmt.Println(errBool)
 						}
 						fmt.Println(effectiveValueChanged)
-						QuantityToTakeout := math.Ceil(rqvEligibleValueLeft * securityQuantity)/ totalValue
+						QuantityToTakeout := math.Ceil((rqvEligibleValueLeft * securityQuantity)/ totalValue)
 						fmt.Println(QuantityToTakeout)
 						totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
 						fmt.Println(totalValueToAllocate)
