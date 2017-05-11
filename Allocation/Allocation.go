@@ -253,6 +253,7 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 	_Role := args[2]
 	_CurrentTimeStamp := args[3]
 
+	fmt.Println("args: ", args)
 	var TransactionsDataFetched []Transactions
 
 	// Fetching Attl transactions for the user
@@ -274,7 +275,8 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 		panic(err)
 	}
 	_CurrentTimeObj := time.Unix(i, 0)
-
+	fmt.Println("_CurrentTimeObj: ", _CurrentTimeObj)
+	fmt.Println("_CurrentTimeObj hours: ", _CurrentTimeObj.Hours())
 	var newTxStatus, newAllStatus string
 
 	for _, ValueTransaction := range TransactionsDataFetched {
@@ -285,7 +287,8 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 				panic(err)
 			}
 			_MarginCallTimeObj := time.Unix(i, 0)
-
+			fmt.Println("_MarginCallTimeObj: ", _MarginCallTimeObj)
+			fmt.Println("_MarginCallTimeObj hours: ", _MarginCallTimeObj.Hours())
 			if _CurrentTimeObj.Sub(_MarginCallTimeObj).Hours() <= 24 && _CurrentTimeObj.Sub(_MarginCallTimeObj).Hours() >= 0 {
 				// New securites are uploaded in cutoff time
 				newTxStatus = "Ready"
