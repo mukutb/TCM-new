@@ -971,7 +971,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		RQVLeft := RQV
 
 		SecuritiesAllocated := make(map[string]float64)
-
+		TotalValueAllocated := make(map[string]float64)
 		var ReallocatedSecurities []Securities
 		
 		// Iterating through all the securities 
@@ -1011,6 +1011,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							fmt.Println("securityQuantity: ",securityQuantity)
 							SecuritiesAllocated[valueSecurity.SecurityId] = securityQuantity
 							fmt.Println(valueSecurity.SecurityId + ": " , SecuritiesAllocated[valueSecurity.SecurityId])
+							TotalValueAllocated[valueSecurity.SecurityId] = totalValue
+							fmt.Println(valueSecurity.SecurityId + ": " , TotalValueAllocated[valueSecurity.SecurityId])
 							/*TotalValuePledgee += totalValue
 							fmt.Println(TotalValuePledgee)*/
 						}else {
@@ -1043,6 +1045,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							fmt.Println("ReallocatedSecurities: ",ReallocatedSecurities)
 							SecuritiesAllocated[valueSecurity.SecurityId] = QuantityToTakeout
 							fmt.Println(valueSecurity.SecurityId + ": " , SecuritiesAllocated[valueSecurity.SecurityId])
+							TotalValueAllocated[valueSecurity.SecurityId] = totalValueToAllocate
+							fmt.Println(valueSecurity.SecurityId + ": " , TotalValueAllocated[valueSecurity.SecurityId])
 							/*TotalValuePledgee += totalValueToAllocate
 							fmt.Println(TotalValuePledgee)*/
 						}
@@ -1077,6 +1081,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 						SecuritiesAllocated[valueSecurity.SecurityId] = QuantityToTakeout
 						fmt.Println(valueSecurity.SecurityId + ": " , SecuritiesAllocated[valueSecurity.SecurityId])
+						TotalValueAllocated[valueSecurity.SecurityId] = totalValueToAllocate
+						fmt.Println(valueSecurity.SecurityId + ": " , TotalValueAllocated[valueSecurity.SecurityId])
 						/*TotalValuePledgee += totalValueToAllocate
 						fmt.Println("TotalValuePledgee: "+TotalValuePledgee)*/
 					}
@@ -1139,21 +1145,28 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					errStr := fmt.Sprintf("Failed to convert SecurityQuantity(string) to SecurityQuantity(int). Got error: %s", err.Error())
 					fmt.Printf(errStr)
 				}
+				totalValue, err := strconv.ParseFloat(valueSecurity.TotalValue, 64)
+				if err != nil {
+					errStr := fmt.Sprintf("Failed to convert totalValue(string) to totalValue(float). Got error: %s", err.Error())
+					fmt.Printf(errStr)
+				}
 				quantityAllocated := SecuritiesAllocated[valueSecurity.SecurityId]
-				fmt.Println(quantityAllocated)
+				fmt.Println("quantityAllocated: ",quantityAllocated)
+				totalValueAllocated := TotalValueAllocated[valueSecurity.SecurityId]
+				fmt.Println("totalValueAllocated: ",totalValueAllocated)
 				newQuantity := securityQuantity - quantityAllocated
-				fmt.Println(newQuantity)
-
-				effectiveValueChanged, err := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
+				fmt.Println("newQuantity: ",newQuantity)
+				newTotalValue := totalValue - totalValueAllocated
+				fmt.Println("newTotalValue: ",newTotalValue)
+				/*effectiveValueChanged, err := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
 				if err != nil {
 					errStr := fmt.Sprintf("Failed to convert effectiveValueChanged(string) to effectiveValueChanged(float64). Got error: %s", err.Error())
 					fmt.Printf(errStr)
 					return nil, errors.New(errStr)
 				}
 				fmt.Println(effectiveValueChanged)
-				_totalValue := effectiveValueChanged * newQuantity
-				valueSecurity.TotalValue = strconv.FormatFloat(_totalValue, 'f', 2, 64)
-				fmt.Println(_totalValue)
+				_totalValue := effectiveValueChanged * newQuantity*/
+				valueSecurity.TotalValue = strconv.FormatFloat(newTotalValue, 'f', 2, 64)
 
 				if newQuantity <= securityQuantity && quantityAllocated >= 0 {
 
