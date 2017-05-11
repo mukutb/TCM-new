@@ -287,8 +287,8 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 			}
 			_MarginCallTimeObj := time.Unix(i, 0)
 			fmt.Println("_MarginCallTimeObj: ", _MarginCallTimeObj)
-			fmt.Println("_CurrentTimeObj.Sub(_MarginCallTimeObj).Hours(): ", _CurrentTimeObj.Sub(_MarginCallTimeObj).Hours())
-			if _CurrentTimeObj.Sub(_MarginCallTimeObj).Hours() <= 24 && _CurrentTimeObj.Sub(_MarginCallTimeObj).Hours() >= 0 {
+			fmt.Println("(_CurrentTimeObj.Hour()-_MarginCallTimeObj.Hour()): ", (_CurrentTimeObj.Hour()-_MarginCallTimeObj.Hour()))
+			if (_CurrentTimeObj.Hour()-_MarginCallTimeObj.Hour()) <= 24 && (_CurrentTimeObj.Hour()-_MarginCallTimeObj.Hour()) >= 0 {
 				// New securites are uploaded in cutoff time
 				newTxStatus = "Ready"
 				newAllStatus = "Ready for Allocation"
