@@ -724,10 +724,10 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 	if err != nil {
 		return nil, errors.New("Failed to get Account " + _accountNumber)
 	}
-	totalValueOfTheDeletedSecurities := float64(0.0)
 	res := Accounts{}
 	res_Security := Securities{}
 	json.Unmarshal(AccountAsBytes, &res)
+	totalValueOfTheDeletedSecurities, _ := strconv.ParseFloat(res.TotalValue,64)
 	_SecuritySplit := strings.Split(res.Securities, ",")
 	fmt.Print("_SecuritySplit: " )
 	fmt.Println(_SecuritySplit)
@@ -740,8 +740,8 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 			return nil, errors.New("Failed to get Security " + _SecuritySplit[i])
 		}
 		json.Unmarshal(SecuritiesAsBytes, &res_Security)
-		valToBeAdded, _ := strconv.ParseFloat(res_Security.Totalvalue, 64)
-		totalValueOfTheDeletedSecurities = totalValueOfTheDeletedSecurities + valToBeAdded
+		valToBeRemoved, _ := strconv.ParseFloat(res_Security.Totalvalue, 64)
+		totalValueOfTheDeletedSecurities = totalValueOfTheDeletedSecurities - valToBeRemoved
 
 		//Got the info. now delete
 		err = stub.DelState(_SecuritySplit[i])													//remove the key from chaincode state
