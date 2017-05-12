@@ -30,7 +30,6 @@ import (
 	//"net/url"
 	"sort"
 	"strconv"
-	"time"
 )
 
 type ManageAllocations struct {
@@ -91,7 +90,7 @@ type Securities struct {
 // Use as Object.Security["CommonStocks"][0]
 // Reference [Tested by Pranav] https://play.golang.org/p/JlQJF5Z14X
 type Ruleset struct {
-	Security         map[string][]float64 `json:"Security"`
+	Security         map[string]map[string]float64 `json:"Security"`
 	BaseCurrency     string               `json:"BaseCurrency"`
 	EligibleCurrency []string             `json:"EligibleCurrency"`
 }
@@ -104,7 +103,7 @@ type SecurityArrayStruct []Securities
 
 func (slice SecurityArrayStruct) Len() int             { return len(slice) }
 func (slice SecurityArrayStruct) Less(i, j int) bool { // Sorting through the field 'Priority'
-	return rulesetFetched.Security[slice[i].CollateralForm][1] < rulesetFetched.Security[slice[j].CollateralForm][1]
+	return rulesetFetched.Security[slice[i].CollateralForm]["Priority"] < rulesetFetched.Security[slice[j].CollateralForm]["Priority"]
 }
 func (slice SecurityArrayStruct) Swap(i, j int) { slice[i], slice[j] = slice[j], slice[i] }
 
@@ -270,25 +269,16 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 	// Timestamp to Date/Time Objest in Go and Logic behind cutoff time
 	// Ref: https://play.golang.org/p/KJRigmHzu9
 
-	i, err := strconv.ParseInt(_CurrentTimeStamp, 10, 64)
+	_CurrentTimeStampHour, err := strconv.ParseInt(_CurrentTimeStamp, 10, 64)
 	if err != nil {
 		panic(err)
 	}
-	_CurrentTimeObj := time.Unix(i, 0)
-	fmt.Println("_CurrentTimeObj: ", _CurrentTimeObj)
 	var newTxStatus, newAllStatus string
 
 	for _, ValueTransaction := range TransactionsDataFetched {
 		if ValueTransaction.AllocationStatus == "Pending due to insufficient collateral" {
 
-			i, err := strconv.ParseInt(ValueTransaction.MarginCAllDate, 10, 64)
-			if err != nil {
-				panic(err)
-			}
-			_MarginCallTimeObj := time.Unix(i, 0)
-			fmt.Println("_MarginCallTimeObj: ", _MarginCallTimeObj)
-			fmt.Println("(_CurrentTimeObj.Hour()-_MarginCallTimeObj.Hour()): ", (_CurrentTimeObj.Hour()-_MarginCallTimeObj.Hour()))
-			if (_CurrentTimeObj.Hour()-_MarginCallTimeObj.Hour()) <= 24 && (_CurrentTimeObj.Hour()-_MarginCallTimeObj.Hour()) >= 0 {
+			if _CurrentTimeStampHour <=15 && _CurrentTimeStampHour >= 0 {
 				// New securites are uploaded in cutoff time
 				newTxStatus = "Ready"
 				newAllStatus = "Ready for Allocation"
@@ -311,7 +301,8 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 				"\""+ValueTransaction.CurrencyConversionRate+"\"",
 				ValueTransaction.MarginCAllDate,
 				newAllStatus,
-				newTxStatus)
+				newTxStatus,
+				"NA")
 			fmt.Println(ValueTransaction)
 			result, err := stub.InvokeChaincode(_DealChaincode, invokeArgs)
 			if err != nil {
@@ -618,38 +609,10 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		// value[0] => ConcentrationLimit
 		// value[1] => Priority
 		// value[2] => ValuationPercentage
-		var Priority_Pub, ConcentrationLimit_Pub, ValuationPercentage_Pub float64
-
-		PriorityPri := value[1]
-		Priority_Pub, errBool1 := strconv.ParseFloat(SecurityJSON[key]["Priority"], 64)
-		if errBool1 != nil {
-			fmt.Println(errBool1)
-		}
-
-		ConcentrationLimitPri := value[0]
-		ConcentrationLimit_Pub, errBool2 := strconv.ParseFloat(SecurityJSON[key]["Concentration Limit"], 64)
-		if errBool2 != nil {
-			fmt.Println(errBool2)
-		}
-
-		ValuationPercentagePri := value[2]
-		ValuationPercentage_Pub, errBool3 := strconv.ParseFloat(SecurityJSON[key]["Valuation Percentage"], 64)
-		if errBool3 != nil {
-			fmt.Println(errBool3)
-		}
-
-		// Check if privateset is subset of publicset
-		if Priority_Pub > PriorityPri && ConcentrationLimit_Pub > ConcentrationLimitPri && ValuationPercentage_Pub > ValuationPercentagePri {
-			errMsg := "{ \"message\" : \"Security Ruleset out of allowed values for: " + key + ".\", \"code\" : \"503\"}"
-			err = stub.SetEvent("errEvent", []byte(errMsg))
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			RQVEligibleValue[key] = (RQV * ConcentrationLimitPri) / 100
-			//fmt.Printf("inside checking privateRuleset is subset of publicRuleSet..")
-			//fmt.Printf("%#v", RQVEligibleValue[key])		
-		}
+		ConcentrationLimitPri := value["Concentration Limit"]
+		RQVEligibleValue[key] = (RQV * ConcentrationLimitPri) / 100
+		//fmt.Printf("inside checking privateRuleset is subset of publicRuleSet..")
+		//fmt.Printf("%#v", RQVEligibleValue[key])		
 	}
 	fmt.Println("RQVEligibleValue after calculation:")
 	fmt.Printf("%#v", RQVEligibleValue)
@@ -736,7 +699,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 			tempSecurity.MTM = stringArr[0]
 			// Storing the Value percentage in the security ruleset data itself
-			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'f', 2, 64)
+			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm]["Valuation Percentage"], 'f', 2, 64)
 			//convert valuePercentage(string) to float
 			tempValuePercentage, errBool := strconv.ParseFloat(tempSecurity.ValuePercentage, 64)
 			if errBool != nil {
@@ -791,7 +754,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				This is just for using the limited sorting application provided by GOlang
 				By no chance is this to be stored on Blockchain.
 			*/
-			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'f', 2, 64)
+			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm]["Valuation Percentage"], 'f', 2, 64)
 			fmt.Println("tempSecurity.ValuePercentage")
 			fmt.Println(tempSecurity.ValuePercentage)
 			// Append Securities to an array
@@ -872,7 +835,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				This is just for using the limited sorting application provided by GOlang
 				By no chance is this to be stored on Blockchain.
 			*/
-			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm][2], 'f', 2, 64)
+			tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm]["Valuation Percentage"], 'f', 2, 64)
 			fmt.Println("tempSecurity.ValuePercentage")
 			fmt.Println(tempSecurity.ValuePercentage)
 			// Append Securities to an array
@@ -929,7 +892,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		
 		// Update transaction's allocation status to "Pending due to insufficient collateral" and transaction status to "Pending"
 		f := "update_transaction"
-		invoke_args := util.ToChaincodeArgs(f, TransactionData.TransactionId,TransactionData.TransactionDate, TransactionData.DealID, TransactionData.Pledger,TransactionData.Pledgee, TransactionData.RQV, TransactionData.Currency,"\" \"", TransactionData.MarginCAllDate, "Pending due to insufficient collateral","Matched")
+		invoke_args := util.ToChaincodeArgs(f, TransactionData.TransactionId,TransactionData.TransactionDate, TransactionData.DealID, TransactionData.Pledger,TransactionData.Pledgee, TransactionData.RQV, TransactionData.Currency,"\" \"", TransactionData.MarginCAllDate, "Pending due to insufficient collateral","Matched","NA")
 		fmt.Println(TransactionData);
 		result, err := stub.InvokeChaincode(DealChaincode, invoke_args)
 		if err != nil {
@@ -1205,6 +1168,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			}
 
 			pledgerLongboxSecuritiesJson += `]`
+			compliance_status := "Regulatory Compliant"
+			totalValue_Pri := make(map[string]float64)
+			eligibleValue_Pub := make(map[string]float64)
 			reallocatedSecuritiesJson := `[`
 			// Update the new Securities to Pledgee Segregated A/c
 			for i, valueSecurity := range ReallocatedSecurities {
@@ -1236,7 +1202,55 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				if i < len(ReallocatedSecurities)-1 {
 					reallocatedSecuritiesJson += `,`
 				}
+				ConcentrationLimit_Pub, errBool1 := strconv.ParseFloat(SecurityJSON[valueSecurity.CollateralForm]["Concentration Limit"], 64)
+				if errBool1 != nil {
+					fmt.Println(errBool1)
+				}
+				//ConcentrationLimit_Pri := rulesetFetched.Security[valueSecurity.CollateralForm]["Concentration Limit"]
+				temp, errBool2 := strconv.ParseFloat(valueSecurity.MTM, 64)
+				if errBool2 != nil {
+					fmt.Println(errBool2)
+				}
+
+				ValuationPercentage_Pub, errBool3 := strconv.ParseFloat(SecurityJSON[valueSecurity.CollateralForm]["Valuation Percentage"], 64)
+				if errBool3 != nil {
+					fmt.Println(errBool3)
+				}
+
+				//ValuationPercentage_Pri := rulesetFetched.Security[valueSecurity.CollateralForm]["Valuation Percentage"]
+				effectiveValueChanged_Pri, errBool4 := strconv.ParseFloat(valueSecurity.EffectiveValueChanged, 64)
+				if errBool4 != nil {
+					fmt.Println(errBool4)
+				}
+				totalValuePri, errBool5 := strconv.ParseFloat(valueSecurity.TotalValue, 64)
+				if errBool5 != nil {
+					fmt.Println(errBool5)
+				}
+				exchange_rate := ConversionRate.Rates[valueSecurity.Currency]
+				if valueSecurity.Currency == RQVCurrency {
+					exchange_rate = 1
+				}
+				newMTM :=  temp/exchange_rate
+				fmt.Println("newMTM")
+				fmt.Println(newMTM)
+				// Effective Value =  (MTM(market Value) * valuePercentage)/100
+				effectiveValueChangedPub := (newMTM * ValuationPercentage_Pub)/100
+				fmt.Println("effectiveValueChangedPub")
+				fmt.Println(effectiveValueChangedPub)
+				if effectiveValueChangedPub < effectiveValueChanged_Pri{
+					compliance_status = "Regulatory Non-Compliant"
+				}
+				eligibleValuePub := ConcentrationLimit_Pub * RQV
+				totalValue_Pri[valueSecurity.CollateralForm] += totalValuePri
+				eligibleValue_Pub[valueSecurity.CollateralForm] += eligibleValuePub
+
 			}
+			for key := range totalValue_Pri{
+				if totalValue_Pri[key] < eligibleValue_Pub[key] {
+					compliance_status = "Regulatory Non-Compliant"	
+				}
+			}
+
 			reallocatedSecuritiesJson += `]`
 
 			//-----------------------------------------------------------------------------
@@ -1257,7 +1271,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				ConversionRateAsString,
 				TransactionData.MarginCAllDate,
 				"Allocation Successful",
-				"Completed")
+				"Completed",
+				compliance_status)
 			fmt.Println(TransactionData)
 			res, err := stub.InvokeChaincode(DealChaincode, invoke_args)
 			if err != nil {
@@ -1268,11 +1283,13 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			fmt.Print("Update transaction returned hash: ")
 			fmt.Println(res)
 			fmt.Println("Successfully updated allocation status to 'Allocation Successful'")
-
-			reportInJson += `"pledgerLongboxSecurities" : ` + pledgerLongboxSecuritiesJson + `,`
-			reportInJson += `"pledgeeSegregatedSecurities" : ` + reallocatedSecuritiesJson + `,`
-			reportInJson += `"allocationDate" : ` + MarginCallTimpestamp + `,`
-			reportInJson += `"allocationStatus" : "Allocation Successful"`
+			
+			
+			reportInJson += `"Pledger Longbox Securities" : ` + pledgerLongboxSecuritiesJson + `,`
+			reportInJson += `"Pledgee Segregated Securities" : ` + reallocatedSecuritiesJson + `,`
+			reportInJson += `"Allocation Date" : ` + MarginCallTimpestamp + `,`
+			reportInJson += `"Allocation Status" : "Allocation Successful"` + `,`
+			reportInJson += `"Compliance Status" : ` + compliance_status 
 			reportInJson += `}`
 			fmt.Println(reportInJson)
 
@@ -1283,7 +1300,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			}
 		} else {
 			f := "update_transaction"
-			invoke_args := util.ToChaincodeArgs(f, TransactionData.TransactionId, TransactionData.TransactionDate, TransactionData.DealID, TransactionData.Pledger, TransactionData.Pledgee, TransactionData.RQV, TransactionData.Currency, "\" \"", TransactionData.MarginCAllDate, "Pending due to insufficient collateral", "Matched")
+			invoke_args := util.ToChaincodeArgs(f, TransactionData.TransactionId, TransactionData.TransactionDate, TransactionData.DealID, TransactionData.Pledger, TransactionData.Pledgee, TransactionData.RQV, TransactionData.Currency, "\" \"", TransactionData.MarginCAllDate, "Pending due to insufficient collateral", "Matched","NA")
 			fmt.Println(TransactionData)
 			result, err := stub.InvokeChaincode(DealChaincode, invoke_args)
 			if err != nil {
