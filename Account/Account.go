@@ -597,14 +597,16 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		}
 	res := Securities{}
 	json.Unmarshal(SecurityAsBytes, &res)
-	if res.SecurityId == _securityId{
+
+	// NOTE:: This is not required as Securities can be added, hence remove check for already existing
+	/*if res.SecurityId == _securityId{
 		errMsg := "{ \"SecurityId\" : \""+_securityId+"\",\"message\" : \"This Security already exists\", \"code\" : \"503\"}"
 		err := stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
 		} 
 		return nil, nil				//all stop a Account by this name exists
-	}
+	}*/
 	
 	//build the Account json string manually
 	order := 	`{`+
@@ -723,13 +725,26 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 		return nil, errors.New("Failed to get Account " + _accountNumber)
 	}
 	res := Accounts{}
+	res_Security := Securities{}
 	json.Unmarshal(AccountAsBytes, &res)
+	totalValueOfTheDeletedSecurities, _ := strconv.ParseFloat(res.TotalValue,64)
 	_SecuritySplit := strings.Split(res.Securities, ",")
 	fmt.Print("_SecuritySplit: " )
 	fmt.Println(_SecuritySplit)
 	for i:=0;i<len(_SecuritySplit);{
 		fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
-		err := stub.DelState(_SecuritySplit[i])													//remove the key from chaincode state
+
+		//Get the total value of the securities
+		SecuritiesAsBytes, err := stub.GetState(_SecuritySplit[i])
+		if err != nil {
+			return nil, errors.New("Failed to get Security " + _SecuritySplit[i])
+		}
+		json.Unmarshal(SecuritiesAsBytes, &res_Security)
+		valToBeRemoved, _ := strconv.ParseFloat(res_Security.Totalvalue, 64)
+		totalValueOfTheDeletedSecurities = totalValueOfTheDeletedSecurities - valToBeRemoved
+
+		//Got the info. now delete
+		err = stub.DelState(_SecuritySplit[i])													//remove the key from chaincode state
 		if err != nil {
 			errMsg := "{ \"security\" : \"" + _SecuritySplit[i] + "\", \"message\" : \"Failed to delete state\", \"code\" : \"503\"}"
 			err = stub.SetEvent("errEvent", []byte(errMsg))
@@ -750,22 +765,26 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 	res.Securities = strings.Join(_SecuritySplit,",");
 	fmt.Println(res.Securities)
 	fmt.Println(_SecuritySplit)
+	fmt.Println("totalValueOfTheDeletedSecurities::")
+	fmt.Println(totalValueOfTheDeletedSecurities)
+	
 	//build the Account json string manually
-	order := 	`{`+
+	account_json := 	`{`+
 		`"accountId": "` + res.AccountID + `" ,`+
 		`"accountName": "` + res.AccountName + `" ,`+
 		`"accountNumber": "` + res.AccountNumber + `" ,`+
 		`"accountType": "` + res.AccountType + `" ,`+
-		`"totalValue": "` + res.TotalValue + `" ,`+
+		`"totalValue": "` + strconv.FormatFloat(totalValueOfTheDeletedSecurities, 'f', 2, 64) + `" ,`+
 		`"currency": "` + res.Currency + `" ,`+
 		`"pledger": "` + res.Pledger + `" ,`+
 		`"securities": "`+ res.Securities +`" `+
 		`}`
-	fmt.Println("order: " + order)
-	err = stub.PutState(_accountNumber, []byte(order))									//store Account with _accountNumber as key
+	fmt.Println("account_json: " + account_json)
+	err = stub.PutState(_accountNumber, []byte(account_json))									//store Account with _accountNumber as key
 	if err != nil {
 		return nil, err
 	}
+
 	tosend := "{ \"AccountNumber\" : \""+_accountNumber+"\", \"message\" : \"All securities deleted succcesfully!\", \"code\" : \"200\"}"
 	err = stub.SetEvent("evtsender", []byte(tosend))
 	if err != nil {
