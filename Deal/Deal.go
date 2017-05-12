@@ -1102,8 +1102,14 @@ func(t * ManageDeals) update_transaction(stub shim.ChaincodeStubInterface, args[
 	        return nil,nil
 	    }
 	    json.Unmarshal(dealAsBytes, &res_Deal)
+        var allocationDate string
+	    if args[9] == "Allocation Successful" {
+		    allocationDate = time.Now().String()
+	    } else {
+		    allocationDate = "NA"
+	    }
+		    //build the Deal json string manually
 
-		//build the Deal json string manually
         deal_json := `{` + 
             `"dealId": "` + res_Deal.DealID + `" , ` + 
             `"pledger": "` + res_Deal.Pledger + `" , ` + 
@@ -1112,7 +1118,7 @@ func(t * ManageDeals) update_transaction(stub shim.ChaincodeStubInterface, args[
             `"totalValueLongBoxAccount": "` + res_Deal.TotalValueLongBoxAccount + `" , ` + 
             `"totalValueSegregatedAccount": "` + res_Deal.TotalValueSegregatedAccount + `" , ` +
             `"issueDate": "` + res_Deal.IssueDate + `" , ` + 
-            `"lastSuccessfulAllocationDate": ` + time.Now().String() + ` , ` +  
+            `"lastSuccessfulAllocationDate": ` + allocationDate + ` , ` +  
             `"transactions": "` + res_Deal.Transactions + `" ` + 
         `}`
         fmt.Println(deal_json)
@@ -1142,10 +1148,9 @@ func(t * ManageDeals) update_transaction(stub shim.ChaincodeStubInterface, args[
 // ============================================================================================================================
 func(t * ManageDeals) update_transaction_AllocationStatus(stub shim.ChaincodeStubInterface, args[] string)([] byte, error) {
     var err error
-    var _complianceStatus string
     fmt.Println(" update_transaction_AllocationStatus")
-    if len(args) != 3 {
-        errMsg:= "{ \"message\" : \"Incorrect number of arguments. Expecting 3\", \"code\" : \"503\"}"
+    if len(args) != 2 {
+        errMsg:= "{ \"message\" : \"Incorrect number of arguments. Expecting 2\", \"code\" : \"503\"}"
         err = stub.SetEvent("errEvent", [] byte(errMsg))
         if err != nil {
             return nil, err
@@ -1165,16 +1170,7 @@ func(t * ManageDeals) update_transaction_AllocationStatus(stub shim.ChaincodeStu
     }
 
     _allocationStatus := args[1];
-    _complianceFlag := args[2]; 
-    
-    if _allocationStatus == "Allocation Successful" && _complianceFlag == "true" {
-        _complianceStatus = "Regulatory Compliant"
-    } else if _allocationStatus == "Allocation Successful" && _complianceFlag == "false" {
-        _complianceStatus = "Regulatory Non-Compliant"
-    } else {
-    	_complianceStatus = "NA"
-    }
-
+   
     //fmt.Print("dealAsBytes in update Deal")
     //fmt.Println(dealAsBytes);
     res:= Transactions {}
@@ -1196,7 +1192,7 @@ func(t * ManageDeals) update_transaction_AllocationStatus(stub shim.ChaincodeStu
             `"marginCAllDate": "` + res.MarginCAllDate + `" , ` + 
             `"allocationStatus": "` + _allocationStatus + `" , ` + 
             `"transactionStatus": "` + res.TransactionStatus + `" , ` + 
-            `"complianceStatus": "` + _complianceStatus + `" ` + 
+            `"complianceStatus": "` + res.ComplianceStatus + `" ` + 
         `}`
         fmt.Println(transaction_json);
         err = stub.PutState(_transactionId, [] byte(transaction_json)) //store Deal with id as key
