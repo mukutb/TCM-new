@@ -1111,7 +1111,7 @@ func(t * ManageDeals) update_transaction(stub shim.ChaincodeStubInterface, args[
 		    allocationDate = "NA"
 	    }
 		    //build the Deal json string manually
-
+	    _allocationDate := strconv.FormatInt(allocationDate,10)
         deal_json := `{` + 
             `"dealId": "` + res_Deal.DealID + `" , ` + 
             `"pledger": "` + res_Deal.Pledger + `" , ` + 
@@ -1120,7 +1120,7 @@ func(t * ManageDeals) update_transaction(stub shim.ChaincodeStubInterface, args[
             `"totalValueLongBoxAccount": "` + res_Deal.TotalValueLongBoxAccount + `" , ` + 
             `"totalValueSegregatedAccount": "` + res_Deal.TotalValueSegregatedAccount + `" , ` +
             `"issueDate": "` + res_Deal.IssueDate + `" , ` + 
-	    `"lastSuccessfulAllocationDate": "` + allocationDate.String() + `" , ` +  
+	    `"lastSuccessfulAllocationDate": "` + _allocationDate + `" , ` +  
             `"transactions": "` + res_Deal.Transactions + `" ` + 
         `}`
         fmt.Println(deal_json)
