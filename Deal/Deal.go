@@ -1043,9 +1043,10 @@ func (t *ManageDeals) deleteTransactions(stub shim.ChaincodeStubInterface, args 
 func(t * ManageDeals) update_transaction(stub shim.ChaincodeStubInterface, args[] string)([] byte, error) {
     var err error
     fmt.Println(" update_transaction")
-    if len(args) != 11 {
-        errMsg:= "{ \"message\" : \"Incorrect number of arguments. Expecting 11\", \"code\" : \"503\"}"
-        err = stub.SetEvent("errEvent", [] byte(errMsg))
+    if len(args) != 12 {
+        errMsg:= "{ \"message\" : \"Incorrect number of arguments. Expecting 12\", \"code\" : \"503\"}"
+	fmt.Println(errMsg)
+	err = stub.SetEvent("errEvent", [] byte(errMsg))
         if err != nil {
             return nil, err
         }
@@ -1053,7 +1054,8 @@ func(t * ManageDeals) update_transaction(stub shim.ChaincodeStubInterface, args[
     }
     // set _transactionId
     _transactionId:= args[0]
-    transAsBytes, err:= stub.GetState(_transactionId) //get the Transaction for the specified _transactionId from chaincode state
+    fmt.Println(args)
+	transAsBytes, err:= stub.GetState(_transactionId) //get the Transaction for the specified _transactionId from chaincode state
     if err != nil {
         errMsg:= "{ \"message\" : \"Failed to get state for " + _transactionId + "\", \"code\" : \"503\"}"
         err = stub.SetEvent("errEvent", [] byte(errMsg))
