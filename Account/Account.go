@@ -643,14 +643,15 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		fmt.Println(_SecuritySplit)
 		for i := range _SecuritySplit{
 			fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
-			if _SecuritySplit[i] == _accountNumber+"-"+_securityId {
+			fmt.Println("Security already exists")
+			/*if _SecuritySplit[i] == _accountNumber+"-"+_securityId {
 				errMsg := "{ \"SecurityId\" : \""+_accountNumber+"-"+_securityId+"\",\"message\" : \" SecurityId already exists in the account.\", \"code\" : \"503\"}"
 				err = stub.SetEvent("errEvent", []byte(errMsg))
 				if err != nil {
 					return nil, err
 				} 
 				return nil, nil
-			}
+			}*/
 		}
 	}else{
 		errMsg := "{ \"message\" : \""+ _accountNumber+ " Not Found.\", \"code\" : \"503\"}"
