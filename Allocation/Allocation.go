@@ -47,6 +47,7 @@ type Transactions struct {
 	MarginCAllDate         string `json:"marginCAllDate"`
 	AllocationStatus       string `json:"allocationStatus"`
 	TransactionStatus      string `json:"transactionStatus"`
+	ComplianceStatus      string `json:"complianceStatus"`
 }
 
 type Deals struct { // Attributes of a Allocation
