@@ -1221,8 +1221,8 @@ func(t * ManageDeals) update_transaction_AllocationStatus(stub shim.ChaincodeStu
 func(t * ManageDeals) create_transaction(stub shim.ChaincodeStubInterface, args[] string)([] byte, error) {
     var err error
     var _allocationStatus string
-    if len(args) != 10 {
-        errMsg:= "{ \"message\" : \"Incorrect number of arguments. Expecting 10\", \"code\" : \"503\"}"
+    if len(args) != 9 {
+        errMsg:= "{ \"message\" : \"Incorrect number of arguments. Expecting 9\", \"code\" : \"503\"}"
         err = stub.SetEvent("errEvent", [] byte(errMsg))
         if err != nil {
             return nil, err
