@@ -428,18 +428,18 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	fmt.Println("RQVCurrency : ", RQVCurrency)
 	//-----------------------------------------------------------------------------
 
-	reportInJson += `"dealId" : "` + DealID + `",`
-	reportInJson += `"transactionId" : "` + TransactionID + `",`
-	reportInJson += `"marginCallDate" : "` + MarginCallTimpestamp + `",`
-	reportInJson += `"pledgee" : "` + Pledgee + `",`
-	reportInJson += `"pledger" : "` + Pledger + `",`
-	reportInJson += `"pledgerLongboxAccount" : "` + PledgerLongboxAccount + `",`
-	reportInJson += `"pledgeeSegregatedAccount" : "` + PledgeeSegregatedAccount + `",`
+	reportInJson += `"Deal ID" : "` + DealID + `",`
+	reportInJson += `"Transaction ID" : "` + TransactionID + `",`
+	reportInJson += `"Margin Call Date" : "` + MarginCallTimpestamp + `",`
+	reportInJson += `"Pledgee" : "` + Pledgee + `",`
+	reportInJson += `"Pledger" : "` + Pledger + `",`
+	reportInJson += `"Pledger Longbox Account" : "` + PledgerLongboxAccount + `",`
+	reportInJson += `"Pledgee Segregated Account" : "` + PledgeeSegregatedAccount + `",`
 	reportInJson += `"RQV" : "` + strconv.FormatFloat(RQV, 'f', 2, 64) + `",`
 	reportInJson += `"Currency" : "` + TransactionData.Currency + `",`
 
 	// SecurityJSON to String https://play.golang.org/p/_C21BONfZk
-	reportInJson += `"publicRuleSet" : {"US Treasury Bills":{"Valuation Percentage":"95","Concentration Limit":"25","Priority":"4"},"US Treasury Notes":{"Concentration Limit":"25","Priority":"6","Valuation Percentage":"95"},"Gilt":{"Priority":"7","Valuation Percentage":"94","Concentration Limit":"25"},"Common Stocks":{"Valuation Percentage":"97","Concentration Limit":"40","Priority":"1"},"Federal Agency Bonds":{"Concentration Limit":"20","Priority":"8","Valuation Percentage":"93"},"Convertible Bonds":{"Concentration Limit":"20","Priority":"11","Valuation Percentage":"90"},"Revenue Bonds":{"Concentration Limit":"15","Priority":"12","Valuation Percentage":"90"},"Medium Term Note":{"Priority":"13","Valuation Percentage":"89","Concentration Limit":"15"},"Corporate Bonds":{"Valuation Percentage":"97","Concentration Limit":"30","Priority":"2"},"Global Bonds":{"Concentration Limit":"20","Priority":"9","Valuation Percentage":"92"},"Builder Bonds":{"Concentration Limit":"15","Priority":"15","Valuation Percentage":"85"},"Sovereign Bonds":{"Concentration Limit":"25","Priority":"3","Valuation Percentage":"95"},"US Treasury Bonds":{"Priority":"5","Valuation Percentage":"95","Concentration Limit":"25"},"Preferrred Shares":{"Concentration Limit":"20","Priority":"10","Valuation Percentage":"91"},"Short Term Investments":{"Valuation Percentage":"87","Concentration Limit":"15","Priority":"14"}} ,`
+	reportInJson += `"Public Rule Set" : {"US Treasury Bills":{"Valuation Percentage":"95","Concentration Limit":"25","Priority":"4"},"US Treasury Notes":{"Concentration Limit":"25","Priority":"6","Valuation Percentage":"95"},"Gilt":{"Priority":"7","Valuation Percentage":"94","Concentration Limit":"25"},"Common Stocks":{"Valuation Percentage":"97","Concentration Limit":"40","Priority":"1"},"Federal Agency Bonds":{"Concentration Limit":"20","Priority":"8","Valuation Percentage":"93"},"Convertible Bonds":{"Concentration Limit":"20","Priority":"11","Valuation Percentage":"90"},"Revenue Bonds":{"Concentration Limit":"15","Priority":"12","Valuation Percentage":"90"},"Medium Term Note":{"Priority":"13","Valuation Percentage":"89","Concentration Limit":"15"},"Corporate Bonds":{"Valuation Percentage":"97","Concentration Limit":"30","Priority":"2"},"Global Bonds":{"Concentration Limit":"20","Priority":"9","Valuation Percentage":"92"},"Builder Bonds":{"Concentration Limit":"15","Priority":"15","Valuation Percentage":"85"},"Sovereign Bonds":{"Concentration Limit":"25","Priority":"3","Valuation Percentage":"95"},"US Treasury Bonds":{"Priority":"5","Valuation Percentage":"95","Concentration Limit":"25"},"Preferrred Shares":{"Concentration Limit":"20","Priority":"10","Valuation Percentage":"91"},"Short Term Investments":{"Valuation Percentage":"87","Concentration Limit":"15","Priority":"14"}} ,`
 	//-----------------------------------------------------------------------------
 
 	// Update allocation status to "Allocation in progress"
@@ -501,7 +501,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	if err != nil {
 		fmt.Println(err)
 	}
-	reportInJson += `"privateRuleset" : ` + string(resbody) + `,`
+	reportInJson += `"Private Rule set" : ` + string(resbody) + `,`
 
 	// Callers should close resp.Body when done reading from it
 	// Defer the closing of the body
@@ -509,6 +509,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 	fmt.Println("Ruleset : ")
 	fmt.Println(rulesetFetched)
+	fmt.Println(resbody)
 
 	//-----------------------------------------------------------------------------
 
@@ -591,7 +592,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	if err != nil {
 		fmt.Println(err)
 	}
-	reportInJson += `"currencyConversionRate" : ` + string(respbody) + `,`
+	reportInJson += `"Currency Conversion Rate" : ` + string(respbody) + `,`
 
 	// Callers should close resp.Body when done reading from it
 	// Defer the closing of the body
