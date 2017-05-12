@@ -1106,7 +1106,7 @@ func(t * ManageDeals) update_transaction(stub shim.ChaincodeStubInterface, args[
 	    json.Unmarshal(dealAsBytes, &res_Deal)
         var allocationDate string
 	    if args[9] == "Allocation Successful" {
-		    allocationDate = time.Now().String()
+		    allocationDate = time.Now().Unix()
 	    } else {
 		    allocationDate = "NA"
 	    }
