@@ -277,6 +277,7 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 	var newTxStatus, newAllStatus string
 
 	for _, ValueTransaction := range TransactionsDataFetched {
+
 		if ValueTransaction.AllocationStatus == "Pending due to insufficient collateral" {
 
 			if _CurrentTimeStampHour <=15 && _CurrentTimeStampHour >= 0 {
@@ -1273,7 +1274,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				TransactionData.MarginCAllDate,
 				"Allocation Successful",
 				"Completed",
-				compliance_status)
+				"\""+compliance_status+"\"")
 			fmt.Println(TransactionData)
 			res, err := stub.InvokeChaincode(DealChaincode, invoke_args)
 			if err != nil {
