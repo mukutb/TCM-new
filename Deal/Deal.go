@@ -136,8 +136,8 @@ func(t * ManageDeals) Invoke(stub shim.ChaincodeStubInterface, function string, 
         return t.update_transaction_AllocationStatus(stub, args)
     } else if function == "addTransaction_inDeal" { //add transactions to a deal
         return t.addTransaction_inDeal(stub, args)
-    } else if function == "deleteTransactions" { //delete transactions
-        return t.deleteTransactions(stub, args)
+    } else if function == "deleteTransaction" { //delete transactions
+        return t.deleteTransaction(stub, args)
     } else if function == "deleteDeal" { //delete deal
         return t.deleteDeal(stub, args)
     }
@@ -972,22 +972,24 @@ func (t *ManageDeals) deleteDeal(stub shim.ChaincodeStubInterface, args []string
 	return nil, nil
 }
 // ============================================================================================================================
-// Delete - remove transactions from chain
+// deleteTransaction - remove a Transaction from state and then remove from a Deal
 // ============================================================================================================================
-func (t *ManageDeals) deleteTransactions(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	if len(args) != 1 {
-		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting 'dealId' as an argument\", \"code\" : \"503\"}"
+
+func (t *ManageDeals) deleteTransaction(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	if len(args) != 2 {
+		errMsg := "{ \"message\" : \"Incorrect number of arguments. Expecting \"transactionId,dealId\" arguments.\", \"code\" : \"503\"}"
 		err := stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
 		} 
 		return nil, nil
 	}
-	// set dealId
-	dealId := args[0]
-	err := stub.DelState(dealId)						//remove the Deal from chaincode
+	// set transactionId and dealId
+	_transactionId := args[0];
+	_dealId := args[1];
+	err := stub.DelState(_transactionId)											//remove the key from chaincode state
 	if err != nil {
-		errMsg := "{ \"message\" : \"Failed to delete state\", \"code\" : \"503\"}"
+		errMsg := "{ \"TransactionId\" : \"" + _transactionId + "\", \"message\" : \"Failed to delete state\", \"code\" : \"503\"}"
 		err = stub.SetEvent("errEvent", []byte(errMsg))
 		if err != nil {
 			return nil, err
@@ -995,48 +997,59 @@ func (t *ManageDeals) deleteTransactions(stub shim.ChaincodeStubInterface, args 
 		return nil, nil
 	}
 
-	//get the Deal index
-	dealAsBytes, err := stub.GetState(DealIndexStr)
+	//get the dealId details
+	dealAsBytes, err := stub.GetState(_dealId)
 	if err != nil {
-		errMsg := "{ \"message\" : \"Failed to get Deal index\", \"code\" : \"503\"}"
-		err = stub.SetEvent("errEvent", []byte(errMsg))
-		if err != nil {
-			return nil, err
-		} 
-		return nil, nil
+		return nil, errors.New("Failed to get deal ID")
 	}
-	res := Deals{}
-	json.Unmarshal(dealAsBytes, &res)								//un stringify it aka JSON.parse()
-	_TransactionsSplit := strings.Split(res.Transactions, ",")
-	fmt.Print("_TransactionsSplit: " )
-	fmt.Println(_TransactionsSplit)
-	for i:=0;i<len(_TransactionsSplit);{
-		fmt.Println("_TransactionsSplit[i]: " + _TransactionsSplit[i])
-		err := stub.DelState(_TransactionsSplit[i])													//remove the key from chaincode state
-		if err != nil {
-			errMsg := "{ \"transactions\" : \"" + _TransactionsSplit[i] + "\", \"message\" : \"Failed to delete state\", \"code\" : \"503\"}"
-			err = stub.SetEvent("errEvent", []byte(errMsg))
-			if err != nil {
-				return nil, err
-			} 
-			return nil, nil
-		}
-		_TransactionsSplit = append(_TransactionsSplit[:i], _TransactionsSplit[i+1:]...)			//remove it
-		fmt.Println(_TransactionsSplit)
-		for x:= range _TransactionsSplit{											//debug prints...
-			fmt.Println(string(x) + " - " + _TransactionsSplit[x])
+	valIndex := Deals{}
+	json.Unmarshal(dealAsBytes, &valIndex)	
+	_TransactionSplit := strings.Split(valIndex.Transactions, ",")
+	fmt.Print("_TransactionSplit: " )
+	fmt.Println(_TransactionSplit)
+	for i := range _TransactionSplit{
+		fmt.Println("_TransactionSplit[i]: " + _TransactionSplit[i])
+		if _TransactionSplit[i] == _transactionId {
+			fmt.Println("Transaction Found.");
+			_TransactionSplit = append(_TransactionSplit[:i], _TransactionSplit[i+1:]...)			//remove it
+			fmt.Println(_TransactionSplit[:i])
+			fmt.Println(_TransactionSplit)
+			for x:= range _TransactionSplit{											//debug prints...
+				fmt.Println(string(x) + " - " + _TransactionSplit[x])
+			}
+			break
 		}
 	}
+	fmt.Println(_TransactionSplit);
+	valIndex.Transactions = strings.Join(_TransactionSplit,",");
+	fmt.Println(_TransactionSplit);
+	//build the Account json string manually
 
-	tosend := "{ \"dealID\" : \""+dealId+"\", \"message\" : \"Deal and its Transactions deleted succcessfully\", \"code\" : \"200\"}"
+	order := 	`{`+
+		`"dealId": "` + valIndex.DealID + `" ,`+
+		`"pledger": "` + valIndex.Pledger + `" ,`+
+		`"pledgee": "` + valIndex.Pledgee + `" ,`+
+		`"maxValue": "` + valIndex.MaxValue + `" ,`+
+		`"totalValueLongBoxAccount": "` + valIndex.TotalValueLongBoxAccount + `" ,`+
+		`"totalValueSegregatedAccount": "` + valIndex.TotalValueSegregatedAccount + `" ,`+
+		`"issueDate": "` + valIndex.IssueDate + `" ,`+
+		`"lastSuccessfulAllocationDate": "`+ valIndex.LastSuccessfulAllocationDate +`" ,`+
+		`"transactions": "`+ valIndex.Transactions +`" `+
+		`}`
+		
+	fmt.Println("order: " + order)
+	err = stub.PutState(_dealId, []byte(order))									//store Account with _accountNumber as key
+	if err != nil {
+		return nil, err
+	}
+	tosend := "{ \"DealID\" : \""+_dealId+"\", \"message\" : \"Transaction deleted from deal succcessfully\", \"code\" : \"200\"}"
 	err = stub.SetEvent("evtsender", []byte(tosend))
 	if err != nil {
 		return nil, err
 	} 
-
-	fmt.Println("Deal and its Transactions deleted succcessfully")
 	return nil, nil
 }
+
 // ============================================================================================================================
 // update_transaction - update Transaction into chaincode state
 // ============================================================================================================================
