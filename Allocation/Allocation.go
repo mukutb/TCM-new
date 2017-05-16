@@ -274,19 +274,17 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 	if err != nil {
 		panic(err)
 	}
-	var newTxStatus, newAllStatus string
+	var newAllStatus string
 
 	for _, ValueTransaction := range TransactionsDataFetched {
 
 		if ValueTransaction.AllocationStatus == "Pending due to insufficient collateral" {
 
-			if _CurrentTimeStampHour <=15 && _CurrentTimeStampHour >= 0 {
+			if _CurrentTimeStampHour <=18 && _CurrentTimeStampHour >= 0 {
 				// New securites are uploaded in cutoff time
-				newTxStatus = "Ready"
 				newAllStatus = "Ready for Allocation"
 			} else {
 				// New securities not uploaded in cutoff time
-				newTxStatus = "Failed"
 				newAllStatus = "Allocation Failed"
 			}
 
@@ -303,7 +301,7 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 				"\""+ValueTransaction.CurrencyConversionRate+"\"",
 				ValueTransaction.MarginCAllDate,
 				newAllStatus,
-				newTxStatus,
+				ValueTransaction.TransactionStatus,
 				"NA")
 			fmt.Println(ValueTransaction)
 			result, err := stub.InvokeChaincode(_DealChaincode, invokeArgs)
@@ -314,7 +312,6 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 			}
 			fmt.Println("Transaction hash returned: ", result)
 			fmt.Println(ValueTransaction.TransactionId + " updated with AllocationStatus as " + newAllStatus)
-			fmt.Println(ValueTransaction.TransactionId + " updated with TransactionStatus as " + newTxStatus)
 
 			//Sending event call
 			tosend := "{ \"transactionId\" : \"" + ValueTransaction.TransactionId + "\", \"message\" : \"Transaction updated succcessfully with Allocation Status as " + newAllStatus + " \", \"code\" : \"200\"}"
