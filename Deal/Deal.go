@@ -918,49 +918,83 @@ func (t *ManageDeals) deleteDeal(stub shim.ChaincodeStubInterface, args []string
 		return nil, nil
 	}
 	// set dealId
-	dealId := args[0]
-	err := stub.DelState(dealId)						//remove the Deal from chaincode
-	if err != nil {
-		errMsg := "{ \"message\" : \"Failed to delete state\", \"code\" : \"503\"}"
-		err = stub.SetEvent("errEvent", []byte(errMsg))
-		if err != nil {
-			return nil, err
-		} 
-		return nil, nil
-	}
+    dealId := args[0]
+    dealAsBytes, err := stub.GetState(dealId)
+    if err != nil {
+        errMsg := "{ \"message\" : \"Failed to get Deal ID\", \"code\" : \"503\"}"
+        err = stub.SetEvent("errEvent", []byte(errMsg))
+        if err != nil {
+            return nil, err
+        } 
+        return nil, nil
+    }
+	valIndex := Deals{}
+    json.Unmarshal(dealAsBytes, &valIndex)  
+    _TransactionSplit := strings.Split(valIndex.Transactions, ",")
+    fmt.Print("_TransactionSplit: " )
+    fmt.Println(_TransactionSplit)
+    for i := range _TransactionSplit{
+        fmt.Println("_TransactionSplit[i]: " + _TransactionSplit[i])
+        err := stub.DelState(_TransactionSplit[i])                        //remove the transaction from chaincode
+        if err != nil {
+            errMsg := "{ \"message\" : \"Failed to delete state\", \"code\" : \"503\"}"
+            err = stub.SetEvent("errEvent", []byte(errMsg))
+            if err != nil {
+                return nil, err
+            } 
+            return nil, nil
+        }
+        _TransactionSplit = append(_TransactionSplit[:i], _TransactionSplit[i+1:]...)           //remove it
+        fmt.Println(_TransactionSplit[:i])
+        fmt.Println(_TransactionSplit)
+        for x:= range _TransactionSplit{                                            //debug prints...
+            fmt.Println(string(x) + " - " + _TransactionSplit[x])
+        }
+    }
+    fmt.Println(_TransactionSplit);
+    valIndex.Transactions = strings.Join(_TransactionSplit,",");
+    fmt.Println(valIndex.Transactions);
+    err = stub.DelState(dealId)                        //remove the Deal from chaincode
+    if err != nil {
+        errMsg := "{ \"message\" : \"Failed to delete state\", \"code\" : \"503\"}"
+        err = stub.SetEvent("errEvent", []byte(errMsg))
+        if err != nil {
+            return nil, err
+        } 
+        return nil, nil
+    }
 
-	//get the Deal index
-	dealAsBytes, err := stub.GetState(DealIndexStr)
-	if err != nil {
-		errMsg := "{ \"message\" : \"Failed to get Deal index\", \"code\" : \"503\"}"
-		err = stub.SetEvent("errEvent", []byte(errMsg))
-		if err != nil {
-			return nil, err
-		} 
-		return nil, nil
-	}
-	res := Deals{}
-	json.Unmarshal(dealAsBytes, &res)								//un stringify it aka JSON.parse()
-	_TransactionsSplit := strings.Split(res.Transactions, ",")
-	fmt.Print("_TransactionsSplit: " )
-	fmt.Println(_TransactionsSplit)
-	for i:=0;i<len(_TransactionsSplit);{
-		fmt.Println("_TransactionsSplit[i]: " + _TransactionsSplit[i])
-		err := stub.DelState(_TransactionsSplit[i])													//remove the key from chaincode state
-		if err != nil {
-			errMsg := "{ \"transactions\" : \"" + _TransactionsSplit[i] + "\", \"message\" : \"Failed to delete state\", \"code\" : \"503\"}"
-			err = stub.SetEvent("errEvent", []byte(errMsg))
-			if err != nil {
-				return nil, err
-			} 
-			return nil, nil
-		}
-		_TransactionsSplit = append(_TransactionsSplit[:i], _TransactionsSplit[i+1:]...)			//remove it
-		fmt.Println(_TransactionsSplit)
-		for x:= range _TransactionsSplit{											//debug prints...
-			fmt.Println(string(x) + " - " + _TransactionsSplit[x])
-		}
-	}
+    //get the Deal index
+    dealsAsBytes, err := stub.GetState(DealIndexStr)
+    if err != nil {
+        errMsg := "{ \"message\" : \"Failed to get Deal index\", \"code\" : \"503\"}"
+        err = stub.SetEvent("errEvent", []byte(errMsg))
+        if err != nil {
+            return nil, err
+        } 
+        return nil, nil
+    }
+    //fmt.Println("dealAsBytes in delete deal")
+    //fmt.Println(dealAsBytes);
+    var dealIndex []string
+    json.Unmarshal(dealsAsBytes, &dealIndex)                             //un stringify it aka JSON.parse()
+    //fmt.Println("dealIndex in delete deal")
+    //fmt.Println(dealIndex);
+    //remove deal from index
+    for i,val := range dealIndex{
+        fmt.Println(strconv.Itoa(i) + " - looking at " + val + " for " + dealId)
+        if val == dealId{                                                          //find the correct Deal
+            fmt.Println("found Deal with matching dealId")
+            dealIndex = append(dealIndex[:i], dealIndex[i+1:]...)         //remove it
+            for x:= range dealIndex{                                          //debug prints...
+                fmt.Println(string(x) + " - " + dealIndex[x])
+            }
+            break
+        }
+    }
+    jsonAsBytes, _ := json.Marshal(dealIndex)                                 //save new index
+    err = stub.PutState(DealIndexStr, jsonAsBytes)
+    
 
 	tosend := "{ \"dealID\" : \""+dealId+"\", \"message\" : \"Deal and its Transactions deleted succcessfully\", \"code\" : \"200\"}"
 	err = stub.SetEvent("evtsender", []byte(tosend))
@@ -996,6 +1030,29 @@ func (t *ManageDeals) deleteTransaction(stub shim.ChaincodeStubInterface, args [
 		} 
 		return nil, nil
 	}
+    // remove transaction from transactionIndexStr
+    transactionsAsBytes, err := stub.GetState(transactionIndexStr)
+    if err != nil {
+        return nil, errors.New("Failed to get Transaction index")
+    }
+    var transactionIndex []string
+    json.Unmarshal(transactionsAsBytes, &transactionIndex)                             //un stringify it aka JSON.parse()
+    //fmt.Println("transactionIndex in delete transaction")
+    //fmt.Println(transactionIndex);
+    //remove transaction from index
+    for i,val := range transactionIndex{
+        fmt.Println(strconv.Itoa(i) + " - looking at " + val + " for " + _transactionId)
+        if val == _transactionId{                                                          //find the correct PO
+            fmt.Println("found transaction with matching transactionId")
+            transactionIndex = append(transactionIndex[:i], transactionIndex[i+1:]...)         //remove it
+            for x:= range transactionIndex{                                          //debug prints...
+                fmt.Println(string(x) + " - " + transactionIndex[x])
+            }
+            break
+        }
+    }
+    jsonAsBytes, _ := json.Marshal(transactionIndex)                                 //save new index
+    err = stub.PutState(transactionIndexStr, jsonAsBytes)
 
 	//get the dealId details
 	dealAsBytes, err := stub.GetState(_dealId)
