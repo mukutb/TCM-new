@@ -1253,7 +1253,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				//}
 			}
 			for key := range totalValue_Pri{
-				if totalValue_Pri[key] < eligibleValue_Pub[key] {
+				if totalValue_Pri[key] > eligibleValue_Pub[key] {
 					compliance_status = "Regulatory Non-Compliant"	
 				}
 			}
