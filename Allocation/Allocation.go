@@ -506,7 +506,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 	fmt.Println("Ruleset : ")
 	fmt.Println(rulesetFetched)
-	fmt.Println(resbody)
+	//fmt.Println(resbody)
 
 	//-----------------------------------------------------------------------------
 
@@ -1137,35 +1137,36 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				valueSecurity.TotalValue = strconv.FormatFloat(newTotalValue, 'f', 2, 64)
 
 				if newQuantity <= securityQuantity && quantityAllocated >= 0 {
-
-					invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId,
-						PledgerLongboxAccount,
-						valueSecurity.SecuritiesName,
-						strconv.FormatFloat(newQuantity, 'f', 2, 64),
-						valueSecurity.SecurityType,
-						valueSecurity.CollateralForm,
-						valueSecurity.TotalValue,
-						valueSecurity.ValuePercentage,
-						valueSecurity.MTM,
-						valueSecurity.EffectivePercentage,
-						valueSecurity.EffectiveValueChanged,
-						valueSecurity.Currency)
-					fmt.Println(valueSecurity)
-					result, err := stub.InvokeChaincode(AccountChainCode, invokeArgs)
-					if err != nil {
-						errStr := fmt.Sprintf("Failed to update Security from 'Account' chaincode. Got error: %s", err.Error())
-						fmt.Printf(errStr)
-						return nil, errors.New(errStr)
+					if newQuantity != 0.00 {
+						invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId,
+							PledgerLongboxAccount,
+							valueSecurity.SecuritiesName,
+							strconv.FormatFloat(newQuantity, 'f', 2, 64),
+							valueSecurity.SecurityType,
+							valueSecurity.CollateralForm,
+							valueSecurity.TotalValue,
+							valueSecurity.ValuePercentage,
+							valueSecurity.MTM,
+							valueSecurity.EffectivePercentage,
+							valueSecurity.EffectiveValueChanged,
+							valueSecurity.Currency)
+						fmt.Println(valueSecurity)
+						result, err := stub.InvokeChaincode(AccountChainCode, invokeArgs)
+						if err != nil {
+							errStr := fmt.Sprintf("Failed to update Security from 'Account' chaincode. Got error: %s", err.Error())
+							fmt.Printf(errStr)
+							return nil, errors.New(errStr)
+						}
+						fmt.Println(result)
+						sec, err := json.Marshal(valueSecurity)
+						if err != nil {
+							fmt.Println("Error while converting CombinedSecurities struct to string")
+						}
+						pledgerLongboxSecuritiesJson += string(sec)
+						if i < len(CombinedSecurities)-1 {
+							pledgerLongboxSecuritiesJson += `,`
+						}
 					}
-					fmt.Println(result)
-					sec, err := json.Marshal(valueSecurity)
-					if err != nil {
-						fmt.Println("Error while converting CombinedSecurities struct to string")
-					}
-					pledgerLongboxSecuritiesJson += string(sec)
-				}
-				if i < len(CombinedSecurities)-1 {
-					pledgerLongboxSecuritiesJson += `,`
 				}
 
 			}
