@@ -1032,6 +1032,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						fmt.Println("effectiveValueChanged: ",effectiveValueChanged)
 						QuantityToTakeout := math.Floor((rqvEligibleValueLeft * securityQuantity)/ totalValue)
 						fmt.Println("QuantityToTakeout: ", QuantityToTakeout)
+						if QuantityToTakeout == 0{
+							QuantityToTakeout = 1
+						}
 						totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
 						fmt.Println("totalValueToAllocate: ", totalValueToAllocate)
 						if totalValueToAllocate > rqvEligibleValueLeft {
@@ -1135,13 +1138,13 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				fmt.Println(effectiveValueChanged)
 				_totalValue := effectiveValueChanged * newQuantity*/
 				valueSecurity.TotalValue = strconv.FormatFloat(newTotalValue, 'f', 2, 64)
-
+				valueSecurity.SecuritiesQuantity = strconv.FormatFloat(newQuantity, 'f', 2, 64)
 				if newQuantity != 0 {
 					if newQuantity <= securityQuantity && quantityAllocated >= 0 {
 						invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId,
 							PledgerLongboxAccount,
 							valueSecurity.SecuritiesName,
-							strconv.FormatFloat(newQuantity, 'f', 2, 64),
+							valueSecurity.SecuritiesQuantity,
 							valueSecurity.SecurityType,
 							valueSecurity.CollateralForm,
 							valueSecurity.TotalValue,
