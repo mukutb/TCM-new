@@ -1136,8 +1136,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				_totalValue := effectiveValueChanged * newQuantity*/
 				valueSecurity.TotalValue = strconv.FormatFloat(newTotalValue, 'f', 2, 64)
 
-				if newQuantity <= securityQuantity && quantityAllocated >= 0 {
-					//if newQuantity != 0.00 {
+				if newQuantity != 0 {
+					if newQuantity <= securityQuantity && quantityAllocated >= 0 {
 						invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId,
 							PledgerLongboxAccount,
 							valueSecurity.SecuritiesName,
@@ -1166,7 +1166,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						if i < len(CombinedSecurities)-1 {
 							pledgerLongboxSecuritiesJson += `,`
 						}
-					//}
+					}
 				}
 
 			}
@@ -1180,7 +1180,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			reallocatedSecuritiesJson := `[`
 			// Update the new Securities to Pledgee Segregated A/c
 			for i, valueSecurity := range ReallocatedSecurities {
-				//if valueSecurity.SecuritiesQuantity != "0.00" {
+				if valueSecurity.SecuritiesQuantity != "0.00" {
 					invokeArgs := util.ToChaincodeArgs(functionAddSecurity, valueSecurity.SecurityId,
 						PledgeeSegregatedAccount,
 						valueSecurity.SecuritiesName,
@@ -1250,7 +1250,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					eligibleValuePub := ConcentrationLimit_Pub * RQV
 					totalValue_Pri[valueSecurity.CollateralForm] += totalValuePri
 					eligibleValue_Pub[valueSecurity.CollateralForm] += eligibleValuePub
-				//}
+				}
 			}
 			for key := range totalValue_Pri{
 				if totalValue_Pri[key] > eligibleValue_Pub[key] {
