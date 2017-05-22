@@ -829,7 +829,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					fmt.Println(valueSecurity.ValuePercentage)
 					// Append Securities to an array
 					//PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, valueSecurity)
-					CombinedSecurities = append(CombinedSecurities, valueSecurity)
+					//CombinedSecurities = append(CombinedSecurities, valueSecurity)
 				}else{
 					fmt.Println("SecuritiesQuantity: ",tempSecurity.SecuritiesQuantity)
 					// Storing the Value percentage in the security data itself
