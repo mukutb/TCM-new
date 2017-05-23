@@ -767,15 +767,27 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		fmt.Println("tempSecurity: ",tempSecurity)
 		// Check if Current Collateral Form type is acceptied in ruleset. If not skip it!
 		if len(rulesetFetched.Security[tempSecurity.CollateralForm]) > 0 {
-			for _,valueSecurity:= range CombinedSecurities{
+			for _,value2:= range CombinedSecurities{
+				valueSecurity:= Securities{}
+				valueSecurity = value2
 				fmt.Println("valueSecurity: ",valueSecurity)
 				fmt.Println("valueSecurity.SecurityId(CombinedSecurities): ",valueSecurity.SecurityId)
-					fmt.Println("tempSecurity.SecurityId(PledgeeSegregatedSecurities): ",tempSecurity.SecurityId)
+				fmt.Println("tempSecurity.SecurityId(PledgeeSegregatedSecurities): ",tempSecurity.SecurityId)
   				// if combined security already contain same security, then update quantity and other values accordingly
 				if valueSecurity.SecurityId == tempSecurity.SecurityId{
 					fmt.Println("Securities matched.")
-					valueSecurity.SecuritiesQuantity += tempSecurity.SecuritiesQuantity
-					fmt.Println("SecuritiesQuantity: ",valueSecurity.SecuritiesQuantity)
+					securityQuantity1, errBool := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 64)
+					if errBool != nil {
+						fmt.Println(errBool)
+					}
+					securityQuantity2, errBool2 := strconv.ParseFloat(tempSecurity.SecuritiesQuantity, 64)
+					if errBool2 != nil {
+						fmt.Println(errBool2)
+					}
+					securityQuantity1 += securityQuantity2
+					//valueSecurity.SecuritiesQuantity += tempSecurity.SecuritiesQuantity
+					fmt.Println("SecuritiesQuantity: ",securityQuantity1)
+					valueSecurity.SecuritiesQuantity = strconv.FormatFloat(securityQuantity1, 'f', 2, 64)
 					// Storing the Value percentage in the security data itself
 					valueSecurity.ValuePercentage = SecurityJSON[valueSecurity.CollateralForm]["Valuation Percentage"]
 					
@@ -803,13 +815,12 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					fmt.Println("EffectiveValueChanged: ",temp3)
 					valueSecurity.EffectiveValueChanged = strconv.FormatFloat(temp3, 'f', 2, 64)
 					// Adding it to TotalValue
-					temp2, errBool := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 64)
+					/*temp2, errBool := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 64)
 					if errBool != nil {
 						fmt.Println(errBool)
-					}
-					fmt.Println("SecurityQuantity(CombinedSecurities): ",temp2)
+					}*/
 					// Calculate Total Value = Effective Value * Quantity
-					tempTotal := temp3 * temp2
+					tempTotal := temp3 * securityQuantity1
 					fmt.Println("TotalValue: ",tempTotal)
 					valueSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 64)
 					fmt.Println("TotalValue: ",valueSecurity.TotalValue)
@@ -828,7 +839,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					fmt.Println("ValuePercentage: ",valueSecurity.ValuePercentage)
 					fmt.Println("CombinedSecurity: ",valueSecurity)
 					// Append Securities to an array
-					//PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, valueSecurity)
+					PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, valueSecurity)
 					//CombinedSecurities = append(CombinedSecurities, valueSecurity)
 				}else{
 					fmt.Println("Securities are different")
@@ -961,9 +972,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	    if err != nil {
 	        return nil, err
 	    }
-
 	    // Actual return of process end. 
-		
 		return nil, nil
 
 	} else {
@@ -1046,7 +1055,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							fmt.Println("effectiveValueChanged: ",effectiveValueChanged)
 							QuantityToTakeout := math.Floor((RQVLeft * securityQuantity)/ totalValue)
 							fmt.Println("QuantityToTakeout: ", QuantityToTakeout)
-							if QuantityToTakeout ==0{
+							if QuantityToTakeout == 0{
 								QuantityToTakeout = 1
 							}
 							
