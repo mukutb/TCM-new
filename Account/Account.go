@@ -47,18 +47,18 @@ type Accounts struct{
 }
 
 type Securities struct{
-	SecurityId string `json:"securityId"`
-	AccountNumber string `json:"accountNumber"`
-	SecurityName string `json:"securityName"`
-	SecurityQuantity string `json:"securityQuantity"`
-	SecurityType string `json:"securityType"`
-	CollateralForm string `json:"collateralForm"`
-	Totalvalue string `json:"totalvalue"`
-	ValuePercentage string `json:"valuePercentage"`
-	MTM string `json:"mtm"`
+	SecurityId          string `json:"securityId"`
+	AccountNumber       string `json:"accountNumber"`
+	SecuritiesName      string `json:"securityName"`
+	SecuritiesQuantity  string `json:"securityQuantity"`
+	SecurityType        string `json:"securityType"`
+	CollateralForm      string `json:"collateralForm"`
+	Totalvalue          string `json:"totalvalue"`
+	ValuePercentage     string `json:"valuePercentage"`
+	MTM                 string `json:"mtm"`
 	EffectivePercentage string `json:"effectivePercentage"`
-	EffectiveValueinUSD string `json:"effectiveValueinUSD"`
-	Currency string `json:"currency"`
+	EffectiveValueChanged string `json:"effectiveValueChanged"`
+	Currency            string `json:"currency"`
 }
 // ============================================================================================================================
 // Main - start the chaincode for Account management
@@ -597,109 +597,120 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		}
 	res := Securities{}
 	json.Unmarshal(SecurityAsBytes, &res)
-
-	// NOTE:: This is not required as Securities can be added, hence remove check for already existing
-	/*if res.SecurityId == _securityId{
-		errMsg := "{ \"SecurityId\" : \""+_securityId+"\",\"message\" : \"This Security already exists\", \"code\" : \"503\"}"
-		err := stub.SetEvent("errEvent", []byte(errMsg))
-		if err != nil {
-			return nil, err
-		} 
-		return nil, nil				//all stop a Account by this name exists
-	}*/
-	
-	//build the Account json string manually
-	order := 	`{`+
-		`"securityId": "` + _securityId + `" ,`+
-		`"accountNumber": "` + _accountNumber + `" ,`+
-		`"securityName": "` + _securityName + `" ,`+
-		`"securityQuantity": "` + _securityQuantity + `" ,`+
-		`"securityType": "` + _securityType + `" ,`+
-		`"collateralForm": "` + _collateralForm + `" ,`+
-		`"totalvalue": "` + _totalValue + `" ,`+
-		`"valuePercentage": "` + _valuePercentage + `" ,`+
-		`"mtm": "` + _mtm + `" ,`+
-		`"effectivePercentage": "` + _effectivePercentage + `" ,`+
-		`"effectiveValueinUSD": "` + _effectiveValueinUSD + `" ,`+
-		`"currency": "` + _currency + `"`+
-		`}`
-	fmt.Println("order: " + order)
-	err = stub.PutState(_accountNumber+"-"+_securityId, []byte(order))									//store Account with AccountId as key
-	if err != nil {
-		return nil, err
-	}
-	AccountAsBytes, err := stub.GetState(_accountNumber)
-	if err != nil {
-		return nil, errors.New("Failed to get account " + _accountNumber)
-	}
-	//Adding Security to the account
-	res2 := Accounts{}
-	json.Unmarshal(AccountAsBytes, &res2)
-	fmt.Println(res2);
-	if res2.AccountNumber == _accountNumber{
-		fmt.Println("Account found with AccountNumber : " + _accountNumber)
-		_SecuritySplit := strings.Split(res2.Securities, ",")
-		fmt.Print("_SecuritySplit: " )
-		fmt.Println(_SecuritySplit)
-		for i := range _SecuritySplit{
-			fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
-			fmt.Println("Security already exists")
-			/*if _SecuritySplit[i] == _accountNumber+"-"+_securityId {
-				errMsg := "{ \"SecurityId\" : \""+_accountNumber+"-"+_securityId+"\",\"message\" : \" SecurityId already exists in the account.\", \"code\" : \"503\"}"
-				err = stub.SetEvent("errEvent", []byte(errMsg))
-				if err != nil {
-					return nil, err
-				} 
-				return nil, nil
-			}*/
+	// update already existing securities
+	if res.SecurityId == _securityId{
+		securityQuantity1, errBool := strconv.ParseFloat(res.SecuritiesQuantity, 64)
+		if errBool != nil {
+			fmt.Println(errBool)
 		}
+		securityQuantity2, errBool2 := strconv.ParseFloat(_securityQuantity, 64)
+		if errBool2 != nil {
+			fmt.Println(errBool2)
+		}
+		securityQuantity1 += securityQuantity2
+		res.SecuritiesQuantity = strconv.FormatFloat(securityQuantity1, 'f', 2, 64)
+		fmt.Println("SecuritiesQuantity: ",res.SecuritiesQuantity)
+		totalValue1, errBool3 := strconv.ParseFloat(res.Totalvalue, 64)
+		if errBool3 != nil {
+			fmt.Println(errBool3)
+		}
+		totalValue2, errBool1 := strconv.ParseFloat(_totalValue, 64)
+		if errBool1 != nil {
+			fmt.Println(errBool1)
+		}
+		totalValue1 += totalValue2
+		res.Totalvalue = strconv.FormatFloat(totalValue1, 'f', 2, 64)
+		fmt.Println("TotalValue: ",res.Totalvalue)
+		var temp[] string
+        temp = append(temp, res.SecurityId,res.AccountNumber,_securityName,res.SecuritiesQuantity,_securityType,_collateralForm,res.Totalvalue,_valuePercentage,_mtm,_effectivePercentage,_effectiveValueinUSD,_currency)
+        t.update_security(stub, temp)
+		fmt.Println("Existing security updated successfully")
 	}else{
-		errMsg := "{ \"message\" : \""+ _accountNumber+ " Not Found.\", \"code\" : \"503\"}"
-		err = stub.SetEvent("errEvent", []byte(errMsg))
+		//build the Account json string manually
+		order := 	`{`+
+			`"securityId": "` + _securityId + `" ,`+
+			`"accountNumber": "` + _accountNumber + `" ,`+
+			`"securityName": "` + _securityName + `" ,`+
+			`"securityQuantity": "` + _securityQuantity + `" ,`+
+			`"securityType": "` + _securityType + `" ,`+
+			`"collateralForm": "` + _collateralForm + `" ,`+
+			`"totalvalue": "` + _totalValue + `" ,`+
+			`"valuePercentage": "` + _valuePercentage + `" ,`+
+			`"mtm": "` + _mtm + `" ,`+
+			`"effectivePercentage": "` + _effectivePercentage + `" ,`+
+			`"effectiveValueinUSD": "` + _effectiveValueinUSD + `" ,`+
+			`"currency": "` + _currency + `"`+
+			`}`
+		fmt.Println("order: " + order)
+		err = stub.PutState(_accountNumber+"-"+_securityId, []byte(order))									//store Account with AccountId as key
+		if err != nil {
+			return nil, err
+		}
+		AccountAsBytes, err := stub.GetState(_accountNumber)
+		if err != nil {
+			return nil, errors.New("Failed to get account " + _accountNumber)
+		}
+		//Adding Security to the account
+		res2 := Accounts{}
+		json.Unmarshal(AccountAsBytes, &res2)
+		fmt.Println(res2);
+		if res2.AccountNumber == _accountNumber{
+			fmt.Println("Account found with AccountNumber : " + _accountNumber)
+			_SecuritySplit := strings.Split(res2.Securities, ",")
+			fmt.Print("_SecuritySplit: " )
+			fmt.Println(_SecuritySplit)
+			for i := range _SecuritySplit{
+				fmt.Println("_SecuritySplit[i]: " + _SecuritySplit[i])
+				fmt.Println("Security already exists")
+			}
+		}else{
+			errMsg := "{ \"message\" : \""+ _accountNumber+ " Not Found.\", \"code\" : \"503\"}"
+			err = stub.SetEvent("errEvent", []byte(errMsg))
+			if err != nil {
+				return nil, err
+			} 
+			return nil, nil
+		}
+		// Convert account's totalValue(String) to float
+		tempTotalValue1, errBool := strconv.ParseFloat(res2.TotalValue, 32)
+		if errBool != nil {
+			fmt.Println(errBool)
+		}
+		// Convert security's totalvalue(String) to float
+		tempTotalvalue2, errBool := strconv.ParseFloat(_totalValue, 32)
+		if errBool != nil {
+			fmt.Println(errBool)
+		}
+		if res2.Securities == " " || res2.Securities == "" {
+			res2.Securities = _accountNumber+"-"+_securityId;
+			_tempTotal := tempTotalValue1 + tempTotalvalue2
+			res2.TotalValue = strconv.FormatFloat(_tempTotal, 'f', -1, 64)
+		}else {
+			res2.Securities = res2.Securities+ "," + _accountNumber+"-"+_securityId;
+			_tempTotal := tempTotalValue1 + tempTotalvalue2
+			res2.TotalValue = strconv.FormatFloat(_tempTotal, 'f', -1, 64)
+		}
+		order2 := 	`{`+
+			`"accountId": "` + res2.AccountID + `" ,`+
+			`"accountName": "` + res2.AccountName + `" ,`+
+			`"accountNumber": "` + res2.AccountNumber + `" ,`+
+			`"accountType": "` + res2.AccountType + `" ,`+
+			`"totalValue": "` + res2.TotalValue + `" ,`+
+			`"currency": "` + res2.Currency + `" ,`+
+			`"pledger": "` + res2.Pledger + `" ,`+
+			`"securities": "` + res2.Securities + `" `+
+			`}`
+		fmt.Println("order2: " + order2)
+		err = stub.PutState(res2.AccountNumber, []byte(order2))									//store Account with id as key
+		if err != nil {
+			return nil, err
+		}
+		tosend := "{ \"SecurityId\" : \""+_accountNumber+"-"+_securityId+"\", \"message\" : \"Security updated succcesfully\", \"code\" : \"200\"}"
+		err = stub.SetEvent("evtsender", []byte(tosend))
 		if err != nil {
 			return nil, err
 		} 
-		return nil, nil
 	}
-	// Convert account's totalValue(String) to float
-	tempTotalValue1, errBool := strconv.ParseFloat(res2.TotalValue, 32)
-	if errBool != nil {
-		fmt.Println(errBool)
-	}
-	// Convert security's totalvalue(String) to float
-	tempTotalvalue2, errBool := strconv.ParseFloat(_totalValue, 32)
-	if errBool != nil {
-		fmt.Println(errBool)
-	}
-	if res2.Securities == " " || res2.Securities == "" {
-		res2.Securities = _accountNumber+"-"+_securityId;
-		_tempTotal := tempTotalValue1 + tempTotalvalue2
-		res2.TotalValue = strconv.FormatFloat(_tempTotal, 'f', -1, 64)
-	}else {
-		res2.Securities = res2.Securities+ "," + _accountNumber+"-"+_securityId;
-		_tempTotal := tempTotalValue1 + tempTotalvalue2
-		res2.TotalValue = strconv.FormatFloat(_tempTotal, 'f', -1, 64)
-	}
-	order2 := 	`{`+
-		`"accountId": "` + res2.AccountID + `" ,`+
-		`"accountName": "` + res2.AccountName + `" ,`+
-		`"accountNumber": "` + res2.AccountNumber + `" ,`+
-		`"accountType": "` + res2.AccountType + `" ,`+
-		`"totalValue": "` + res2.TotalValue + `" ,`+
-		`"currency": "` + res2.Currency + `" ,`+
-		`"pledger": "` + res2.Pledger + `" ,`+
-		`"securities": "` + res2.Securities + `" `+
-		`}`
-	fmt.Println("order2: " + order2)
-	err = stub.PutState(res2.AccountNumber, []byte(order2))									//store Account with id as key
-	if err != nil {
-		return nil, err
-	}
-	tosend := "{ \"SecurityId\" : \""+_accountNumber+"-"+_securityId+"\", \"message\" : \"Security updated succcesfully\", \"code\" : \"200\"}"
-	err = stub.SetEvent("evtsender", []byte(tosend))
-	if err != nil {
-		return nil, err
-	} 
 
 	fmt.Println("end add_security")
 	return nil, nil
