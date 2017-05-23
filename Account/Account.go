@@ -587,7 +587,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 	_valuePercentage		:= args[7]
 	_mtm					:= args[8]
 	_effectivePercentage	:= args[9]
-	_effectiveValueinUSD	:= args[10];
+	_effectiveValueinUSD	:= args[10]
 	_currency			    := args[11]
 	
 
@@ -682,7 +682,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 			fmt.Println(errBool)
 		}
 		if res2.Securities == " " || res2.Securities == "" {
-			res2.Securities = _accountNumber+"-"+_securityId;
+			res2.Securities = _accountNumber+"-"+_securityId
 			_tempTotal := tempTotalValue1 + tempTotalvalue2
 			res2.TotalValue = strconv.FormatFloat(_tempTotal, 'f', -1, 64)
 		}else {
