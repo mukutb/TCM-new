@@ -48,6 +48,7 @@ type Transactions struct {
 	AllocationStatus       string `json:"allocationStatus"`
 	TransactionStatus      string `json:"transactionStatus"`
 	ComplianceStatus      string `json:"complianceStatus"`
+	ShortFall      string `json:"shortFall"`
 }
 
 type Deals struct { // Attributes of a Allocation
@@ -302,7 +303,8 @@ func (t *ManageAllocations) LongboxAccountUpdated(stub shim.ChaincodeStubInterfa
 				ValueTransaction.MarginCAllDate,
 				newAllStatus,
 				ValueTransaction.TransactionStatus,
-				"NA")
+				ValueTransaction.ComplianceStatus,
+				ValueTransaction.ShortFall)
 			fmt.Println(ValueTransaction)
 			result, err := stub.InvokeChaincode(_DealChaincode, invokeArgs)
 			if err != nil {
@@ -766,7 +768,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		tempSecurity = value
 		fmt.Println("tempSecurity: ",tempSecurity)
 		if len(rulesetFetched.Security[tempSecurity.CollateralForm]) > 0 {
-			for _,value2:= range CombinedSecurities{
+			for i,value2:= range CombinedSecurities{
+
 					valueSecurity:= Securities{}
 					valueSecurity = value2
 					fmt.Println("valueSecurity: ",valueSecurity)
@@ -790,8 +793,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						fmt.Println("SecuritiesQuantity: ",securityQuantity1)
 						valueSecurity.SecuritiesQuantity = strconv.FormatFloat(securityQuantity1, 'f', 2, 64)
 						// Storing the Value percentage in the security data itself
-						valueSecurity.ValuePercentage = SecurityJSON[valueSecurity.CollateralForm]["Valuation Percentage"]
-						
+						//valueSecurity.ValuePercentage = SecurityJSON[valueSecurity.CollateralForm]["Valuation Percentage"]
 						//convert valuePercentage(string) to float
 						tempValuePercentage, errBool := strconv.ParseFloat(valueSecurity.ValuePercentage, 64)
 						if errBool != nil {
@@ -822,7 +824,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						}*/
 						// Calculate Total Value = Effective Value * Quantity
 						tempTotal := temp3 * securityQuantity1
-						fmt.Println("TotalValue: ",tempTotal)
+						//fmt.Println("TotalValue: ",tempTotal)
 						valueSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 64)
 						fmt.Println("TotalValue: ",valueSecurity.TotalValue)
 						// Calculate Total value based on Collateral form
@@ -836,76 +838,76 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							This is just for using the limited sorting application provided by GOlang
 							By no chance is this to be stored on Blockchain.
 						*/
-						valueSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[valueSecurity.CollateralForm]["Valuation Percentage"], 'f', 2, 64)
-						fmt.Println("ValuePercentage: ",valueSecurity.ValuePercentage)
+						//valueSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[valueSecurity.CollateralForm]["Valuation Percentage"], 'f', 2, 64)
+						//fmt.Println("ValuePercentage: ",valueSecurity.ValuePercentage)
 						fmt.Println("CombinedSecurity: ",valueSecurity)
 						// Append Securities to an array
 						//PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, valueSecurity)
+						CombinedSecurities[i]= valueSecurity;
 						//CombinedSecurities = append(CombinedSecurities, valueSecurity)
-					}else{
-						fmt.Println("Securities are different")
-						fmt.Println("SecuritiesQuantity(PledgeeSegregatedSecurities): ",tempSecurity.SecuritiesQuantity)
-						// Storing the Value percentage in the security data itself
-						tempSecurity.ValuePercentage = SecurityJSON[tempSecurity.CollateralForm]["Valuation Percentage"]
-						fmt.Println("tempSecurity.ValuePercentage: ",tempSecurity.ValuePercentage)
-						//convert valuePercentage(string) to float
-						tempValuePercentage, errBool := strconv.ParseFloat(tempSecurity.ValuePercentage, 64)
-						if errBool != nil {
-							fmt.Println(errBool)
-						}
-						fmt.Println("tempValuePercentage: ",tempValuePercentage)
-						temp, errBool := strconv.ParseFloat(tempSecurity.MTM, 64)
-						if errBool != nil {
-							fmt.Println(errBool)
-						}
-						fmt.Println("mtm: ",temp)
-						_rate := ConversionRate.Rates[tempSecurity.Currency]
-						if tempSecurity.Currency == RQVCurrency {
-							_rate = 1
-						}
-						fmt.Println("tempSecurity.Currency: ",tempSecurity.Currency)
-						fmt.Println("_rate: ",_rate)
-						//calculate Currency conversion rate(to RQVCurrency) for mtm  
-						_changedMTM :=  temp/_rate
-						fmt.Println("_changedMTM: ",_changedMTM)
-						// Effective Value =  (MTM(market Value) * valuePercentage)/100
-						temp3 := (_changedMTM * tempValuePercentage)/100
-						fmt.Println("temp3: ",temp3)
-						tempSecurity.EffectiveValueChanged = strconv.FormatFloat(temp3, 'f', 2, 64)
-						// Adding it to TotalValue
-						fmt.Println("EffectiveValueChanged: ",tempSecurity.EffectiveValueChanged)
-						temp2, errBool := strconv.ParseFloat(tempSecurity.SecuritiesQuantity, 64)
-						if errBool != nil {
-							fmt.Println(errBool)
-						}
-						fmt.Println("securityQuantity: ",temp2)
-						// Calculate Total Value = Effective Value * Quantity
-						tempTotal := temp3 * temp2
-						fmt.Println("tempTotal: ",tempTotal)
-						tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 64)
-						fmt.Println("tempSecurity.TotalValue")
-						fmt.Println(tempSecurity.TotalValue)
-						// Calculate Total value based on Collateral form
-						TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm] += tempTotal
-						fmt.Println("TotalValuePledgeeSegregatedSecurities[CollateralForm]",TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm])
-						// Calculate Total value of pledgee's segregated account
-						TotalValuePledgeeSegregated += tempTotal
-						fmt.Println("TotalValuePledgeeSegregated: ",TotalValuePledgeeSegregated)	
-						/*	Warning :
-							Saving Priority for the Security in filed `ValuePercentage`
-							This is just for using the limited sorting application provided by GOlang
-							By no chance is this to be stored on Blockchain.
-						*/
-						tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm]["Valuation Percentage"], 'f', 2, 64)
-						fmt.Println("tempSecurity.ValuePercentage:",tempSecurity.ValuePercentage)
-						// Append Securities to an array
-						PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, tempSecurity)
-						fmt.Println("PledgeeSegregatedSecurities: ",PledgeeSegregatedSecurities)
-						CombinedSecurities = append(CombinedSecurities, tempSecurity)
-						fmt.Println("CombinedSecurity: ",CombinedSecurities)
 					}
 				}
 			}
+			fmt.Println("Securities are different")
+			//fmt.Println("SecuritiesQuantity(PledgeeSegregatedSecurities): ",tempSecurity.SecuritiesQuantity)
+			// Storing the Value percentage in the security data itself
+			//tempSecurity.ValuePercentage = SecurityJSON[tempSecurity.CollateralForm]["Valuation Percentage"]
+			//fmt.Println("tempSecurity.ValuePercentage: ",tempSecurity.ValuePercentage)
+			//convert valuePercentage(string) to float
+			tempValuePercentage, errBool := strconv.ParseFloat(tempSecurity.ValuePercentage, 64)
+			if errBool != nil {
+				fmt.Println(errBool)
+			}
+			fmt.Println("tempValuePercentage: ",tempValuePercentage)
+			temp, errBool := strconv.ParseFloat(tempSecurity.MTM, 64)
+			if errBool != nil {
+				fmt.Println(errBool)
+			}
+			fmt.Println("mtm: ",temp)
+			_rate := ConversionRate.Rates[tempSecurity.Currency]
+			if tempSecurity.Currency == RQVCurrency {
+				_rate = 1
+			}
+			fmt.Println("tempSecurity.Currency: ",tempSecurity.Currency)
+			fmt.Println("_rate: ",_rate)
+			//calculate Currency conversion rate(to RQVCurrency) for mtm  
+			_changedMTM :=  temp/_rate
+			fmt.Println("_changedMTM: ",_changedMTM)
+			// Effective Value =  (MTM(market Value) * valuePercentage)/100
+			temp3 := (_changedMTM * tempValuePercentage)/100
+			fmt.Println("temp3: ",temp3)
+			tempSecurity.EffectiveValueChanged = strconv.FormatFloat(temp3, 'f', 2, 64)
+			// Adding it to TotalValue
+			fmt.Println("EffectiveValueChanged: ",tempSecurity.EffectiveValueChanged)
+			temp2, errBool := strconv.ParseFloat(tempSecurity.SecuritiesQuantity, 64)
+			if errBool != nil {
+				fmt.Println(errBool)
+			}
+			fmt.Println("securityQuantity: ",temp2)
+			// Calculate Total Value = Effective Value * Quantity
+			tempTotal := temp3 * temp2
+			fmt.Println("tempTotal: ",tempTotal)
+			tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 64)
+			fmt.Println("tempSecurity.TotalValue")
+			fmt.Println(tempSecurity.TotalValue)
+			// Calculate Total value based on Collateral form
+			TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm] += tempTotal
+			fmt.Println("TotalValuePledgeeSegregatedSecurities[CollateralForm]",TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm])
+			// Calculate Total value of pledgee's segregated account
+			TotalValuePledgeeSegregated += tempTotal
+			fmt.Println("TotalValuePledgeeSegregated: ",TotalValuePledgeeSegregated)	
+			/*	Warning :
+				Saving Priority for the Security in filed `ValuePercentage`
+				This is just for using the limited sorting application provided by GOlang
+				By no chance is this to be stored on Blockchain.
+			*/
+			//tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm]["Valuation Percentage"], 'f', 2, 64)
+			//fmt.Println("tempSecurity.ValuePercentage:",tempSecurity.ValuePercentage)
+			// Append Securities to an array
+			PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, tempSecurity)
+			fmt.Println("PledgeeSegregatedSecurities: ",PledgeeSegregatedSecurities)
+			CombinedSecurities = append(CombinedSecurities, tempSecurity)
+			fmt.Println("CombinedSecurity: ",CombinedSecurities)
 		}
 	}
 	 		
@@ -954,9 +956,10 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 
 	if AvailableEligibleCollateral < RQV {
 		RQVLeft:= RQV - AvailableEligibleCollateral
+		_RQVLeft := strconv.FormatFloat(RQVLeft, 'f', 2, 64)
 		// Update transaction's allocation status to "Pending due to insufficient collateral" and transaction status to "Pending"
 		f := "update_transaction"
-		invoke_args := util.ToChaincodeArgs(f, TransactionData.TransactionId,TransactionData.TransactionDate, TransactionData.DealID, TransactionData.Pledger,TransactionData.Pledgee, TransactionData.RQV, TransactionData.Currency,"\" \"", TransactionData.MarginCAllDate, "Pending due to insufficient collateral",TransactionData.TransactionStatus,"NA")
+		invoke_args := util.ToChaincodeArgs(f, TransactionData.TransactionId,TransactionData.TransactionDate, TransactionData.DealID, TransactionData.Pledger,TransactionData.Pledgee, TransactionData.RQV, TransactionData.Currency,"\" \"", TransactionData.MarginCAllDate, "Pending due to insufficient collateral",TransactionData.TransactionStatus,TransactionData.ComplianceStatus,_RQVLeft)
 		fmt.Println(TransactionData);
 		result, err := stub.InvokeChaincode(DealChaincode, invoke_args)
 		if err != nil {
@@ -968,7 +971,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		fmt.Println(result)
 		fmt.Println("Successfully updated allocation status to 'Pending' due to insufficient collateral'")
 	    //Send a event to event handler
-	    tosend:= "{ \"transactionId\" : \"" + TransactionData.TransactionId + "\", \"message\" : \"Transaction Allocation updated succcessfully with status 'Pending' due to insufficient collateral.\", \"code\" : \"200\",\"RQVLeft\" : \"" + strconv.FormatFloat(RQVLeft, 'f', 2, 64) + "\"}"
+	    tosend:= "{ \"transactionId\" : \"" + TransactionData.TransactionId + "\", \"message\" : \"Transaction Allocation updated succcessfully with status 'Pending' due to insufficient collateral.\", \"code\" : \"200\",\"RQVLeft\" : \"" + _RQVLeft + "\"}"
 	    err = stub.SetEvent("evtsender", [] byte(tosend))
 	    if err != nil {
 	        return nil, err
@@ -1347,7 +1350,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				TransactionData.MarginCAllDate,
 				"Allocation Successful",
 				TransactionData.TransactionStatus,
-				compliance_status)
+				compliance_status,
+				"0")
 			fmt.Println(TransactionData)
 			res, err := stub.InvokeChaincode(DealChaincode, invoke_args)
 			if err != nil {
@@ -1374,8 +1378,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				return nil, err
 			}
 		} else {
+			_RQVLeft := strconv.FormatFloat(RQVLeft, 'f', 2, 64)
 			f := "update_transaction"
-			invoke_args := util.ToChaincodeArgs(f, TransactionData.TransactionId, TransactionData.TransactionDate, TransactionData.DealID, TransactionData.Pledger, TransactionData.Pledgee, TransactionData.RQV, TransactionData.Currency, "\" \"", TransactionData.MarginCAllDate, "Pending due to insufficient collateral", TransactionData.TransactionStatus,"NA")
+			invoke_args := util.ToChaincodeArgs(f, TransactionData.TransactionId, TransactionData.TransactionDate, TransactionData.DealID, TransactionData.Pledger, TransactionData.Pledgee, TransactionData.RQV, TransactionData.Currency, "\" \"", TransactionData.MarginCAllDate, "Pending due to insufficient collateral", TransactionData.TransactionStatus,TransactionData.ComplianceStatus,_RQVLeft)
 			fmt.Println(TransactionData)
 			result, err := stub.InvokeChaincode(DealChaincode, invoke_args)
 			if err != nil {
@@ -1387,7 +1392,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			fmt.Println(result)
 			fmt.Println("Successfully updated allocation status to 'Pending' due to insufficient collateral'")
 			//Send a event to event handler
-			tosend := "{ \"transactionId\" : \"" + TransactionData.TransactionId + "\", \"message\" : \"Transaction Allocation updated succcessfully with status 'Pending' due to insufficient collateral.\", \"code\" : \"200\",\"RQVLeft\" : \"" + strconv.FormatFloat(RQVLeft, 'f', 2, 64) + "\"}"
+			tosend := "{ \"transactionId\" : \"" + TransactionData.TransactionId + "\", \"message\" : \"Transaction Allocation updated succcessfully with status 'Pending' due to insufficient collateral.\", \"code\" : \"200\",\"RQVLeft\" : \"" + _RQVLeft + "\"}"
 			err = stub.SetEvent("evtsender", []byte(tosend))
 			if err != nil {
 				return nil, err
