@@ -765,147 +765,148 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		tempSecurity := Securities{}
 		tempSecurity = value
 		fmt.Println("tempSecurity: ",tempSecurity)
-		// Check if Current Collateral Form type is acceptied in ruleset. If not skip it!
 		if len(rulesetFetched.Security[tempSecurity.CollateralForm]) > 0 {
 			for _,value2:= range CombinedSecurities{
-				valueSecurity:= Securities{}
-				valueSecurity = value2
-				fmt.Println("valueSecurity: ",valueSecurity)
-				fmt.Println("valueSecurity.SecurityId(CombinedSecurities): ",valueSecurity.SecurityId)
-				fmt.Println("tempSecurity.SecurityId(PledgeeSegregatedSecurities): ",tempSecurity.SecurityId)
-  				// if combined security already contain same security, then update quantity and other values accordingly
-				if valueSecurity.SecurityId == tempSecurity.SecurityId{
-					fmt.Println("Securities matched.")
-					securityQuantity1, errBool := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 64)
-					if errBool != nil {
-						fmt.Println(errBool)
+					valueSecurity:= Securities{}
+					valueSecurity = value2
+					fmt.Println("valueSecurity: ",valueSecurity)
+				// Check if Current Collateral Form type is acceptied in ruleset. If not skip it!
+				if len(rulesetFetched.Security[valueSecurity.CollateralForm]) > 0 {
+					fmt.Println("valueSecurity.SecurityId(CombinedSecurities): ",valueSecurity.SecurityId)
+					fmt.Println("tempSecurity.SecurityId(PledgeeSegregatedSecurities): ",tempSecurity.SecurityId)
+	  				// if combined security already contain same security, then update quantity and other values accordingly
+					if valueSecurity.SecurityId == tempSecurity.SecurityId{
+						fmt.Println("Securities matched.")
+						securityQuantity1, errBool := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 64)
+						if errBool != nil {
+							fmt.Println(errBool)
+						}
+						securityQuantity2, errBool2 := strconv.ParseFloat(tempSecurity.SecuritiesQuantity, 64)
+						if errBool2 != nil {
+							fmt.Println(errBool2)
+						}
+						securityQuantity1 += securityQuantity2
+						//valueSecurity.SecuritiesQuantity += tempSecurity.SecuritiesQuantity
+						fmt.Println("SecuritiesQuantity: ",securityQuantity1)
+						valueSecurity.SecuritiesQuantity = strconv.FormatFloat(securityQuantity1, 'f', 2, 64)
+						// Storing the Value percentage in the security data itself
+						valueSecurity.ValuePercentage = SecurityJSON[valueSecurity.CollateralForm]["Valuation Percentage"]
+						
+						//convert valuePercentage(string) to float
+						tempValuePercentage, errBool := strconv.ParseFloat(valueSecurity.ValuePercentage, 64)
+						if errBool != nil {
+							fmt.Println(errBool)
+						}
+						fmt.Println("tempValuePercentage: ",tempValuePercentage)
+						temp, errBool := strconv.ParseFloat(valueSecurity.MTM, 64)
+						if errBool != nil {
+							fmt.Println(errBool)
+						}
+						fmt.Println("mtm: ",temp)
+						_rate := ConversionRate.Rates[valueSecurity.Currency]
+						if valueSecurity.Currency == RQVCurrency {
+							_rate = 1
+						}
+						fmt.Println("_rate: ",_rate)
+						//calculate Currency conversion rate(to RQVCurrency) for mtm  
+						_changedMTM :=  temp/_rate
+						fmt.Println("_changedMTM: ", _changedMTM)
+						// Effective Value =  (MTM(market Value) * valuePercentage)/100
+						temp3 := (_changedMTM * tempValuePercentage)/100
+						fmt.Println("EffectiveValueChanged: ",temp3)
+						valueSecurity.EffectiveValueChanged = strconv.FormatFloat(temp3, 'f', 2, 64)
+						// Adding it to TotalValue
+						/*temp2, errBool := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 64)
+						if errBool != nil {
+							fmt.Println(errBool)
+						}*/
+						// Calculate Total Value = Effective Value * Quantity
+						tempTotal := temp3 * securityQuantity1
+						fmt.Println("TotalValue: ",tempTotal)
+						valueSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 64)
+						fmt.Println("TotalValue: ",valueSecurity.TotalValue)
+						// Calculate Total value based on Collateral form
+						TotalValuePledgeeSegregatedSecurities[valueSecurity.CollateralForm] += tempTotal
+						fmt.Println("totalValueSegregatedAccount(CollateralForm): ",TotalValuePledgeeSegregatedSecurities[valueSecurity.CollateralForm])
+						// Calculate Total value of pledgee's segregated account
+						TotalValuePledgeeSegregated += tempTotal
+						fmt.Println("TotalValuePledgeeSegregated: ",TotalValuePledgeeSegregated)			
+						/*	Warning :
+							Saving Priority for the Security in filed `ValuePercentage`
+							This is just for using the limited sorting application provided by GOlang
+							By no chance is this to be stored on Blockchain.
+						*/
+						valueSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[valueSecurity.CollateralForm]["Valuation Percentage"], 'f', 2, 64)
+						fmt.Println("ValuePercentage: ",valueSecurity.ValuePercentage)
+						fmt.Println("CombinedSecurity: ",valueSecurity)
+						// Append Securities to an array
+						//PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, valueSecurity)
+						//CombinedSecurities = append(CombinedSecurities, valueSecurity)
+					}else{
+						fmt.Println("Securities are different")
+						fmt.Println("SecuritiesQuantity(PledgeeSegregatedSecurities): ",tempSecurity.SecuritiesQuantity)
+						// Storing the Value percentage in the security data itself
+						tempSecurity.ValuePercentage = SecurityJSON[tempSecurity.CollateralForm]["Valuation Percentage"]
+						fmt.Println("tempSecurity.ValuePercentage: ",tempSecurity.ValuePercentage)
+						//convert valuePercentage(string) to float
+						tempValuePercentage, errBool := strconv.ParseFloat(tempSecurity.ValuePercentage, 64)
+						if errBool != nil {
+							fmt.Println(errBool)
+						}
+						fmt.Println("tempValuePercentage: ",tempValuePercentage)
+						temp, errBool := strconv.ParseFloat(tempSecurity.MTM, 64)
+						if errBool != nil {
+							fmt.Println(errBool)
+						}
+						fmt.Println("mtm: ",temp)
+						_rate := ConversionRate.Rates[tempSecurity.Currency]
+						if tempSecurity.Currency == RQVCurrency {
+							_rate = 1
+						}
+						fmt.Println("tempSecurity.Currency: ",tempSecurity.Currency)
+						fmt.Println("_rate: ",_rate)
+						//calculate Currency conversion rate(to RQVCurrency) for mtm  
+						_changedMTM :=  temp/_rate
+						fmt.Println("_changedMTM: ",_changedMTM)
+						// Effective Value =  (MTM(market Value) * valuePercentage)/100
+						temp3 := (_changedMTM * tempValuePercentage)/100
+						fmt.Println("temp3: ",temp3)
+						tempSecurity.EffectiveValueChanged = strconv.FormatFloat(temp3, 'f', 2, 64)
+						// Adding it to TotalValue
+						fmt.Println("EffectiveValueChanged: ",tempSecurity.EffectiveValueChanged)
+						temp2, errBool := strconv.ParseFloat(tempSecurity.SecuritiesQuantity, 64)
+						if errBool != nil {
+							fmt.Println(errBool)
+						}
+						fmt.Println("securityQuantity: ",temp2)
+						// Calculate Total Value = Effective Value * Quantity
+						tempTotal := temp3 * temp2
+						fmt.Println("tempTotal: ",tempTotal)
+						tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 64)
+						fmt.Println("tempSecurity.TotalValue")
+						fmt.Println(tempSecurity.TotalValue)
+						// Calculate Total value based on Collateral form
+						TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm] += tempTotal
+						fmt.Println("TotalValuePledgeeSegregatedSecurities[CollateralForm]",TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm])
+						// Calculate Total value of pledgee's segregated account
+						TotalValuePledgeeSegregated += tempTotal
+						fmt.Println("TotalValuePledgeeSegregated: ",TotalValuePledgeeSegregated)	
+						/*	Warning :
+							Saving Priority for the Security in filed `ValuePercentage`
+							This is just for using the limited sorting application provided by GOlang
+							By no chance is this to be stored on Blockchain.
+						*/
+						tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm]["Valuation Percentage"], 'f', 2, 64)
+						fmt.Println("tempSecurity.ValuePercentage:",tempSecurity.ValuePercentage)
+						// Append Securities to an array
+						PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, tempSecurity)
+						fmt.Println("PledgeeSegregatedSecurities: ",PledgeeSegregatedSecurities)
+						CombinedSecurities = append(CombinedSecurities, tempSecurity)
+						fmt.Println("CombinedSecurity: ",CombinedSecurities)
 					}
-					securityQuantity2, errBool2 := strconv.ParseFloat(tempSecurity.SecuritiesQuantity, 64)
-					if errBool2 != nil {
-						fmt.Println(errBool2)
-					}
-					securityQuantity1 += securityQuantity2
-					//valueSecurity.SecuritiesQuantity += tempSecurity.SecuritiesQuantity
-					fmt.Println("SecuritiesQuantity: ",securityQuantity1)
-					valueSecurity.SecuritiesQuantity = strconv.FormatFloat(securityQuantity1, 'f', 2, 64)
-					// Storing the Value percentage in the security data itself
-					valueSecurity.ValuePercentage = SecurityJSON[valueSecurity.CollateralForm]["Valuation Percentage"]
-					
-					//convert valuePercentage(string) to float
-					tempValuePercentage, errBool := strconv.ParseFloat(valueSecurity.ValuePercentage, 64)
-					if errBool != nil {
-						fmt.Println(errBool)
-					}
-					fmt.Println("tempValuePercentage: ",tempValuePercentage)
-					temp, errBool := strconv.ParseFloat(valueSecurity.MTM, 64)
-					if errBool != nil {
-						fmt.Println(errBool)
-					}
-					fmt.Println("mtm: ",temp)
-					_rate := ConversionRate.Rates[valueSecurity.Currency]
-					if valueSecurity.Currency == RQVCurrency {
-						_rate = 1
-					}
-					fmt.Println("_rate: ",_rate)
-					//calculate Currency conversion rate(to RQVCurrency) for mtm  
-					_changedMTM :=  temp/_rate
-					fmt.Println("_changedMTM: ", _changedMTM)
-					// Effective Value =  (MTM(market Value) * valuePercentage)/100
-					temp3 := (_changedMTM * tempValuePercentage)/100
-					fmt.Println("EffectiveValueChanged: ",temp3)
-					valueSecurity.EffectiveValueChanged = strconv.FormatFloat(temp3, 'f', 2, 64)
-					// Adding it to TotalValue
-					/*temp2, errBool := strconv.ParseFloat(valueSecurity.SecuritiesQuantity, 64)
-					if errBool != nil {
-						fmt.Println(errBool)
-					}*/
-					// Calculate Total Value = Effective Value * Quantity
-					tempTotal := temp3 * securityQuantity1
-					fmt.Println("TotalValue: ",tempTotal)
-					valueSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 64)
-					fmt.Println("TotalValue: ",valueSecurity.TotalValue)
-					// Calculate Total value based on Collateral form
-					TotalValuePledgeeSegregatedSecurities[valueSecurity.CollateralForm] += tempTotal
-					fmt.Println("totalValueSegregatedAccount(CollateralForm): ",TotalValuePledgeeSegregatedSecurities[valueSecurity.CollateralForm])
-					// Calculate Total value of pledgee's segregated account
-					TotalValuePledgeeSegregated += tempTotal
-					fmt.Println("TotalValuePledgeeSegregated: ",TotalValuePledgeeSegregated)			
-					/*	Warning :
-						Saving Priority for the Security in filed `ValuePercentage`
-						This is just for using the limited sorting application provided by GOlang
-						By no chance is this to be stored on Blockchain.
-					*/
-					valueSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[valueSecurity.CollateralForm]["Valuation Percentage"], 'f', 2, 64)
-					fmt.Println("ValuePercentage: ",valueSecurity.ValuePercentage)
-					fmt.Println("CombinedSecurity: ",valueSecurity)
-					// Append Securities to an array
-					PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, valueSecurity)
-					//CombinedSecurities = append(CombinedSecurities, valueSecurity)
-				}else{
-					fmt.Println("Securities are different")
-					fmt.Println("SecuritiesQuantity(PledgeeSegregatedSecurities): ",tempSecurity.SecuritiesQuantity)
-					// Storing the Value percentage in the security data itself
-					tempSecurity.ValuePercentage = SecurityJSON[tempSecurity.CollateralForm]["Valuation Percentage"]
-					fmt.Println("tempSecurity.ValuePercentage: ",tempSecurity.ValuePercentage)
-					//convert valuePercentage(string) to float
-					tempValuePercentage, errBool := strconv.ParseFloat(tempSecurity.ValuePercentage, 64)
-					if errBool != nil {
-						fmt.Println(errBool)
-					}
-					fmt.Println("tempValuePercentage: ",tempValuePercentage)
-					temp, errBool := strconv.ParseFloat(tempSecurity.MTM, 64)
-					if errBool != nil {
-						fmt.Println(errBool)
-					}
-					fmt.Println("mtm: ",temp)
-					_rate := ConversionRate.Rates[tempSecurity.Currency]
-					if tempSecurity.Currency == RQVCurrency {
-						_rate = 1
-					}
-					fmt.Println("tempSecurity.Currency: ",tempSecurity.Currency)
-					fmt.Println("_rate: ",_rate)
-					//calculate Currency conversion rate(to RQVCurrency) for mtm  
-					_changedMTM :=  temp/_rate
-					fmt.Println("_changedMTM: ",_changedMTM)
-					// Effective Value =  (MTM(market Value) * valuePercentage)/100
-					temp3 := (_changedMTM * tempValuePercentage)/100
-					fmt.Println("temp3: ",temp3)
-					tempSecurity.EffectiveValueChanged = strconv.FormatFloat(temp3, 'f', 2, 64)
-					// Adding it to TotalValue
-					fmt.Println("EffectiveValueChanged: ",tempSecurity.EffectiveValueChanged)
-					temp2, errBool := strconv.ParseFloat(tempSecurity.SecuritiesQuantity, 64)
-					if errBool != nil {
-						fmt.Println(errBool)
-					}
-					fmt.Println("securityQuantity: ",temp2)
-					// Calculate Total Value = Effective Value * Quantity
-					tempTotal := temp3 * temp2
-					fmt.Println("tempTotal: ",tempTotal)
-					tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 64)
-					fmt.Println("tempSecurity.TotalValue")
-					fmt.Println(tempSecurity.TotalValue)
-					// Calculate Total value based on Collateral form
-					TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm] += tempTotal
-					fmt.Println("TotalValuePledgeeSegregatedSecurities[CollateralForm]",TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm])
-					// Calculate Total value of pledgee's segregated account
-					TotalValuePledgeeSegregated += tempTotal
-					fmt.Println("TotalValuePledgeeSegregated: ",TotalValuePledgeeSegregated)	
-					/*	Warning :
-						Saving Priority for the Security in filed `ValuePercentage`
-						This is just for using the limited sorting application provided by GOlang
-						By no chance is this to be stored on Blockchain.
-					*/
-					tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm]["Valuation Percentage"], 'f', 2, 64)
-					fmt.Println("tempSecurity.ValuePercentage:",tempSecurity.ValuePercentage)
-					// Append Securities to an array
-					PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, tempSecurity)
-					fmt.Println("PledgeeSegregatedSecurities: ",PledgeeSegregatedSecurities)
-					CombinedSecurities = append(CombinedSecurities, tempSecurity)
-					fmt.Println("CombinedSecurity: ",CombinedSecurities)
 				}
 			}
 		}
-
 	}
 	 		
 	fmt.Println("TotalValuePledgeeSegregatedSecurities")
