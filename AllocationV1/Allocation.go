@@ -1096,30 +1096,28 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							fmt.Println(errBool)
 						}
 						fmt.Println("effectiveValueChanged: ",effectiveValueChanged)
-						QuantityToTakeout := math.Floor((RQVLeft * securityQuantity)/ totalValue)
+						QuantityToTakeout := math.Floor((rqvEligibleValueLeft * securityQuantity)/ totalValue)
 						fmt.Println("QuantityToTakeout: ", QuantityToTakeout)
 						if QuantityToTakeout == 0{
 							QuantityToTakeout = 1
 						}
 						totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
 						fmt.Println("totalValueToAllocate: ", totalValueToAllocate)
-						RQVLeft -= totalValueToAllocate
-						fmt.Println("RQVLeft: ",RQVLeft)
-						if totalValueToAllocate < RQVLeft {
+						if totalValueToAllocate > RQVLeft {
 							// One more security can be taken out
-							QuantityToTakeout := math.Floor((RQVLeft * securityQuantity)/ totalValue)
+							QuantityToTakeout := math.Ceil((RQVLeft * securityQuantity)/ totalValue)
 							fmt.Println("QuantityToTakeout: ", QuantityToTakeout)
 							if QuantityToTakeout == 0{
 								QuantityToTakeout = 1
 							}
 							totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
 							fmt.Println("totalValueToAllocate: ", totalValueToAllocate)
-							RQVLeft -= totalValueToAllocate
-							fmt.Println("RQVLeft: ",RQVLeft)
 						}
 						if totalValueToAllocate > rqvEligibleValueLeft {
 							totalValueToAllocate = rqvEligibleValueLeft
 						}
+						RQVLeft -= totalValueToAllocate
+						fmt.Println("RQVLeft: ",RQVLeft)
 						RQVEligibleValueLeft[valueSecurity.CollateralForm] -= totalValueToAllocate
 						fmt.Println("RQVEligibleValueLeft: ",RQVEligibleValueLeft)
 						tempSecurity2 := valueSecurity
