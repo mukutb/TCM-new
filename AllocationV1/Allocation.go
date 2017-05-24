@@ -1105,12 +1105,12 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						fmt.Println("totalValueToAllocate: ", totalValueToAllocate)
 						if totalValueToAllocate > RQVLeft {
 							// One more security can be taken out
-							QuantityToTakeout := math.Ceil((RQVLeft * securityQuantity)/ totalValue)
+							QuantityToTakeout = math.Ceil((RQVLeft * securityQuantity)/ totalValue)
 							fmt.Println("QuantityToTakeout: ", QuantityToTakeout)
 							if QuantityToTakeout == 0{
 								QuantityToTakeout = 1
 							}
-							totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
+							totalValueToAllocate = QuantityToTakeout * effectiveValueChanged
 							fmt.Println("totalValueToAllocate: ", totalValueToAllocate)
 						}
 						if totalValueToAllocate > rqvEligibleValueLeft {
