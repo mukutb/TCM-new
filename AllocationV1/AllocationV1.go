@@ -842,7 +842,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						//valueSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[valueSecurity.CollateralForm]["Valuation Percentage"], 'f', 2, 64)
 						//fmt.Println("ValuePercentage: ",valueSecurity.ValuePercentage)
 						// Append Securities to an array
-						//PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, valueSecurity)
+						PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, tempSecurity)
 						CombinedSecurities[i]= valueSecurity;
 						fmt.Println("CombinedSecurity: ",CombinedSecurities[i])
 						flag = true
@@ -1070,7 +1070,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
 							fmt.Println(totalValueToAllocate)
 							if totalValueToAllocate > rqvEligibleValueLeft {
-								totalValueToAllocate = rqvEligibleValueLeft
+								QuantityToTakeout = 0
+								totalValueToAllocate = QuantityToTakeout * effectiveValueChanged
 							}
 							RQVLeft -= totalValueToAllocate
 							fmt.Println("RQVLeft: ",RQVLeft)
@@ -1079,7 +1080,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							tempSecurity2 := valueSecurity
 							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'f', 2, 64)
 							tempSecurity2.TotalValue = strconv.FormatFloat(totalValueToAllocate, 'f', 2, 64)
-							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
+							if QuantityToTakeout != 0 {
+								ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
+							}
 							fmt.Println("ReallocatedSecurities: ",ReallocatedSecurities)
 							SecuritiesAllocated[valueSecurity.SecurityId] = QuantityToTakeout
 							fmt.Println(valueSecurity.SecurityId + ": " , SecuritiesAllocated[valueSecurity.SecurityId])
@@ -1102,9 +1105,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						fmt.Println("effectiveValueChanged: ",effectiveValueChanged)
 						QuantityToTakeout := math.Floor((rqvEligibleValueLeft * securityQuantity)/ totalValue)
 						fmt.Println("QuantityToTakeout: ", QuantityToTakeout)
-						if QuantityToTakeout == 0{
-							QuantityToTakeout = 1
-						}
+						
 						totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
 						fmt.Println("totalValueToAllocate: ", totalValueToAllocate)
 						if totalValueToAllocate > RQVLeft {
@@ -1118,7 +1119,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							fmt.Println("totalValueToAllocate: ", totalValueToAllocate)
 						}
 						if totalValueToAllocate > rqvEligibleValueLeft {
-							totalValueToAllocate = rqvEligibleValueLeft
+							QuantityToTakeout = 0
+							totalValueToAllocate = QuantityToTakeout * effectiveValueChanged
 						}
 						RQVLeft -= totalValueToAllocate
 						fmt.Println("RQVLeft: ",RQVLeft)
@@ -1127,9 +1129,10 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						tempSecurity2 := valueSecurity
 						tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'f', 2, 64)
 						tempSecurity2.TotalValue = strconv.FormatFloat(totalValueToAllocate, 'f', 2, 64)
-						ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
+						if QuantityToTakeout != 0 {
+							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
+						}
 						fmt.Println("ReallocatedSecurities: ",ReallocatedSecurities)
-
 						SecuritiesAllocated[valueSecurity.SecurityId] = QuantityToTakeout
 						fmt.Println(valueSecurity.SecurityId + ": " , SecuritiesAllocated[valueSecurity.SecurityId])
 						TotalValueAllocated[valueSecurity.SecurityId] = totalValueToAllocate
