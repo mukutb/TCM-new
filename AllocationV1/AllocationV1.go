@@ -1020,8 +1020,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		CombinedSecuritiesIterator:
 		for _, valueSecurity := range CombinedSecurities {
 			fmt.Println("RQVLeft: ", RQVLeft)
-			fmt.Println("TotalValuePledgeeSegregated: ", TotalValuePledgeeSegregated)
-			fmt.Println("TotalValuePledgerLongbox: ", TotalValuePledgerLongbox)
+			//fmt.Println("TotalValuePledgeeSegregated: ", TotalValuePledgeeSegregated)
+			//fmt.Println("TotalValuePledgerLongbox: ", TotalValuePledgerLongbox)
 			//var TotalValuePledgee float64
 			if RQVLeft > 0 {
 				// More Security need to be taken out
@@ -1072,13 +1072,13 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							if QuantityToTakeout == 0{
 								QuantityToTakeout = 1
 							}
-							
-							totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
-							fmt.Println(totalValueToAllocate)
-							if totalValueToAllocate > rqvEligibleValueLeft {
-								QuantityToTakeout = 0
-								totalValueToAllocate = QuantityToTakeout * effectiveValueChanged
+							if totalValueToAllocate < rqvEligibleValueLeft{
+								if totalValueToAllocate < RQVLeft{
+									QuantityToTakeout := math.Ceil((RQVLeft * securityQuantity)/ totalValue)
+								}
 							}
+							totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
+							fmt.Println("totalValueToAllocate: ",totalValueToAllocate)
 							RQVLeft -= totalValueToAllocate
 							fmt.Println("RQVLeft: ",RQVLeft)
 							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= totalValueToAllocate
