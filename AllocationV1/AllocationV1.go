@@ -105,7 +105,13 @@ type SecurityArrayStruct []Securities
 
 func (slice SecurityArrayStruct) Len() int             { return len(slice) }
 func (slice SecurityArrayStruct) Less(i, j int) bool { // Sorting through the field 'Priority'
-	return rulesetFetched.Security[slice[i].CollateralForm]["Priority"] < rulesetFetched.Security[slice[j].CollateralForm]["Priority"]
+	if rulesetFetched.Security[slice[i].CollateralForm]["Priority"] < rulesetFetched.Security[slice[j].CollateralForm]["Priority"]{
+		return true
+	}
+	if rulesetFetched.Security[slice[i].CollateralForm]["Priority"] > rulesetFetched.Security[slice[j].CollateralForm]["Priority"]{
+		return false
+	}
+	return slice[i].EffectiveValueChanged > slice[j].EffectiveValueChanged
 }
 func (slice SecurityArrayStruct) Swap(i, j int) { slice[i], slice[j] = slice[j], slice[i] }
 
