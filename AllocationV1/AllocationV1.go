@@ -1072,13 +1072,16 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							if QuantityToTakeout == 0{
 								QuantityToTakeout = 1
 							}
+							totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
+							fmt.Println("totalValueToAllocate: ",totalValueToAllocate)
 							if totalValueToAllocate < rqvEligibleValueLeft{
 								if totalValueToAllocate < RQVLeft{
 									QuantityToTakeout := math.Ceil((RQVLeft * securityQuantity)/ totalValue)
+									fmt.Println("QuantityToTakeout: ", QuantityToTakeout)
+									totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
+									fmt.Println("totalValueToAllocate: ",totalValueToAllocate)
 								}
 							}
-							totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
-							fmt.Println("totalValueToAllocate: ",totalValueToAllocate)
 							RQVLeft -= totalValueToAllocate
 							fmt.Println("RQVLeft: ",RQVLeft)
 							RQVEligibleValueLeft[valueSecurity.CollateralForm] -= totalValueToAllocate
