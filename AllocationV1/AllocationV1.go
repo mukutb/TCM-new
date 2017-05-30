@@ -1344,9 +1344,12 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					if effectiveValueChangedPub < effectiveValueChanged_Pri{
 						compliance_status = "Regulatory Non-Compliant"
 					}
-					eligibleValuePub := ConcentrationLimit_Pub * RQV
+					eligibleValuePub := (ConcentrationLimit_Pub * RQV)/100
+					fmt.Println("eligibleValuePub: ",eligibleValuePub)
 					totalValue_Pri[valueSecurity.CollateralForm] += totalValuePri
+					fmt.Println(totalValue_Pri[valueSecurity.CollateralForm])
 					eligibleValue_Pub[valueSecurity.CollateralForm] += eligibleValuePub
+					fmt.Println(eligibleValue_Pub[valueSecurity.CollateralForm])
 				}
 			}
 			for key := range totalValue_Pri{
