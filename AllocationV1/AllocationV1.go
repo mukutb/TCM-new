@@ -132,7 +132,7 @@ var SecurityJSON = map[string]map[string]string{
 	"Municipal Securities - Non EU":      map[string]string{"Concentration Limit": "10", "Priority": "4", "Valuation Percentage": "89"},
 	"Corporate Bonds":       map[string]string{"Concentration Limit": "10", "Priority": "5", "Valuation Percentage": "88"},
 	"Equities":         map[string]string{"Concentration Limit": "10", "Priority": "6", "Valuation Percentage": "85"},
-	"Medium Term Notes":       map[string]string{"Concentration Limit": "10", "Priority": "7", "Valuation Percentage": "83"},
+	"Medium Term Notes":       map[string]string{"Concentration Limit": "10", "Priority": "7", "Valuation Percentage": "83"}}
 // ============================================================================================================================
 // Main - start the chaincode for Allocation management
 // ============================================================================================================================
