@@ -126,22 +126,13 @@ type CurrencyConversion struct {
 
 // To be used as SecurityJSON["CommonStocks"]["Priority"] ==> 1
 var SecurityJSON = map[string]map[string]string{
-	"Common Stocks":         map[string]string{"Concentration Limit": "40", "Priority": "1", "Valuation Percentage": "97"},
-	"Corporate Bonds":       map[string]string{"Concentration Limit": "30", "Priority": "2", "Valuation Percentage": "97"},
-	"Sovereign Bonds":       map[string]string{"Concentration Limit": "25", "Priority": "3", "Valuation Percentage": "95"},
-	"US Treasury Bills":      map[string]string{"Concentration Limit": "25", "Priority": "4", "Valuation Percentage": "95"},
-	"US Treasury Bonds":      map[string]string{"Concentration Limit": "25", "Priority": "5", "Valuation Percentage": "95"},
-	"US Treasury Notes":      map[string]string{"Concentration Limit": "25", "Priority": "6", "Valuation Percentage": "95"},
-	"Gilt":                 map[string]string{"Concentration Limit": "25", "Priority": "7", "Valuation Percentage": "94"},
-	"Federal Agency Bonds":   map[string]string{"Concentration Limit": "20", "Priority": "8", "Valuation Percentage": "93"},
-	"Global Bonds":          map[string]string{"Concentration Limit": "20", "Priority": "9", "Valuation Percentage": "92"},
-	"Preferred Shares":     map[string]string{"Concentration Limit": "20", "Priority": "10", "Valuation Percentage": "91"},
-	"Convertible Bonds":     map[string]string{"Concentration Limit": "20", "Priority": "11", "Valuation Percentage": "90"},
-	"Revenue Bonds":         map[string]string{"Concentration Limit": "15", "Priority": "12", "Valuation Percentage": "90"},
-	"Medium Term Note":       map[string]string{"Concentration Limit": "15", "Priority": "13", "Valuation Percentage": "89"},
-	"Short Term Investments": map[string]string{"Concentration Limit": "15", "Priority": "14", "Valuation Percentage": "87"},
-	"Builder Bonds":         map[string]string{"Concentration Limit": "15", "Priority": "15", "Valuation Percentage": "85"}}
-
+	"Govt Securities":       map[string]string{"Concentration Limit": "50", "Priority": "1", "Valuation Percentage": "95"},
+	"Govt Securities - Non EU":      map[string]string{"Concentration Limit": "10", "Priority": "2", "Valuation Percentage": "93"},
+	"Municipal Securities":      map[string]string{"Concentration Limit": "50", "Priority": "3", "Valuation Percentage": "91"},
+	"Municipal Securities - Non EU":      map[string]string{"Concentration Limit": "10", "Priority": "4", "Valuation Percentage": "89"},
+	"Corporate Bonds":       map[string]string{"Concentration Limit": "10", "Priority": "5", "Valuation Percentage": "88"},
+	"Equities":         map[string]string{"Concentration Limit": "10", "Priority": "6", "Valuation Percentage": "85"},
+	"Medium Term Notes":       map[string]string{"Concentration Limit": "10", "Priority": "7", "Valuation Percentage": "83"},
 // ============================================================================================================================
 // Main - start the chaincode for Allocation management
 // ============================================================================================================================
@@ -444,7 +435,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	reportInJson += `"Currency" : "` + TransactionData.Currency + `",`
 
 	// SecurityJSON to String https://play.golang.org/p/_C21BONfZk
-	reportInJson += `"Public Rule Set" : {"US Treasury Bills":{"Valuation Percentage":"95","Concentration Limit":"25","Priority":"4"},"US Treasury Notes":{"Concentration Limit":"25","Priority":"6","Valuation Percentage":"95"},"Gilt":{"Priority":"7","Valuation Percentage":"94","Concentration Limit":"25"},"Common Stocks":{"Valuation Percentage":"97","Concentration Limit":"40","Priority":"1"},"Federal Agency Bonds":{"Concentration Limit":"20","Priority":"8","Valuation Percentage":"93"},"Convertible Bonds":{"Concentration Limit":"20","Priority":"11","Valuation Percentage":"90"},"Revenue Bonds":{"Concentration Limit":"15","Priority":"12","Valuation Percentage":"90"},"Medium Term Note":{"Priority":"13","Valuation Percentage":"89","Concentration Limit":"15"},"Corporate Bonds":{"Valuation Percentage":"97","Concentration Limit":"30","Priority":"2"},"Global Bonds":{"Concentration Limit":"20","Priority":"9","Valuation Percentage":"92"},"Builder Bonds":{"Concentration Limit":"15","Priority":"15","Valuation Percentage":"85"},"Sovereign Bonds":{"Concentration Limit":"25","Priority":"3","Valuation Percentage":"95"},"US Treasury Bonds":{"Priority":"5","Valuation Percentage":"95","Concentration Limit":"25"},"Preferrred Shares":{"Concentration Limit":"20","Priority":"10","Valuation Percentage":"91"},"Short Term Investments":{"Valuation Percentage":"87","Concentration Limit":"15","Priority":"14"}} ,`
+	reportInJson += `"Public Rule Set" : {"Govt Securities - Non EU":{"Valuation Percentage":"95","Concentration Limit":"25","Priority":"4"},"Govt Securities - Non EU":{"Concentration Limit":"25","Priority":"6","Valuation Percentage":"95"},"Govt Securities":{"Priority":"7","Valuation Percentage":"94","Concentration Limit":"25"},"Equities":{"Valuation Percentage":"97","Concentration Limit":"40","Priority":"1"},"Govt Securities - Non EU":{"Concentration Limit":"20","Priority":"8","Valuation Percentage":"93"},"Corporate Bonds":{"Concentration Limit":"20","Priority":"11","Valuation Percentage":"90"},"Govt Securities - Non EU":{"Concentration Limit":"15","Priority":"12","Valuation Percentage":"90"},"Medium Term Note":{"Priority":"13","Valuation Percentage":"89","Concentration Limit":"15"},"Corporate Bonds":{"Valuation Percentage":"97","Concentration Limit":"30","Priority":"2"},"Govt Securities - Non EU":{"Concentration Limit":"20","Priority":"9","Valuation Percentage":"92"},"Govt Securities - Non EU":{"Concentration Limit":"15","Priority":"15","Valuation Percentage":"85"},"Govt Securities":{"Concentration Limit":"25","Priority":"3","Valuation Percentage":"95"},"Govt Securities - Non EU":{"Priority":"5","Valuation Percentage":"95","Concentration Limit":"25"},"Preferrred Shares":{"Concentration Limit":"20","Priority":"10","Valuation Percentage":"91"},"Corporate Bonds":{"Valuation Percentage":"87","Concentration Limit":"15","Priority":"14"}} ,`
 	//-----------------------------------------------------------------------------
 
 	// Update allocation status to "Allocation in progress"
