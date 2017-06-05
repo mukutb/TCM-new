@@ -1266,6 +1266,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			totalValue_Pri := make(map[string]float64)
 			eligibleValue_Pub := make(map[string]float64)
 			sort.Sort(SecurityArrayStruct(ReallocatedSecurities))
+			fmt.Println("ReallocatedSecurities: ",ReallocatedSecurities);
 			reallocatedSecuritiesJson := `[`
 			// Update the new Securities to Pledgee Segregated A/c
 			for i, valueSecurity := range ReallocatedSecurities {
