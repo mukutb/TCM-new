@@ -790,6 +790,12 @@ func(t * ManageDeals) getTransactions_byUser(stub shim.ChaincodeStubInterface, a
     }
     jsonResp = jsonResp + "]"
     fmt.Println("jsonResp : " + jsonResp)
+    if strings.Contains(jsonResp,"},}"){
+        jsonResp = strings.Replace(jsonResp, "},}", "}}", -1)
+    }
+    if strings.Contains(jsonResp,"}{"){
+        jsonResp = strings.Replace(jsonResp, "}{", "},{", -1)
+    }
     if jsonResp == "[]" {
         fmt.Println("User not found.")
         jsonResp =  "{ \"message\" : \"" + _user + " Not Found.\", \"code\" : \"503\"}"
@@ -799,9 +805,7 @@ func(t * ManageDeals) getTransactions_byUser(stub shim.ChaincodeStubInterface, a
         return nil, err
         }
     }
-    if strings.Contains(jsonResp,"},}"){
-        jsonResp = strings.Replace(jsonResp, "},}", "}}", -1)
-    }
+    
     //fmt.Print("jsonResp in bytes : ")
     //fmt.Println([]byte(jsonResp))
     fmt.Println("end getTransactions_byUser")
