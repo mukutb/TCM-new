@@ -1331,9 +1331,14 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					fmt.Println("newMTM")
 					fmt.Println(newMTM)
 					// Effective Value =  (MTM(market Value) * valuePercentage)/100
-					effectiveValueChangedPub := (newMTM * ValuationPercentage_Pub)/100
-					fmt.Println("effectiveValueChangedPub")
-					fmt.Println(effectiveValueChangedPub)
+					effectiveValueChanged_Pub := (newMTM * ValuationPercentage_Pub)/100
+					fmt.Println("effectiveValueChanged_Pub")
+					fmt.Println(effectiveValueChanged_Pub)
+					tmpEffectiveValueChangedPub := strconv.FormatFloat(effectiveValueChanged_Pub, 'f', 2, 64)
+					effectiveValueChangedPub, errBool6 := strconv.ParseFloat(tmpEffectiveValueChangedPub, 64)
+					if errBool6 != nil {
+						fmt.Println(errBool6)
+					}
 					if effectiveValueChangedPub < effectiveValueChanged_Pri{
 						compliance_status = "Regulatory Non-Compliant"
 					}
