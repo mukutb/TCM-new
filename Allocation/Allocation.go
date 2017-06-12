@@ -105,7 +105,13 @@ type SecurityArrayStruct []Securities
 
 func (slice SecurityArrayStruct) Len() int             { return len(slice) }
 func (slice SecurityArrayStruct) Less(i, j int) bool { // Sorting through the field 'Priority'
-	return rulesetFetched.Security[slice[i].CollateralForm]["Priority"] < rulesetFetched.Security[slice[j].CollateralForm]["Priority"]
+	if rulesetFetched.Security[slice[i].CollateralForm]["Priority"] < rulesetFetched.Security[slice[j].CollateralForm]["Priority"]{
+		return true
+	}
+	if rulesetFetched.Security[slice[i].CollateralForm]["Priority"] > rulesetFetched.Security[slice[j].CollateralForm]["Priority"]{
+		return false
+	}
+	return slice[i].EffectiveValueChanged > slice[j].EffectiveValueChanged
 }
 func (slice SecurityArrayStruct) Swap(i, j int) { slice[i], slice[j] = slice[j], slice[i] }
 
@@ -120,22 +126,13 @@ type CurrencyConversion struct {
 
 // To be used as SecurityJSON["CommonStocks"]["Priority"] ==> 1
 var SecurityJSON = map[string]map[string]string{
-	"Common Stocks":         map[string]string{"Concentration Limit": "40", "Priority": "1", "Valuation Percentage": "97"},
-	"Corporate Bonds":       map[string]string{"Concentration Limit": "30", "Priority": "2", "Valuation Percentage": "97"},
-	"Sovereign Bonds":       map[string]string{"Concentration Limit": "25", "Priority": "3", "Valuation Percentage": "95"},
-	"US Treasury Bills":      map[string]string{"Concentration Limit": "25", "Priority": "4", "Valuation Percentage": "95"},
-	"US Treasury Bonds":      map[string]string{"Concentration Limit": "25", "Priority": "5", "Valuation Percentage": "95"},
-	"US Treasury Notes":      map[string]string{"Concentration Limit": "25", "Priority": "6", "Valuation Percentage": "95"},
-	"Gilt":                 map[string]string{"Concentration Limit": "25", "Priority": "7", "Valuation Percentage": "94"},
-	"Federal Agency Bonds":   map[string]string{"Concentration Limit": "20", "Priority": "8", "Valuation Percentage": "93"},
-	"Global Bonds":          map[string]string{"Concentration Limit": "20", "Priority": "9", "Valuation Percentage": "92"},
-	"Preferred Shares":     map[string]string{"Concentration Limit": "20", "Priority": "10", "Valuation Percentage": "91"},
-	"Convertible Bonds":     map[string]string{"Concentration Limit": "20", "Priority": "11", "Valuation Percentage": "90"},
-	"Revenue Bonds":         map[string]string{"Concentration Limit": "15", "Priority": "12", "Valuation Percentage": "90"},
-	"Medium Term Note":       map[string]string{"Concentration Limit": "15", "Priority": "13", "Valuation Percentage": "89"},
-	"Short Term Investments": map[string]string{"Concentration Limit": "15", "Priority": "14", "Valuation Percentage": "87"},
-	"Builder Bonds":         map[string]string{"Concentration Limit": "15", "Priority": "15", "Valuation Percentage": "85"}}
-
+	"Govt Securities":       map[string]string{"Concentration Limit": "50", "Priority": "1", "Valuation Percentage": "95"},
+	"Govt Securities - Non EU":      map[string]string{"Concentration Limit": "10", "Priority": "2", "Valuation Percentage": "93"},
+	"Municipal Securities":      map[string]string{"Concentration Limit": "50", "Priority": "3", "Valuation Percentage": "91"},
+	"Municipal Securities - Non EU":      map[string]string{"Concentration Limit": "10", "Priority": "4", "Valuation Percentage": "89"},
+	"Corporate Bonds":       map[string]string{"Concentration Limit": "10", "Priority": "5", "Valuation Percentage": "88"},
+	"Equities":         map[string]string{"Concentration Limit": "10", "Priority": "6", "Valuation Percentage": "85"},
+	"Medium Term Notes":       map[string]string{"Concentration Limit": "10", "Priority": "7", "Valuation Percentage": "83"}}
 // ============================================================================================================================
 // Main - start the chaincode for Allocation management
 // ============================================================================================================================
@@ -438,7 +435,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	reportInJson += `"Currency" : "` + TransactionData.Currency + `",`
 
 	// SecurityJSON to String https://play.golang.org/p/_C21BONfZk
-	reportInJson += `"Public Rule Set" : {"US Treasury Bills":{"Valuation Percentage":"95","Concentration Limit":"25","Priority":"4"},"US Treasury Notes":{"Concentration Limit":"25","Priority":"6","Valuation Percentage":"95"},"Gilt":{"Priority":"7","Valuation Percentage":"94","Concentration Limit":"25"},"Common Stocks":{"Valuation Percentage":"97","Concentration Limit":"40","Priority":"1"},"Federal Agency Bonds":{"Concentration Limit":"20","Priority":"8","Valuation Percentage":"93"},"Convertible Bonds":{"Concentration Limit":"20","Priority":"11","Valuation Percentage":"90"},"Revenue Bonds":{"Concentration Limit":"15","Priority":"12","Valuation Percentage":"90"},"Medium Term Note":{"Priority":"13","Valuation Percentage":"89","Concentration Limit":"15"},"Corporate Bonds":{"Valuation Percentage":"97","Concentration Limit":"30","Priority":"2"},"Global Bonds":{"Concentration Limit":"20","Priority":"9","Valuation Percentage":"92"},"Builder Bonds":{"Concentration Limit":"15","Priority":"15","Valuation Percentage":"85"},"Sovereign Bonds":{"Concentration Limit":"25","Priority":"3","Valuation Percentage":"95"},"US Treasury Bonds":{"Priority":"5","Valuation Percentage":"95","Concentration Limit":"25"},"Preferrred Shares":{"Concentration Limit":"20","Priority":"10","Valuation Percentage":"91"},"Short Term Investments":{"Valuation Percentage":"87","Concentration Limit":"15","Priority":"14"}} ,`
+	reportInJson += `"Public Rule Set" : {"Govt Securities":{"Valuation Percentage":"95","Concentration Limit":"50","Priority":"1"},"Govt Securities - Non EU":{"Concentration Limit":"10","Priority":"2","Valuation Percentage":"93"},"Municipal Securities":{"Priority":"3","Valuation Percentage":"91","Concentration Limit":"50"},"Municipal Securities - Non EU":{"Priority":"4","Valuation Percentage":"89","Concentration Limit":"10"},"Equities":{"Valuation Percentage":"85","Concentration Limit":"10","Priority":"6"},"Corporate Bonds":{"Concentration Limit":"10","Priority":"5","Valuation Percentage":"88"},"Medium Term Notes":{"Priority":"7","Valuation Percentage":"83","Concentration Limit":"10"}},`
 	//-----------------------------------------------------------------------------
 
 	// Update allocation status to "Allocation in progress"
@@ -765,6 +762,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 	for _, value := range PledgeeSegregatedSecuritiesJSON {
 		// Key = Security ID && value = Security Structure
 		tempSecurity := Securities{}
+		flag:= false
 		tempSecurity = value
 		fmt.Println("tempSecurity: ",tempSecurity)
 		if len(rulesetFetched.Security[tempSecurity.CollateralForm]) > 0 {
@@ -840,74 +838,77 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 						*/
 						//valueSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[valueSecurity.CollateralForm]["Valuation Percentage"], 'f', 2, 64)
 						//fmt.Println("ValuePercentage: ",valueSecurity.ValuePercentage)
-						fmt.Println("CombinedSecurity: ",valueSecurity)
 						// Append Securities to an array
-						//PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, valueSecurity)
+						PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, tempSecurity)
 						CombinedSecurities[i]= valueSecurity;
+						fmt.Println("CombinedSecurity: ",CombinedSecurities[i])
+						flag = true
 						//CombinedSecurities = append(CombinedSecurities, valueSecurity)
 					}
 				}
 			}
-			fmt.Println("Securities are different")
-			//fmt.Println("SecuritiesQuantity(PledgeeSegregatedSecurities): ",tempSecurity.SecuritiesQuantity)
-			// Storing the Value percentage in the security data itself
-			//tempSecurity.ValuePercentage = SecurityJSON[tempSecurity.CollateralForm]["Valuation Percentage"]
-			//fmt.Println("tempSecurity.ValuePercentage: ",tempSecurity.ValuePercentage)
-			//convert valuePercentage(string) to float
-			tempValuePercentage, errBool := strconv.ParseFloat(tempSecurity.ValuePercentage, 64)
-			if errBool != nil {
-				fmt.Println(errBool)
+			if flag == false{
+				fmt.Println("Securities are different")
+				//fmt.Println("SecuritiesQuantity(PledgeeSegregatedSecurities): ",tempSecurity.SecuritiesQuantity)
+				// Storing the Value percentage in the security data itself
+				//tempSecurity.ValuePercentage = SecurityJSON[tempSecurity.CollateralForm]["Valuation Percentage"]
+				//fmt.Println("tempSecurity.ValuePercentage: ",tempSecurity.ValuePercentage)
+				//convert valuePercentage(string) to float
+				tempValuePercentage, errBool := strconv.ParseFloat(tempSecurity.ValuePercentage, 64)
+				if errBool != nil {
+					fmt.Println(errBool)
+				}
+				fmt.Println("tempValuePercentage: ",tempValuePercentage)
+				temp, errBool := strconv.ParseFloat(tempSecurity.MTM, 64)
+				if errBool != nil {
+					fmt.Println(errBool)
+				}
+				fmt.Println("mtm: ",temp)
+				_rate := ConversionRate.Rates[tempSecurity.Currency]
+				if tempSecurity.Currency == RQVCurrency {
+					_rate = 1
+				}
+				fmt.Println("tempSecurity.Currency: ",tempSecurity.Currency)
+				fmt.Println("_rate: ",_rate)
+				//calculate Currency conversion rate(to RQVCurrency) for mtm  
+				_changedMTM :=  temp/_rate
+				fmt.Println("_changedMTM: ",_changedMTM)
+				// Effective Value =  (MTM(market Value) * valuePercentage)/100
+				temp3 := (_changedMTM * tempValuePercentage)/100
+				fmt.Println("temp3: ",temp3)
+				tempSecurity.EffectiveValueChanged = strconv.FormatFloat(temp3, 'f', 2, 64)
+				// Adding it to TotalValue
+				fmt.Println("EffectiveValueChanged: ",tempSecurity.EffectiveValueChanged)
+				temp2, errBool := strconv.ParseFloat(tempSecurity.SecuritiesQuantity, 64)
+				if errBool != nil {
+					fmt.Println(errBool)
+				}
+				fmt.Println("securityQuantity: ",temp2)
+				// Calculate Total Value = Effective Value * Quantity
+				tempTotal := temp3 * temp2
+				fmt.Println("tempTotal: ",tempTotal)
+				tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 64)
+				fmt.Println("tempSecurity.TotalValue")
+				fmt.Println(tempSecurity.TotalValue)
+				// Calculate Total value based on Collateral form
+				TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm] += tempTotal
+				fmt.Println("TotalValuePledgeeSegregatedSecurities[CollateralForm]",TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm])
+				// Calculate Total value of pledgee's segregated account
+				TotalValuePledgeeSegregated += tempTotal
+				fmt.Println("TotalValuePledgeeSegregated: ",TotalValuePledgeeSegregated)	
+				/*	Warning :
+					Saving Priority for the Security in filed `ValuePercentage`
+					This is just for using the limited sorting application provided by GOlang
+					By no chance is this to be stored on Blockchain.
+				*/
+				//tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm]["Valuation Percentage"], 'f', 2, 64)
+				//fmt.Println("tempSecurity.ValuePercentage:",tempSecurity.ValuePercentage)
+				// Append Securities to an array
+				PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, tempSecurity)
+				fmt.Println("PledgeeSegregatedSecurities: ",PledgeeSegregatedSecurities)
+				CombinedSecurities = append(CombinedSecurities, tempSecurity)
+				fmt.Println("CombinedSecurity: ",CombinedSecurities)
 			}
-			fmt.Println("tempValuePercentage: ",tempValuePercentage)
-			temp, errBool := strconv.ParseFloat(tempSecurity.MTM, 64)
-			if errBool != nil {
-				fmt.Println(errBool)
-			}
-			fmt.Println("mtm: ",temp)
-			_rate := ConversionRate.Rates[tempSecurity.Currency]
-			if tempSecurity.Currency == RQVCurrency {
-				_rate = 1
-			}
-			fmt.Println("tempSecurity.Currency: ",tempSecurity.Currency)
-			fmt.Println("_rate: ",_rate)
-			//calculate Currency conversion rate(to RQVCurrency) for mtm  
-			_changedMTM :=  temp/_rate
-			fmt.Println("_changedMTM: ",_changedMTM)
-			// Effective Value =  (MTM(market Value) * valuePercentage)/100
-			temp3 := (_changedMTM * tempValuePercentage)/100
-			fmt.Println("temp3: ",temp3)
-			tempSecurity.EffectiveValueChanged = strconv.FormatFloat(temp3, 'f', 2, 64)
-			// Adding it to TotalValue
-			fmt.Println("EffectiveValueChanged: ",tempSecurity.EffectiveValueChanged)
-			temp2, errBool := strconv.ParseFloat(tempSecurity.SecuritiesQuantity, 64)
-			if errBool != nil {
-				fmt.Println(errBool)
-			}
-			fmt.Println("securityQuantity: ",temp2)
-			// Calculate Total Value = Effective Value * Quantity
-			tempTotal := temp3 * temp2
-			fmt.Println("tempTotal: ",tempTotal)
-			tempSecurity.TotalValue = strconv.FormatFloat(tempTotal, 'f', 2, 64)
-			fmt.Println("tempSecurity.TotalValue")
-			fmt.Println(tempSecurity.TotalValue)
-			// Calculate Total value based on Collateral form
-			TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm] += tempTotal
-			fmt.Println("TotalValuePledgeeSegregatedSecurities[CollateralForm]",TotalValuePledgeeSegregatedSecurities[tempSecurity.CollateralForm])
-			// Calculate Total value of pledgee's segregated account
-			TotalValuePledgeeSegregated += tempTotal
-			fmt.Println("TotalValuePledgeeSegregated: ",TotalValuePledgeeSegregated)	
-			/*	Warning :
-				Saving Priority for the Security in filed `ValuePercentage`
-				This is just for using the limited sorting application provided by GOlang
-				By no chance is this to be stored on Blockchain.
-			*/
-			//tempSecurity.ValuePercentage = strconv.FormatFloat(rulesetFetched.Security[tempSecurity.CollateralForm]["Valuation Percentage"], 'f', 2, 64)
-			//fmt.Println("tempSecurity.ValuePercentage:",tempSecurity.ValuePercentage)
-			// Append Securities to an array
-			PledgeeSegregatedSecurities = append(PledgeeSegregatedSecurities, tempSecurity)
-			fmt.Println("PledgeeSegregatedSecurities: ",PledgeeSegregatedSecurities)
-			CombinedSecurities = append(CombinedSecurities, tempSecurity)
-			fmt.Println("CombinedSecurity: ",CombinedSecurities)
 		}
 	}
 	 		
@@ -1010,8 +1011,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		CombinedSecuritiesIterator:
 		for _, valueSecurity := range CombinedSecurities {
 			fmt.Println("RQVLeft: ", RQVLeft)
-			fmt.Println("TotalValuePledgeeSegregated: ", TotalValuePledgeeSegregated)
-			fmt.Println("TotalValuePledgerLongbox: ", TotalValuePledgerLongbox)
+			//fmt.Println("TotalValuePledgeeSegregated: ", TotalValuePledgeeSegregated)
+			//fmt.Println("TotalValuePledgerLongbox: ", TotalValuePledgerLongbox)
 			//var TotalValuePledgee float64
 			if RQVLeft > 0 {
 				// More Security need to be taken out
@@ -1062,11 +1063,15 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							if QuantityToTakeout == 0{
 								QuantityToTakeout = 1
 							}
-							
 							totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
-							fmt.Println(totalValueToAllocate)
-							if totalValueToAllocate > rqvEligibleValueLeft {
-								totalValueToAllocate = rqvEligibleValueLeft
+							fmt.Println("totalValueToAllocate: ",totalValueToAllocate)
+							if totalValueToAllocate < rqvEligibleValueLeft{
+								if totalValueToAllocate < RQVLeft{
+									QuantityToTakeout = math.Ceil((RQVLeft * securityQuantity)/ totalValue)
+									fmt.Println("QuantityToTakeout: ", QuantityToTakeout)
+									totalValueToAllocate = QuantityToTakeout * effectiveValueChanged
+									fmt.Println("totalValueToAllocate: ",totalValueToAllocate)
+								}
 							}
 							RQVLeft -= totalValueToAllocate
 							fmt.Println("RQVLeft: ",RQVLeft)
@@ -1075,7 +1080,9 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							tempSecurity2 := valueSecurity
 							tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'f', 2, 64)
 							tempSecurity2.TotalValue = strconv.FormatFloat(totalValueToAllocate, 'f', 2, 64)
-							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
+							if QuantityToTakeout != 0 {
+								ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
+							}
 							fmt.Println("ReallocatedSecurities: ",ReallocatedSecurities)
 							SecuritiesAllocated[valueSecurity.SecurityId] = QuantityToTakeout
 							fmt.Println(valueSecurity.SecurityId + ": " , SecuritiesAllocated[valueSecurity.SecurityId])
@@ -1096,38 +1103,36 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 							fmt.Println(errBool)
 						}
 						fmt.Println("effectiveValueChanged: ",effectiveValueChanged)
-						QuantityToTakeout := math.Floor((RQVLeft * securityQuantity)/ totalValue)
+						QuantityToTakeout := math.Floor((rqvEligibleValueLeft * securityQuantity)/ totalValue)
 						fmt.Println("QuantityToTakeout: ", QuantityToTakeout)
-						if QuantityToTakeout == 0{
-							QuantityToTakeout = 1
-						}
+						
 						totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
 						fmt.Println("totalValueToAllocate: ", totalValueToAllocate)
-						RQVLeft -= totalValueToAllocate
-						fmt.Println("RQVLeft: ",RQVLeft)
-						if totalValueToAllocate < RQVLeft {
+						if totalValueToAllocate > RQVLeft {
 							// One more security can be taken out
-							QuantityToTakeout := math.Floor((RQVLeft * securityQuantity)/ totalValue)
+							QuantityToTakeout = math.Ceil((RQVLeft * securityQuantity)/ totalValue)
 							fmt.Println("QuantityToTakeout: ", QuantityToTakeout)
 							if QuantityToTakeout == 0{
 								QuantityToTakeout = 1
 							}
-							totalValueToAllocate := QuantityToTakeout * effectiveValueChanged
+							totalValueToAllocate = QuantityToTakeout * effectiveValueChanged
 							fmt.Println("totalValueToAllocate: ", totalValueToAllocate)
-							RQVLeft -= totalValueToAllocate
-							fmt.Println("RQVLeft: ",RQVLeft)
 						}
 						if totalValueToAllocate > rqvEligibleValueLeft {
-							totalValueToAllocate = rqvEligibleValueLeft
+							QuantityToTakeout = 0
+							totalValueToAllocate = QuantityToTakeout * effectiveValueChanged
 						}
+						RQVLeft -= totalValueToAllocate
+						fmt.Println("RQVLeft: ",RQVLeft)
 						RQVEligibleValueLeft[valueSecurity.CollateralForm] -= totalValueToAllocate
 						fmt.Println("RQVEligibleValueLeft: ",RQVEligibleValueLeft)
 						tempSecurity2 := valueSecurity
 						tempSecurity2.SecuritiesQuantity = strconv.FormatFloat(QuantityToTakeout, 'f', 2, 64)
 						tempSecurity2.TotalValue = strconv.FormatFloat(totalValueToAllocate, 'f', 2, 64)
-						ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
+						if QuantityToTakeout != 0 {
+							ReallocatedSecurities = append(ReallocatedSecurities, tempSecurity2)
+						}
 						fmt.Println("ReallocatedSecurities: ",ReallocatedSecurities)
-
 						SecuritiesAllocated[valueSecurity.SecurityId] = QuantityToTakeout
 						fmt.Println(valueSecurity.SecurityId + ": " , SecuritiesAllocated[valueSecurity.SecurityId])
 						TotalValueAllocated[valueSecurity.SecurityId] = totalValueToAllocate
@@ -1178,7 +1183,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 				return nil, errors.New(errStr)
 			}
 			fmt.Println(result2)
-			fmt.Print("Securities removed from accounts")
+			fmt.Println("Securities removed from accounts")
 			//-----------------------------------------------------------------------------
 
 			// Committing the state to Blockchain
@@ -1260,6 +1265,10 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			compliance_status := "Regulatory Compliant"
 			totalValue_Pri := make(map[string]float64)
 			eligibleValue_Pub := make(map[string]float64)
+			fmt.Println("ReallocatedSecurities: ", ReallocatedSecurities)
+			sort.Sort(SecurityArrayStruct(ReallocatedSecurities))
+			fmt.Println("ReallocatedSecurities(sorted): ",ReallocatedSecurities);
+			var totalValueSegregatedAccount float64
 			reallocatedSecuritiesJson := `[`
 			// Update the new Securities to Pledgee Segregated A/c
 			for i, valueSecurity := range ReallocatedSecurities {
@@ -1292,10 +1301,7 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					if i < len(ReallocatedSecurities)-1 {
 						reallocatedSecuritiesJson += `,`
 					}
-					ConcentrationLimit_Pub, errBool1 := strconv.ParseFloat(SecurityJSON[valueSecurity.CollateralForm]["Concentration Limit"], 64)
-					if errBool1 != nil {
-						fmt.Println(errBool1)
-					}
+					
 					//ConcentrationLimit_Pri := rulesetFetched.Security[valueSecurity.CollateralForm]["Concentration Limit"]
 					temp, errBool2 := strconv.ParseFloat(valueSecurity.MTM, 64)
 					if errBool2 != nil {
@@ -1324,21 +1330,40 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 					fmt.Println("newMTM")
 					fmt.Println(newMTM)
 					// Effective Value =  (MTM(market Value) * valuePercentage)/100
-					effectiveValueChangedPub := (newMTM * ValuationPercentage_Pub)/100
-					fmt.Println("effectiveValueChangedPub")
-					fmt.Println(effectiveValueChangedPub)
+					effectiveValueChanged_Pub := (newMTM * ValuationPercentage_Pub)/100
+					fmt.Println("effectiveValueChanged_Pub")
+					fmt.Println(effectiveValueChanged_Pub)
+					tmpEffectiveValueChangedPub := strconv.FormatFloat(effectiveValueChanged_Pub, 'f', 2, 64)
+					effectiveValueChangedPub, errBool6 := strconv.ParseFloat(tmpEffectiveValueChangedPub, 64)
+					if errBool6 != nil {
+						fmt.Println(errBool6)
+					}
 					if effectiveValueChangedPub < effectiveValueChanged_Pri{
 						compliance_status = "Regulatory Non-Compliant"
 					}
-					eligibleValuePub := ConcentrationLimit_Pub * RQV
+					fmt.Println("compliance_status: ",compliance_status)
 					totalValue_Pri[valueSecurity.CollateralForm] += totalValuePri
-					eligibleValue_Pub[valueSecurity.CollateralForm] += eligibleValuePub
+					fmt.Println(totalValue_Pri[valueSecurity.CollateralForm])
+					totalValueSegregatedAccount = totalValueSegregatedAccount + totalValuePri
+					fmt.Println("totalValueSegregatedAccount: ",totalValueSegregatedAccount)
+					
 				}
 			}
+			fmt.Println("totalValueSegregatedAccount: ",totalValueSegregatedAccount)
 			for key := range totalValue_Pri{
+				ConcentrationLimit_Pub, errBool1 := strconv.ParseFloat(SecurityJSON[key]["Concentration Limit"], 64)
+				if errBool1 != nil {
+					fmt.Println(errBool1)
+				}
+				eligibleValuePub := (ConcentrationLimit_Pub * totalValueSegregatedAccount)/100
+				fmt.Println("eligibleValuePub: ",eligibleValuePub)
+				eligibleValue_Pub[key] += eligibleValuePub
+				fmt.Println("eligibleValue_Pub["+key+"]: ",eligibleValue_Pub[key])
+				fmt.Println("totalValue_Pri["+key+"]: ",totalValue_Pri[key])
 				if totalValue_Pri[key] > eligibleValue_Pub[key] {
 					compliance_status = "Regulatory Non-Compliant"	
 				}
+				fmt.Println("compliance_status: ",compliance_status)
 			}
 
 			reallocatedSecuritiesJson += `]`
