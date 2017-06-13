@@ -997,8 +997,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 		// Using Code defination like https://play.golang.org/p/ciN45THQjM
 		// Reference from http://nerdyworm.com/blog/2013/05/15/sorting-a-slice-of-structs-in-go/
 
-		sort.Sort(SecurityArrayStruct(PledgerLongboxSecurities))
-		sort.Sort(SecurityArrayStruct(PledgeeSegregatedSecurities))
+		//sort.Sort(SecurityArrayStruct(PledgerLongboxSecurities))
+		//sort.Sort(SecurityArrayStruct(PledgeeSegregatedSecurities))
 		sort.Sort(SecurityArrayStruct(CombinedSecurities))
 		fmt.Println("CombinedSecurities after sort: ", CombinedSecurities)
 		// Start Allocatin & Rearrangment
