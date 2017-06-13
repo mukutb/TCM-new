@@ -107,11 +107,12 @@ func (slice SecurityArrayStruct) Len() int             { return len(slice) }
 func (slice SecurityArrayStruct) Less(i, j int) bool { // Sorting through the field 'Priority'
 	if rulesetFetched.Security[slice[i].CollateralForm]["Priority"] < rulesetFetched.Security[slice[j].CollateralForm]["Priority"]{
 		return true
+	}else if rulesetFetched.Security[slice[i].CollateralForm]["Priority"] == rulesetFetched.Security[slice[j].CollateralForm]["Priority"]{
+		if slice[i].EffectiveValueChanged > slice[j].EffectiveValueChanged {
+			return true	
+		}
 	}
-	if rulesetFetched.Security[slice[i].CollateralForm]["Priority"] > rulesetFetched.Security[slice[j].CollateralForm]["Priority"]{
-		return false
-	}
-	return slice[i].EffectiveValueChanged > slice[j].EffectiveValueChanged
+	return false
 }
 func (slice SecurityArrayStruct) Swap(i, j int) { slice[i], slice[j] = slice[j], slice[i] }
 
@@ -1266,8 +1267,8 @@ func (t *ManageAllocations) start_allocation(stub shim.ChaincodeStubInterface, a
 			totalValue_Pri := make(map[string]float64)
 			eligibleValue_Pub := make(map[string]float64)
 			fmt.Println("ReallocatedSecurities: ", ReallocatedSecurities)
-			sort.Sort(SecurityArrayStruct(ReallocatedSecurities))
-			fmt.Println("ReallocatedSecurities(sorted): ",ReallocatedSecurities);
+			//sort.Sort(SecurityArrayStruct(ReallocatedSecurities))
+			//fmt.Println("ReallocatedSecurities(sorted): ",ReallocatedSecurities);
 			var totalValueSegregatedAccount float64
 			reallocatedSecuritiesJson := `[`
 			// Update the new Securities to Pledgee Segregated A/c
