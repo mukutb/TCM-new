@@ -105,10 +105,18 @@ type SecurityArrayStruct []Securities
 
 func (slice SecurityArrayStruct) Len() int             { return len(slice) }
 func (slice SecurityArrayStruct) Less(i, j int) bool { // Sorting through the field 'Priority'
+	tempEffectiveValueChanged1, errBool := strconv.ParseFloat(slice[i].EffectiveValueChanged, 64)
+	if errBool != nil {
+		fmt.Println(errBool)
+	}
+	tempEffectiveValueChanged2, errBool := strconv.ParseFloat(slice[j].EffectiveValueChanged, 64)
+	if errBool != nil {
+		fmt.Println(errBool)
+	}
 	if rulesetFetched.Security[slice[i].CollateralForm]["Priority"] < rulesetFetched.Security[slice[j].CollateralForm]["Priority"]{
 		return true
 	}else if rulesetFetched.Security[slice[i].CollateralForm]["Priority"] == rulesetFetched.Security[slice[j].CollateralForm]["Priority"]{
-		if slice[i].EffectiveValueChanged > slice[j].EffectiveValueChanged {
+		if tempEffectiveValueChanged1 > tempEffectiveValueChanged2 {
 			return true	
 		}
 	}
