@@ -628,18 +628,18 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 	}else{
 		//build the Account json string manually
 		order := 	`{`+
-			`"securityId": "` + _securityId + `" ,`+
-			`"accountNumber": "` + _accountNumber + `" ,`+
-			`"securityName": "` + _securityName + `" ,`+
-			`"securityQuantity": "` + _securityQuantity + `" ,`+
-			`"securityType": "` + _securityType + `" ,`+
-			`"collateralForm": "` + _collateralForm + `" ,`+
-			`"totalvalue": "` + _totalValue + `" ,`+
-			`"valuePercentage": "` + _valuePercentage + `" ,`+
-			`"mtm": "` + _mtm + `" ,`+
-			`"effectivePercentage": "` + _effectivePercentage + `" ,`+
-			`"effectiveValueinUSD": "` + _effectiveValueinUSD + `" ,`+
-			`"currency": "` + _currency + `"`+
+			`"Security ID": "` + _securityId + `" ,`+
+			`"Account Number": "` + _accountNumber + `" ,`+
+			`"Security Name": "` + _securityName + `" ,`+
+			`"Quantity": "` + _securityQuantity + `" ,`+
+			`"Security Type": "` + _securityType + `" ,`+
+			`"Collateral Form": "` + _collateralForm + `" ,`+
+			`"Total Value": "` + _totalValue + `" ,`+
+			`"Valuation Percentage": "` + _valuePercentage + `" ,`+
+			`"Market Price": "` + _mtm + `" ,`+
+			`"Effective Value": "` + _effectivePercentage + `" ,`+
+			`"Effective Value Changed": "` + _effectiveValueinUSD + `" ,`+
+			`"Currency": "` + _currency + `"`+
 			`}`
 		fmt.Println("order: " + order)
 		err = stub.PutState(_accountNumber+"-"+_securityId, []byte(order))									//store Account with AccountId as key
@@ -895,18 +895,18 @@ func (t *ManageAccounts) update_security(stub shim.ChaincodeStubInterface, args 
 		fmt.Println(res);
 		//build the Account json string manually
 		order := 	`{`+
-			`"securityId": "` + res.SecurityId + `" ,`+
-			`"accountNumber": "` + res.AccountNumber + `" ,`+
-			`"securityName": "` + args[2] + `" ,`+
-			`"securityQuantity": "` + args[3] + `" ,`+
-			`"securityType": "` + args[4] + `" ,`+
-			`"collateralForm": "` + args[5] + `" ,`+
-			`"totalvalue": "` + args[6]+ `" ,`+
-			`"valuePercentage": "` + args[7]+ `" ,`+
-			`"mtm": "` + args[8]+ `" ,`+
-			`"effectivePercentage": "` + args[9]+ `" ,`+
-			`"effectiveValueinUSD": "` + args[10]+ `" ,`+
-			`"currency": "` + args[11] + `"`+
+			`"Security ID": "` + res.SecurityId + `" ,`+
+			`"Account Number": "` + res.AccountNumber + `" ,`+
+			`"Security Name": "` + args[2] + `" ,`+
+			`"Quantity": "` + args[3] + `" ,`+
+			`"Security Type": "` + args[4] + `" ,`+
+			`"Collateral Form": "` + args[5] + `" ,`+
+			`"Total Value": "` + args[6]+ `" ,`+
+			`"Valuation Percentage": "` + args[7]+ `" ,`+
+			`"Market Price": "` + args[8]+ `" ,`+
+			`"Effective Value": "` + args[9]+ `" ,`+
+			`"Effective Value Changed": "` + args[10]+ `" ,`+
+			`"Currency": "` + args[11] + `"`+
 			`}`
 		fmt.Println(order);
 		err = stub.PutState(accountNumber + "-" + securityId, []byte(order))									//store security with id as key
