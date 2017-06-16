@@ -128,9 +128,9 @@ func (slice SecurityArrayStruct) Swap(i, j int) { slice[i], slice[j] = slice[j],
 // Use as Object.Rates["EUR"]
 // Reference [Tested by Pranav] https://play.golang.org/p/j5Act-jN5C
 type CurrencyConversion struct {
-	Base  string             `json:"base"`
-	Date  string             `json:"date"`
-	Rates map[string]float64 `json:"rates"`
+	Base  string             `json:"Base Currency"`
+	Date  string             `json:"Date"`
+	Rates map[string]float64 `json:"Exchange Rates"`
 }
 
 // To be used as SecurityJSON["CommonStocks"]["Priority"] ==> 1
