@@ -610,7 +610,7 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 		securityQuantity1 += securityQuantity2
 		res.SecuritiesQuantity = strconv.FormatFloat(securityQuantity1, 'f', 2, 64)
 		fmt.Println("SecuritiesQuantity: ",res.SecuritiesQuantity)
-		totalValue1, errBool3 := strconv.ParseFloat(res.Totalvalue, 64)
+		totalValue1, errBool3 := strconv.ParseFloat(res.TotalValue, 64)
 		if errBool3 != nil {
 			fmt.Println(errBool3)
 		}
@@ -619,10 +619,10 @@ func (t *ManageAccounts) add_security(stub shim.ChaincodeStubInterface, args []s
 			fmt.Println(errBool1)
 		}
 		totalValue1 += totalValue2
-		res.Totalvalue = strconv.FormatFloat(totalValue1, 'f', 2, 64)
-		fmt.Println("TotalValue: ",res.Totalvalue)
+		res.TotalValue = strconv.FormatFloat(totalValue1, 'f', 2, 64)
+		fmt.Println("TotalValue: ",res.TotalValue)
 		var temp[] string
-        temp = append(temp, res.SecurityId,res.AccountNumber,_securityName,res.SecuritiesQuantity,_securityType,_collateralForm,res.Totalvalue,_valuePercentage,_mtm,_effectivePercentage,_effectiveValueinUSD,_currency)
+        temp = append(temp, res.SecurityId,res.AccountNumber,_securityName,res.SecuritiesQuantity,_securityType,_collateralForm,res.TotalValue,_valuePercentage,_mtm,_effectivePercentage,_effectiveValueinUSD,_currency)
         t.update_security(stub, temp)
 		fmt.Println("Existing security updated successfully")
 	}else{
@@ -752,7 +752,7 @@ func (t *ManageAccounts) remove_securitiesFromAccount(stub shim.ChaincodeStubInt
 			return nil, errors.New("Failed to get Security " + _SecuritySplit[i])
 		}
 		json.Unmarshal(SecuritiesAsBytes, &res_Security)
-		valToBeRemoved, _ := strconv.ParseFloat(res_Security.Totalvalue, 64)
+		valToBeRemoved, _ := strconv.ParseFloat(res_Security.TotalValue, 64)
 		totalValueOfTheDeletedSecurities = totalValueOfTheDeletedSecurities - valToBeRemoved
 
 		//Got the info. now delete
