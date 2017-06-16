@@ -75,18 +75,18 @@ type Accounts struct {
 }
 
 type Securities struct {
-	SecurityId          string `json:"securityId"`
-	AccountNumber       string `json:"accountNumber"`
-	SecuritiesName      string `json:"securityName"`
-	SecuritiesQuantity  string `json:"securityQuantity"`
-	SecurityType        string `json:"securityType"`
-	CollateralForm      string `json:"collateralForm"`
-	TotalValue          string `json:"totalValue"`
-	ValuePercentage     string `json:"valuePercentage"`
-	MTM                 string `json:"mtm"`
-	EffectivePercentage string `json:"effectivePercentage"`
-	EffectiveValueChanged string `json:"effectiveValueChanged"`
-	Currency            string `json:"currency"`
+	SecurityId          string `json:"Security ID"`
+	AccountNumber       string `json:"Account Number"`
+	SecuritiesName      string `json:"Security Name"`
+	SecuritiesQuantity  string `json:"Quantity"`
+	SecurityType        string `json:"Security Type"`
+	CollateralForm      string `json:"Collateral Form"`
+	TotalValue          string `json:"Total Value"`
+	ValuePercentage     string `json:"Valuation Percentage"`
+	MTM                 string `json:"Market Price"`
+	EffectivePercentage string `json:"Effective Value"`
+	EffectiveValueChanged string `json:"Effective Value Changed"`
+	Currency            string `json:"Currency"`
 }
 
 // Use as Object.Security["CommonStocks"][0]
